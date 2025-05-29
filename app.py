@@ -64,7 +64,7 @@ def get_cached_price():
 def get_miner_info(miner_name):
     """Get both human readable name and logo for miner"""
     if not miner_name:
-        return {"name": "Unknown", "logo": None}
+        return {"name": "Unknown", "logo": miner_logos.get("Unknown", None)}
     
     # Check if the miner name is in our mapping
     if miner_name in miner_names:
@@ -72,8 +72,8 @@ def get_miner_info(miner_name):
         logo = miner_logos.get(miner_name, None)
         return {"name": readable_name, "logo": logo}
     
-    # If not found in mapping, return "Unknown"
-    return {"name": "Unknown", "logo": None}
+    # If not found in mapping, return "Unknown" with Unknown logo
+    return {"name": "Unknown", "logo": miner_logos.get("Unknown", None)}
 
 @app.route('/')
 def home():
