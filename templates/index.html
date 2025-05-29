@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ergo Mempool Visualizer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">Ergo Mempool Visualizer</div>
+            <button id="connect-button" class="connect-button">Connect</button>
+        </header>
+
+        <div class="blocks-section">
+            <!-- Next Block Section (Default on Left) -->
+            <div class="next-block-section" id="next-block-section">
+                <h3 class="section-title">Next Block</h3>
+                <div class="block-container">
+                    <div class="block-height" id="next-block-height">Mining...</div>
+                    <div class="dummy-block next-block" id="next-block">
+                        <div class="block-size">Pending</div>
+                        <div class="block-reward">15.00 ERG</div>
+                        <div class="block-tx-count">Processing...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Separator with Swap Button -->
+            <div class="separator-container">
+                <button class="swap-button" id="swap-button" title="Swap sections">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 3l4 4-4 4"/>
+                        <path d="M20 7H4"/>
+                        <path d="M8 21l-4-4 4-4"/>
+                        <path d="M4 17h16"/>
+                    </svg>
+                </button>
+                <div class="separator"></div>
+            </div>
+
+            <!-- Last 4 Blocks Section (Default on Right) -->
+            <div class="last-blocks-section" id="last-blocks-section">
+                <h3 class="section-title">Last 4 Blocks</h3>
+                <div class="blocks-grid">
+                    <div class="block-container">
+                        <div class="block-height" id="block-height-0">Loading...</div>
+                        <div class="dummy-block" id="block-0">
+                            <div class="block-size">Loading...</div>
+                            <div class="block-reward">Loading...</div>
+                            <div class="block-tx-count">Loading...</div>
+                        </div>
+                        <div class="block-miner" id="block-miner-0">Loading...</div>
+                    </div>
+                    <div class="block-container">
+                        <div class="block-height" id="block-height-1">Loading...</div>
+                        <div class="dummy-block" id="block-1">
+                            <div class="block-size">Loading...</div>
+                            <div class="block-reward">Loading...</div>
+                            <div class="block-tx-count">Loading...</div>
+                        </div>
+                        <div class="block-miner" id="block-miner-1">Loading...</div>
+                    </div>
+                    <div class="block-container">
+                        <div class="block-height" id="block-height-2">Loading...</div>
+                        <div class="dummy-block" id="block-2">
+                            <div class="block-size">Loading...</div>
+                            <div class="block-reward">Loading...</div>
+                            <div class="block-tx-count">Loading...</div>
+                        </div>
+                        <div class="block-miner" id="block-miner-2">Loading...</div>
+                    </div>
+                    <div class="block-container">
+                        <div class="block-height" id="block-height-3">Loading...</div>
+                        <div class="dummy-block" id="block-3">
+                            <div class="block-size">Loading...</div>
+                            <div class="block-reward">Loading...</div>
+                            <div class="block-tx-count">Loading...</div>
+                        </div>
+                        <div class="block-miner" id="block-miner-3">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="visualizer">
+            <h2>Mempool Visualizer</h2>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-transactions">0</div>
+                    <div>Total Transactions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="total-value">0</div>
+                    <div>Total Value (ERG)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="total-usd-value">$0</div>
+                    <div>Total Value (USD)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avg-size">0</div>
+                    <div>Avg Size (bytes)</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-button active" id="color-by-size">Color by Size</button>
+                <button class="control-button" id="color-by-value">Color by Value</button>
+                <button class="control-button" id="refresh-data">Refresh Data</button>
+            </div>
+
+            <div class="mempool-grid" id="mempool-grid">
+                <div class="loading">Loading transactions...</div>
+            </div>
+        </main>
+
+        <footer class="transactions">
+            <h2>Recent Transactions</h2>
+            <table id="transaction-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Size (bytes)</th>
+                        <th>Value (ERG)</th>
+                        <th>Value ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4" class="loading">Loading...</td></tr>
+                </tbody>
+            </table>
+        </footer>
+    </div>
+
+    <div class="transaction-tooltip" id="tooltip"></div>
+
+    <script>
+        let transactions = [];
+        let colorMode = 'size';
+        let currentPrice = 0;
+
+        // Color palettes for different visualization modes
+        const sizeColors = [
+            '#27ae60', '#2ecc71', '#f1c40f', '#e67e22', '#e74c3c', '#8e44ad'
+        ];
+        
+        const valueColors = [
+            '#3498db', '#2980b9', '#9b59b6', '#8e44ad', '#e74c3c', '#c0392b'
+        ];
+
+        // Helper function to shorten transaction IDs
+        function shortenTransactionId(id, startChars = 5, endChars = 5) {
+            if (!id || id.length <= startChars + endChars + 3) {
+                return id; // Return original if too short
+            }
+            return `${id.substring(0, startChars)}...${id.substring(id.length - endChars)}`;
+        }
+
+        function getColorBySize(size, maxSize) {
+            const normalized = Math.min(size / maxSize, 1);
+            const index = Math.floor(normalized * (sizeColors.length - 1));
+            return sizeColors[index];
+        }
+
+        function getColorByValue(value, maxValue) {
+            const normalized = Math.min(value / maxValue, 1);
+            const index = Math.floor(normalized * (valueColors.length - 1));
+            return valueColors[index];
+        }
+
+        function getSquareSize(value, maxValue, minSize = 8, maxSizePixels = 24) {
+            const normalized = Math.min(value / maxValue, 1);
+            return Math.max(minSize, Math.floor(minSize + (maxSizePixels - minSize) * normalized));
+        }
+
+        function loadPrice() {
+            fetch('/get_price')
+                .then(response => response.json())
+                .then(data => {
+                    currentPrice = data.price;
+                    // Price loaded but not displayed in header
+                })
+                .catch(error => {
+                    console.error('Error fetching price:', error);
+                });
+        }
+
+        function createVisualization() {
+            const grid = document.getElementById('mempool-grid');
+            grid.innerHTML = '';
+
+            if (transactions.length === 0) {
+                grid.innerHTML = '<div class="loading">No transactions available</div>';
+                return;
+            }
+
+            const maxSize = Math.max(...transactions.map(tx => tx.size || 0));
+            const maxValue = Math.max(...transactions.map(tx => tx.value || 0));
+
+            // Limit to first 500 transactions for performance
+            const displayTransactions = transactions.slice(0, 500);
+
+            displayTransactions.forEach((tx, index) => {
+                const square = document.createElement('div');
+                square.className = 'transaction-square';
+                
+                const size = getSquareSize(colorMode === 'size' ? tx.size : tx.value, 
+                                         colorMode === 'size' ? maxSize : maxValue);
+                
+                const color = colorMode === 'size' 
+                    ? getColorBySize(tx.size || 0, maxSize)
+                    : getColorByValue(tx.value || 0, maxValue);
+
+                square.style.width = `${size}px`;
+                square.style.height = `${size}px`;
+                square.style.backgroundColor = color;
+                square.style.gridColumn = `span ${Math.max(1, Math.floor(size / 8))}`;
+                square.style.gridRow = `span ${Math.max(1, Math.floor(size / 8))}`;
+
+                // Add hover events for tooltip
+                square.addEventListener('mouseenter', (e) => {
+                    showTooltip(e, tx);
+                });
+
+                square.addEventListener('mouseleave', () => {
+                    hideTooltip();
+                });
+
+                square.addEventListener('click', () => {
+                    window.open(`https://sigmaspace.io/en/transaction/${tx.id}`, '_blank');
+                });
+
+                grid.appendChild(square);
+            });
+        }
+
+        function showTooltip(event, tx) {
+            const tooltip = document.getElementById('tooltip');
+            const usdValue = tx.usd_value || 0;
+            const shortId = shortenTransactionId(tx.id, 8, 8); // Use 8 chars for tooltip
+            tooltip.innerHTML = `
+                <strong>Transaction</strong><br>
+                ID: ${shortId}<br>
+                Size: ${tx.size || 'N/A'} bytes<br>
+                Value: ${(tx.value || 0).toFixed(4)} ERG<br>
+                Value: $${usdValue.toFixed(2)} USD
+            `;
+            tooltip.style.display = 'block';
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 10 + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+
+        function updateNextBlockInfo() {
+            if (transactions.length === 0) {
+                // Show default values when no transactions
+                document.getElementById('next-block-height').textContent = 'Mining...';
+                document.getElementById('next-block').innerHTML = `
+                    <div class="block-size">Pending</div>
+                    <div class="block-reward">15.00 ERG</div>
+                    <div class="block-tx-count">Processing...</div>
+                `;
+                return;
+            }
+
+            // Calculate mempool stats
+            const totalTransactions = transactions.length;
+            const totalSize = transactions.reduce((sum, tx) => sum + (tx.size || 0), 0);
+            
+            // Update next block display
+            document.getElementById('next-block-height').textContent = 'Mining...';
+            document.getElementById('next-block').innerHTML = `
+                <div class="block-size">${(totalSize / 1000000).toFixed(2)} MB</div>
+                <div class="block-reward">15.00 ERG</div>
+                <div class="block-tx-count">${totalTransactions.toLocaleString()} transactions</div>
+            `;
+        }
+
+        function updateStats() {
+            const totalTx = transactions.length;
+            const totalValue = transactions.reduce((sum, tx) => sum + (tx.value || 0), 0);
+            const totalUsdValue = transactions.reduce((sum, tx) => sum + (tx.usd_value || 0), 0);
+            const avgSize = totalTx > 0 ? Math.round(transactions.reduce((sum, tx) => sum + (tx.size || 0), 0) / totalTx) : 0;
+
+            document.getElementById('total-transactions').textContent = totalTx;
+            document.getElementById('total-value').textContent = totalValue.toFixed(2);
+            document.getElementById('total-usd-value').textContent = '$' + totalUsdValue.toFixed(2);
+            document.getElementById('avg-size').textContent = avgSize;
+        }
+
+        function loadTransactions() {
+            fetch('/get_transactions')
+                .then(response => response.json())
+                .then(data => {
+                    transactions = data;
+                    createVisualization();
+                    updateStats();
+                    updateNextBlockInfo();
+                    populateTransactionTable();
+                })
+                .catch(error => {
+                    console.error('Error fetching transactions:', error);
+                    document.getElementById('mempool-grid').innerHTML = 
+                        '<div class="loading">Error loading transactions</div>';
+                });
+        }
+
+        let previousBlockData = null;
+        let isNextBlockFirst = false; // Track current layout order
+
+        function animateBlockTransition(newBlocks) {
+            // Check if we have new block data and it's different from previous
+            if (!previousBlockData || !newBlocks || newBlocks.length === 0) {
+                previousBlockData = [...newBlocks]; // Create a copy
+                return false;
+            }
+
+            // Check if the first block (newest) has changed
+            const hasNewBlock = newBlocks[0] && previousBlockData[0] && 
+                              newBlocks[0].height !== previousBlockData[0].height;
+
+            console.log('Checking for new block:', {
+                newHeight: newBlocks[0]?.height,
+                previousHeight: previousBlockData[0]?.height,
+                hasNewBlock: hasNewBlock
+            });
+
+            if (hasNewBlock) {
+                console.log('New block detected, starting animation');
+                performBlockAnimation(newBlocks);
+                previousBlockData = [...newBlocks]; // Create a copy
+                return true;
+            }
+
+            previousBlockData = [...newBlocks]; // Create a copy
+            return false;
+        }
+
+        function performBlockAnimation(newBlocks) {
+            // Determine current layout
+            const blocksSection = document.querySelector('.blocks-section');
+            const isNextFirst = blocksSection.children[0].id === 'next-block-section';
+            
+            if (isNextFirst) {
+                // Next block is on left, animate it moving right
+                animateNextBlockToRight(newBlocks);
+            } else {
+                // Next block is on right, animate it moving left  
+                animateNextBlockToLeft(newBlocks);
+            }
+        }
+
+        function animateNextBlockToRight(newBlocks) {
+            const nextBlock = document.getElementById('next-block');
+            const nextBlockContainer = nextBlock.parentElement;
+            
+            // Get all Last 4 Block containers
+            const block0Container = document.getElementById('block-0').parentElement;
+            const block1Container = document.getElementById('block-1').parentElement;
+            const block2Container = document.getElementById('block-2').parentElement;
+            const block3Container = document.getElementById('block-3').parentElement;
+            
+            // Step 1: Animate next block moving right
+            nextBlockContainer.style.transform = 'translateX(400px)';
+            nextBlockContainer.style.transition = 'all 0.8s ease';
+            
+            // Step 2: Shift all Last 4 Blocks to the right
+            block0Container.style.transform = 'translateX(220px)'; // Move right to make room
+            block0Container.style.transition = 'all 0.8s ease';
+            
+            block1Container.style.transform = 'translateX(220px)';
+            block1Container.style.transition = 'all 0.8s ease';
+            
+            block2Container.style.transform = 'translateX(220px)';
+            block2Container.style.transition = 'all 0.8s ease';
+            
+            // Step 3: Last block (position 3) moves off screen
+            block3Container.style.transform = 'translateX(440px)';
+            block3Container.style.opacity = '0';
+            block3Container.style.transition = 'all 0.8s ease';
+            
+            // Step 4: After animation, update data
+            setTimeout(() => {
+                updateBlocksWithAnimation(newBlocks);
+                resetAllBlocks([nextBlockContainer, block0Container, block1Container, block2Container, block3Container]);
+            }, 800);
+        }
+
+        function animateNextBlockToLeft(newBlocks) {
+            const nextBlock = document.getElementById('next-block');
+            const nextBlockContainer = nextBlock.parentElement;
+            
+            // Get all Last 4 Block containers
+            const block0Container = document.getElementById('block-0').parentElement;
+            const block1Container = document.getElementById('block-1').parentElement;
+            const block2Container = document.getElementById('block-2').parentElement;
+            const block3Container = document.getElementById('block-3').parentElement;
+            
+            // Step 1: Animate next block moving left
+            nextBlockContainer.style.transform = 'translateX(-400px)';
+            nextBlockContainer.style.transition = 'all 0.8s ease';
+            
+            // Step 2: Shift all Last 4 Blocks to the left
+            block0Container.style.transform = 'translateX(-220px)'; // Move left to make room
+            block0Container.style.transition = 'all 0.8s ease';
+            
+            block1Container.style.transform = 'translateX(-220px)';
+            block1Container.style.transition = 'all 0.8s ease';
+            
+            block2Container.style.transform = 'translateX(-220px)';
+            block2Container.style.transition = 'all 0.8s ease';
+            
+            // Step 3: Last block (position 3) moves off screen
+            block3Container.style.transform = 'translateX(-440px)';
+            block3Container.style.opacity = '0';
+            block3Container.style.transition = 'all 0.8s ease';
+            
+            // Step 4: After animation, update data
+            setTimeout(() => {
+                updateBlocksWithAnimation(newBlocks);
+                resetAllBlocks([nextBlockContainer, block0Container, block1Container, block2Container, block3Container]);
+            }, 800);
+        }
+
+        function resetAllBlocks(containers) {
+            // Reset transforms for all containers
+            containers.forEach(container => {
+                container.style.transform = '';
+                container.style.transition = '';
+                container.style.opacity = '';
+            });
+            
+            // Update next block with new mempool data
+            updateNextBlockInfo();
+            
+            // Add fade-in animation to new next block
+            const nextBlockContainer = document.getElementById('next-block').parentElement;
+            nextBlockContainer.classList.add('block-fade-in');
+            setTimeout(() => {
+                nextBlockContainer.classList.remove('block-fade-in');
+            }, 600);
+        }
+
+        function calculateTimeAgo(timestamp) {
+            const now = Date.now();
+            const blockTime = timestamp; // Timestamp is already in milliseconds
+            const diffInMinutes = Math.floor((now - blockTime) / (1000 * 60));
+            
+            if (diffInMinutes < 1) {
+                return "< 1 min ago";
+            } else if (diffInMinutes === 1) {
+                return "1 min ago";
+            } else if (diffInMinutes < 60) {
+                return `${diffInMinutes} mins ago`;
+            } else {
+                const hours = Math.floor(diffInMinutes / 60);
+                const remainingMins = diffInMinutes % 60;
+                if (hours === 1) {
+                    return remainingMins > 0 ? `1h ${remainingMins}m ago` : "1h ago";
+                } else {
+                    return remainingMins > 0 ? `${hours}h ${remainingMins}m ago` : `${hours}h ago`;
+                }
+            }
+        }
+
+        function updateBlocksWithAnimation(blockLabels) {
+            blockLabels.forEach((block, i) => {
+                if (i < 4) {
+                    // Update block height (just the number now)
+                    const heightElement = document.getElementById(`block-height-${i}`);
+                    if (heightElement) {
+                        heightElement.textContent = block.height;
+                    }
+
+                    // Update block content with real data including timestamp
+                    const blockElement = document.getElementById(`block-${i}`);  
+                    if (blockElement) {
+                        // Change color from orange to purple when next block becomes mined
+                        blockElement.style.background = 'linear-gradient(135deg, #8e44ad, #9b59b6)';
+                        blockElement.style.border = '2px solid #7d3c98';
+                        blockElement.style.animation = 'none';
+                        
+                        let timeAgoText = '';
+                        if (block.timestamp) {
+                            timeAgoText = calculateTimeAgo(block.timestamp);
+                        }
+                        
+                        blockElement.innerHTML = `
+                            <div class="block-size">${(block.size / 1000000).toFixed(2)} MB</div>
+                            <div class="block-reward">${block.minerReward.toFixed(2)} ERG</div>
+                            <div class="block-tx-count">${block.transactionsCount.toLocaleString()} transactions</div>
+                            ${timeAgoText ? `<div class="block-time">${timeAgoText}</div>` : ''}
+                        `;
+                    }
+
+                    // Update miner name and logo
+                    const minerElement = document.getElementById(`block-miner-${i}`);
+                    if (minerElement && block.minerInfo) {
+                        const minerName = block.minerInfo.name || 'Unknown';
+                        const minerLogo = block.minerInfo.logo;
+                        
+                        if (minerLogo) {
+                            minerElement.innerHTML = `
+                                <img src="${minerLogo}" alt="${minerName}" class="miner-logo" onerror="this.style.display='none'">
+                                <span>${minerName}</span>
+                            `;
+                        } else {
+                            minerElement.innerHTML = `<span>${minerName}</span>`;
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadBlockLabels() {
+            fetch('/get_block_labels')
+                .then(response => response.json())
+                .then(blockLabels => {
+                    console.log('Block data received:', blockLabels); // Debug log
+                    
+                    // Check if we should animate
+                    const shouldAnimate = animateBlockTransition(blockLabels);
+                    
+                    if (!shouldAnimate) {
+                        // No animation needed, just update normally
+                        blockLabels.forEach((block, i) => {
+                            if (i < 4) {
+                                console.log(`Block ${i} timestamp:`, block.timestamp); // Debug log
+                                
+                                // Update block height (just the number now)
+                                const heightElement = document.getElementById(`block-height-${i}`);
+                                if (heightElement) {
+                                    heightElement.textContent = block.height;
+                                }
+
+                                // Update block content with real data including timestamp
+                                const blockElement = document.getElementById(`block-${i}`);
+                                if (blockElement) {
+                                    let timeAgoText = '';
+                                    if (block.timestamp) {
+                                        timeAgoText = calculateTimeAgo(block.timestamp);
+                                    } else {
+                                        console.log(`No timestamp for block ${i}`); // Debug log
+                                    }
+
+                                    blockElement.innerHTML = `
+                                        <div class="block-size">${(block.size / 1000000).toFixed(2)} MB</div>
+                                        <div class="block-reward">${block.minerReward.toFixed(2)} ERG</div>
+                                        <div class="block-tx-count">${block.transactionsCount.toLocaleString()} transactions</div>
+                                        ${timeAgoText ? `<div class="block-time">${timeAgoText}</div>` : ''}
+                                    `;
+                                }
+
+                                // Update miner name and logo
+                                const minerElement = document.getElementById(`block-miner-${i}`);
+                                if (minerElement && block.minerInfo) {
+                                    const minerName = block.minerInfo.name || 'Unknown';
+                                    const minerLogo = block.minerInfo.logo;
+                                    
+                                    if (minerLogo) {
+                                        minerElement.innerHTML = `
+                                            <img src="${minerLogo}" alt="${minerName}" class="miner-logo" onerror="this.style.display='none'">
+                                            <span>${minerName}</span>
+                                        `;
+                                    } else {
+                                        minerElement.innerHTML = `<span>${minerName}</span>`;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => console.error('Error fetching block labels:', error));
+        }
+
+        function populateTransactionTable() {
+            const tbody = document.querySelector('#transaction-table tbody');
+            tbody.innerHTML = '';
+
+            const displayTransactions = transactions.slice(0, 20); // Show first 20 in table
+
+            displayTransactions.forEach(tx => {
+                const usdValue = tx.usd_value || 0;
+                const shortId = shortenTransactionId(tx.id); // Shorten the ID for display
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><a href="https://sigmaspace.io/en/transaction/${tx.id}" target="_blank">${shortId}</a></td>
+                    <td>${tx.size || 'N/A'}</td>
+                    <td>${(tx.value || 0).toFixed(4)}</td>
+                    <td>${usdValue.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (displayTransactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="loading">No transactions available</td></tr>';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('color-by-size').addEventListener('click', function() {
+            colorMode = 'size';
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            createVisualization();
+        });
+
+        document.getElementById('color-by-value').addEventListener('click', function() {
+            colorMode = 'value';
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            createVisualization();
+        });
+
+        document.getElementById('refresh-data').addEventListener('click', function() {
+            this.textContent = 'Refreshing...';
+            loadTransactions();
+            loadBlockLabels();
+            loadPrice();
+            setTimeout(() => {
+                this.textContent = 'Refresh Data';
+            }, 1000);
+        });
+
+        // Swap button functionality
+        document.getElementById('swap-button').addEventListener('click', function() {
+            const blocksSection = document.querySelector('.blocks-section');
+            const lastBlocksSection = document.getElementById('last-blocks-section');
+            const nextBlockSection = document.getElementById('next-block-section');
+            const separatorContainer = document.querySelector('.separator-container');
+            
+            // Get current order
+            const isLastBlocksFirst = blocksSection.children[0].id === 'last-blocks-section';
+            
+            // Clear the blocks section
+            blocksSection.innerHTML = '';
+            
+            if (isLastBlocksFirst) {
+                // Current order: Last4, Separator, Next
+                // Change to: Next, Separator, Last4
+                blocksSection.appendChild(nextBlockSection);
+                blocksSection.appendChild(separatorContainer);
+                blocksSection.appendChild(lastBlocksSection);
+                isNextBlockFirst = true;
+            } else {
+                // Current order: Next, Separator, Last4
+                // Change to: Last4, Separator, Next
+                blocksSection.appendChild(lastBlocksSection);
+                blocksSection.appendChild(separatorContainer);
+                blocksSection.appendChild(nextBlockSection);
+                isNextBlockFirst = false;
+            }
+            
+            // Add rotation animation to button
+            this.style.transform = this.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPrice();
+            loadTransactions();
+            loadBlockLabels();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                loadTransactions();
+                loadBlockLabels();
+            }, 30000);
+
+            // Refresh price every 5 minutes
+            setInterval(() => {
+                loadPrice();
+            }, 300000);
+        });
+    </script>
+</body>
+</html>

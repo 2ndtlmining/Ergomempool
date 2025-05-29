@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>My Flask Application</h1>
+    <div class="container">
+        <header class="header">
+            <div class="logo">Dummy Logo</div>
+            <nav>
+                <button class="nav-button">Dashboard</button>
+                <button class="nav-button">Block</button>
+            </nav>
+            <!-- Connect button -->
+            <button id="connect-button" class="connect-button">Connect</button>
+        </header>
+
+        <div class="dummy-blocks">
+            <div class="dummy-block" data-label="Dummy Block 1"></div>
+            <div class="dummy-block" data-label="Dummy Block 2"></div> <!-- Placeholder for height label -->
+            <div class="dummy-block" data-label="Dummy Block 3"></div> <!-- Placeholder for length label -->
+            <div class="dummy-block" data-label="Dummy Block 4"></div> <!-- Placeholder for width label -->
+        </div>
+
+        <main class="visualizer">
+            <h2>Visualizer</h2>
+        </main>
+
+        <footer class="transactions">
+            <h2>List of Transactions</h2>
+            <table id="transaction-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Size</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Transactions will be listed here -->
+                </tbody>
+            </table>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/get_transactions')
+                .then(response => response.json())
+                .then(transactions => {
+                    const transactionTable = document.getElementById('transaction-table').getElementsByTagName('tbody')[0];
+                    transactions.forEach(tx => {
+                        const row = document.createElement('tr');
+                        let isFirstCell = true;
+                        Object.values(tx).forEach(value => {
+                            const cell = document.createElement('td');
+                            if (isFirstCell) {
+                                // Create a hyperlink for the ID
+                                const link = document.createElement('a');
+                                link.href = `https://sigmaspace.io/en/transaction/${value}`;
+                                link.textContent = value;
+                                link.target = "_blank";  // Open in new tab
+                                cell.appendChild(link);
+                                isFirstCell = false;
+                            } else {
+                                cell.textContent = value;
+                            }
+
+                            row.appendChild(cell);
+                        });
+                        transactionTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching transactions:', error));
+
+            // Fetch block labels from get_blocks function
+            fetch('/get_block_labels')
+                .then(response => response.json())
+                .then(blockLabels => {
+                    const dummyBlocks = document.querySelectorAll('.dummy-block');
+                    for (let i = 0; i < dummyBlocks.length && i < blockLabels.length; i++) { // Ensure we don't go out of bounds
+                        const labelElement = dummyBlocks[i];
+                        if (labelElement) {
+                            const size = blockLabels[i].size;
+                            const value = blockLabels[i].minerReward;
+                            const transactionsCount = blockLabels[i].transactionsCount;
+
+                            labelElement.setAttribute('data-label', 'Block ' + blockLabels[i].height);
+                            labelElement.setAttribute('title', `Size: ${size}, Value: ${value}, Transactions: ${transactionsCount}`);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching block labels:', error));
+
+        });
+    </script>
+</body>
+</html>

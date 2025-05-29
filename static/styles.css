@@ -1,0 +1,467 @@
+/* Dark Mode Default */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.header {
+    background-color: #34495e;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* New blocks section layout */
+.blocks-section {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    background-color: #2c3e50;
+    justify-content: center;
+    gap: 30px;
+}
+
+.next-block-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.last-blocks-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.blocks-grid {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.section-title {
+    color: #3498db;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Separator container with swap button */
+.separator-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.swap-button {
+    background-color: #3498db;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.swap-button:hover {
+    background-color: #2980b9;
+    transform: scale(1.1);
+}
+
+.swap-button svg {
+    transition: transform 0.3s ease;
+    width: 12px;
+    height: 12px;
+}
+
+/* Dotted line separator */
+.separator {
+    width: 2px;
+    height: 180px;
+    background: repeating-linear-gradient(
+        to bottom,
+        #7f8c8d 0px,
+        #7f8c8d 5px,
+        transparent 5px,
+        transparent 10px
+    );
+}
+
+.block-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.block-height {
+    color: #3498db;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.block-time {
+    font-size: 11px;
+    color: #95a5a6;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* New miner name styling */
+.block-miner {
+    font-size: 12px;
+    color: #e67e22;
+    margin-top: 6px;
+    text-align: center;
+    font-weight: bold;
+    max-width: 180px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.miner-logo {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    border-radius: 2px;
+}
+
+.dummy-block {
+    position: relative;
+    width: 180px;
+    height: 120px;
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    border: 2px solid #7d3c98;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dummy-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Style for the next block to differentiate it */
+.next-block {
+    background: linear-gradient(135deg, #e67e22, #f39c12);
+    border: 2px solid #d68910;
+}
+
+.block-size {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ecf0f1;
+    margin-bottom: 8px;
+}
+
+.block-reward {
+    font-size: 14px;
+    color: #f39c12;
+    margin-bottom: 8px;
+}
+
+.block-tx-count {
+    font-size: 12px;
+    color: #bdc3c7;
+    margin-bottom: 4px;
+}
+
+.visualizer {
+    flex: 1;
+    background-color: #34495e;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 400px;
+}
+
+.visualizer h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.mempool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8px, 1fr));
+    gap: 2px;
+    background-color: #2c3e50;
+    padding: 15px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 800px;
+    height: 300px;
+    overflow: hidden;
+    border: 2px solid #34495e;
+}
+
+.transaction-square {
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    position: relative;
+    margin: 1px;
+    box-shadow: 0 0 0 1px rgba(44, 62, 80, 0.3);
+}
+
+.transaction-square:hover {
+    transform: scale(1.1);
+    z-index: 100;
+    border: 1px solid #fff;
+}
+
+.transaction-tooltip {
+    position: absolute;
+    background-color: #2c3e50;
+    border: 1px solid #34495e;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #ecf0f1;
+    pointer-events: none;
+    z-index: 1000;
+    white-space: nowrap;
+    display: none;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.control-button {
+    padding: 8px 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.control-button:hover {
+    background-color: #2980b9;
+}
+
+.control-button.active {
+    background-color: #e74c3c;
+}
+
+.transactions {
+    background-color: #2c3e50;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.nav-button, .connect-button {
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+.nav-button:hover, .connect-button:hover {
+    background-color: #2980b9;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #5a6774;
+}
+
+th {
+    background-color: #34495e;
+}
+
+/* Style for USD values in table */
+td:last-child {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.loading {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+    font-size: 14px;
+    gap: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    min-width: 100px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3498db;
+}
+
+/* Special styling for USD stat */
+.stat-item:nth-child(3) .stat-value {
+    color: #f39c12;
+}
+
+/* Fade-in animation for new blocks */
+.block-fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1024px) {
+    .blocks-grid {
+        flex-wrap: wrap;
+        gap: 15px;
+        max-width: 800px;
+    }
+    
+    .stats {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .blocks-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .separator-container {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .swap-button {
+        margin-bottom: 0;
+        margin-right: 10px;
+    }
+    
+    .separator {
+        width: 60%;
+        height: 2px;
+        background: repeating-linear-gradient(
+            to right,
+            #7f8c8d 0px,
+            #7f8c8d 5px,
+            transparent 5px,
+            transparent 10px
+        );
+    }
+    
+    .blocks-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .dummy-block {
+        width: 150px;
+        height: 100px;
+    }
+    
+    .block-miner {
+        font-size: 11px;
+        max-width: 150px;
+        gap: 4px;
+    }
+    
+    .miner-logo {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .logo {
+        font-size: 20px;
+    }
+    
+    .stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    /* Make table responsive */
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 6px 4px;
+    }
+}
