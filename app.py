@@ -121,4 +121,4 @@ def get_current_price():
     return jsonify({"price": price, "currency": "USD"})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
