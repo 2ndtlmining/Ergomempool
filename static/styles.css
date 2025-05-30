@@ -66,45 +66,20 @@ body, html {
     text-align: center;
 }
 
-/* Separator container with swap button */
+/* Separator container */
 .separator-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
+    justify-content: flex-start;
+    padding-top: 0;
 }
 
-.swap-button {
-    background-color: #3498db;
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: white;
-    transition: all 0.3s ease;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.swap-button:hover {
-    background-color: #2980b9;
-    transform: scale(1.1);
-}
-
-.swap-button svg {
-    transition: transform 0.3s ease;
-    width: 12px;
-    height: 12px;
-}
-
-/* Dotted line separator */
+/* Dotted line separator - adjusted height to match block sections */
 .separator {
     width: 2px;
-    height: 180px;
+    height: 240px; /* Increased to fully cover from title to bottom of miner logos */
     background: repeating-linear-gradient(
         to bottom,
         #7f8c8d 0px,
@@ -112,6 +87,7 @@ body, html {
         transparent 5px,
         transparent 10px
     );
+    margin-top: 0; /* Align with the top of section titles */
 }
 
 .block-container {
@@ -301,6 +277,48 @@ body, html {
     overflow-y: auto;
 }
 
+/* Footer styling */
+.footer {
+    background-color: #34495e;
+    padding: 15px 20px;
+    text-align: center;
+    border-top: 1px solid #5a6774;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #bdc3c7;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.github-link:hover {
+    color: #ecf0f1;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.github-link svg {
+    transition: transform 0.3s ease;
+}
+
+.github-link:hover svg {
+    transform: scale(1.1);
+}
+
 .nav-button, .connect-button {
     padding: 10px 20px;
     cursor: pointer;
@@ -408,11 +426,6 @@ td:last-child {
         justify-content: center;
     }
     
-    .swap-button {
-        margin-bottom: 0;
-        margin-right: 10px;
-    }
-    
     .separator {
         width: 60%;
         height: 2px;
@@ -463,5 +476,20 @@ td:last-child {
     
     th, td {
         padding: 6px 4px;
+    }
+    
+    /* Footer responsive */
+    .footer {
+        padding: 12px 15px;
+    }
+    
+    .github-link {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+    
+    .github-link svg {
+        width: 20px;
+        height: 20px;
     }
 }

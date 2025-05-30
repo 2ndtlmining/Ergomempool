@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ergo Mempool Visualizer</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -14,7 +15,7 @@
         </header>
 
         <div class="blocks-section">
-            <!-- Next Block Section (Default on Left) -->
+            <!-- Next Block Section -->
             <div class="next-block-section" id="next-block-section">
                 <h3 class="section-title">Next Block</h3>
                 <div class="block-container">
@@ -27,20 +28,12 @@
                 </div>
             </div>
 
-            <!-- Separator with Swap Button -->
+            <!-- Separator -->
             <div class="separator-container">
-                <button class="swap-button" id="swap-button" title="Swap sections">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M16 3l4 4-4 4"/>
-                        <path d="M20 7H4"/>
-                        <path d="M8 21l-4-4 4-4"/>
-                        <path d="M4 17h16"/>
-                    </svg>
-                </button>
                 <div class="separator"></div>
             </div>
 
-            <!-- Last 4 Blocks Section (Default on Right) -->
+            <!-- Last 4 Blocks Section -->
             <div class="last-blocks-section" id="last-blocks-section">
                 <h3 class="section-title">Last 4 Blocks</h3>
                 <div class="blocks-grid">
@@ -117,7 +110,7 @@
             </div>
         </main>
 
-        <footer class="transactions">
+        <section class="transactions">
             <h2>Recent Transactions</h2>
             <table id="transaction-table">
                 <thead>
@@ -132,6 +125,17 @@
                     <tr><td colspan="4" class="loading">Loading...</td></tr>
                 </tbody>
             </table>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <a href="https://github.com/2ndtlmining/Ergomempool" target="_blank" rel="noopener noreferrer" class="github-link" title="View source code on GitHub">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>v.0.0.1</span>
+                </a>
+            </div>
         </footer>
     </div>
 
@@ -312,7 +316,6 @@
         }
 
         let previousBlockData = null;
-        let isNextBlockFirst = false; // Track current layout order
 
         function animateBlockTransition(newBlocks) {
             // Check if we have new block data and it's different from previous
@@ -343,17 +346,8 @@
         }
 
         function performBlockAnimation(newBlocks) {
-            // Determine current layout
-            const blocksSection = document.querySelector('.blocks-section');
-            const isNextFirst = blocksSection.children[0].id === 'next-block-section';
-            
-            if (isNextFirst) {
-                // Next block is on left, animate it moving right
-                animateNextBlockToRight(newBlocks);
-            } else {
-                // Next block is on right, animate it moving left  
-                animateNextBlockToLeft(newBlocks);
-            }
+            // Animate next block moving right (simplified to one direction)
+            animateNextBlockToRight(newBlocks);
         }
 
         function animateNextBlockToRight(newBlocks) {
@@ -382,42 +376,6 @@
             
             // Step 3: Last block (position 3) moves off screen
             block3Container.style.transform = 'translateX(440px)';
-            block3Container.style.opacity = '0';
-            block3Container.style.transition = 'all 0.8s ease';
-            
-            // Step 4: After animation, update data
-            setTimeout(() => {
-                updateBlocksWithAnimation(newBlocks);
-                resetAllBlocks([nextBlockContainer, block0Container, block1Container, block2Container, block3Container]);
-            }, 800);
-        }
-
-        function animateNextBlockToLeft(newBlocks) {
-            const nextBlock = document.getElementById('next-block');
-            const nextBlockContainer = nextBlock.parentElement;
-            
-            // Get all Last 4 Block containers
-            const block0Container = document.getElementById('block-0').parentElement;
-            const block1Container = document.getElementById('block-1').parentElement;
-            const block2Container = document.getElementById('block-2').parentElement;
-            const block3Container = document.getElementById('block-3').parentElement;
-            
-            // Step 1: Animate next block moving left
-            nextBlockContainer.style.transform = 'translateX(-400px)';
-            nextBlockContainer.style.transition = 'all 0.8s ease';
-            
-            // Step 2: Shift all Last 4 Blocks to the left
-            block0Container.style.transform = 'translateX(-220px)'; // Move left to make room
-            block0Container.style.transition = 'all 0.8s ease';
-            
-            block1Container.style.transform = 'translateX(-220px)';
-            block1Container.style.transition = 'all 0.8s ease';
-            
-            block2Container.style.transform = 'translateX(-220px)';
-            block2Container.style.transition = 'all 0.8s ease';
-            
-            // Step 3: Last block (position 3) moves off screen
-            block3Container.style.transform = 'translateX(-440px)';
             block3Container.style.opacity = '0';
             block3Container.style.transition = 'all 0.8s ease';
             
@@ -626,39 +584,6 @@
             setTimeout(() => {
                 this.textContent = 'Refresh Data';
             }, 1000);
-        });
-
-        // Swap button functionality
-        document.getElementById('swap-button').addEventListener('click', function() {
-            const blocksSection = document.querySelector('.blocks-section');
-            const lastBlocksSection = document.getElementById('last-blocks-section');
-            const nextBlockSection = document.getElementById('next-block-section');
-            const separatorContainer = document.querySelector('.separator-container');
-            
-            // Get current order
-            const isLastBlocksFirst = blocksSection.children[0].id === 'last-blocks-section';
-            
-            // Clear the blocks section
-            blocksSection.innerHTML = '';
-            
-            if (isLastBlocksFirst) {
-                // Current order: Last4, Separator, Next
-                // Change to: Next, Separator, Last4
-                blocksSection.appendChild(nextBlockSection);
-                blocksSection.appendChild(separatorContainer);
-                blocksSection.appendChild(lastBlocksSection);
-                isNextBlockFirst = true;
-            } else {
-                // Current order: Next, Separator, Last4
-                // Change to: Last4, Separator, Next
-                blocksSection.appendChild(lastBlocksSection);
-                blocksSection.appendChild(separatorContainer);
-                blocksSection.appendChild(nextBlockSection);
-                isNextBlockFirst = false;
-            }
-            
-            // Add rotation animation to button
-            this.style.transform = this.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
         });
 
         // Initial load
