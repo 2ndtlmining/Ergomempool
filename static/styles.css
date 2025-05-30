@@ -458,10 +458,15 @@ td:last-child {
 }
 
 /* Connect button - HIDDEN state when wallet is connected */
+button#connect-button.wallet-connected-hidden,
 .connect-button.wallet-connected-hidden {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 /* Wallet info display */

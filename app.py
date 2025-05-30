@@ -93,6 +93,15 @@ def transactions():
         else:
             tx['usd_value'] = 0
     
+    # Optional: Debug logging to verify address data is present
+    if txs and len(txs) > 0:
+        sample_tx = txs[0]
+        print(f"Debug: Sample transaction has {len(sample_tx.get('inputs', []))} inputs and {len(sample_tx.get('outputs', []))} outputs")
+        if sample_tx.get('inputs'):
+            print(f"Debug: First input address: {sample_tx['inputs'][0].get('address', 'N/A')[:20]}...")
+        if sample_tx.get('outputs'):
+            print(f"Debug: First output address: {sample_tx['outputs'][0].get('address', 'N/A')[:20]}...")
+    
     return jsonify(txs)
 
 @app.route('/get_block_labels', methods=['GET'])

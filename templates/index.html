@@ -273,6 +273,30 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Wallet transaction highlighting styles */
+        @keyframes walletGlow {
+            from { 
+                box-shadow: 0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6), 0 0 45px rgba(243, 156, 18, 0.3);
+                transform: scale(1);
+            }
+            to { 
+                box-shadow: 0 0 20px rgba(243, 156, 18, 1), 0 0 40px rgba(243, 156, 18, 0.8), 0 0 60px rgba(243, 156, 18, 0.4);
+                transform: scale(1.05);
+            }
+        }
+
+        .wallet-transaction {
+            position: relative;
+        }
+
+        .wallet-transaction-row {
+            transition: all 0.3s ease;
+        }
+
+        .wallet-transaction-row:hover {
+            background-color: rgba(243, 156, 18, 0.2) !important;
+        }
+
         /* Wallet status notification */
         .wallet-status {
             position: fixed;
@@ -343,6 +367,7 @@
             constructor() {
                 this.connectedWallet = null;
                 this.isConnected = false;
+                this.connectedAddress = null; // NEW: Store wallet address for transaction matching
             }
 
             async detectWallets() {
@@ -382,6 +407,8 @@
                         if (access) {
                             this.connectedWallet = { name: selectedWallet.name };
                             this.isConnected = true;
+                            // Store wallet address for transaction matching
+                            this.connectedAddress = await this.getAddress();
                             return this.connectedWallet;
                         }
                     } else {
@@ -391,6 +418,8 @@
                         if (access) {
                             this.connectedWallet = { name: wallet.name };
                             this.isConnected = true;
+                            // Store wallet address for transaction matching
+                            this.connectedAddress = await this.getAddress();
                             return this.connectedWallet;
                         }
                     }
@@ -491,6 +520,7 @@
             disconnect() {
                 this.connectedWallet = null;
                 this.isConnected = false;
+                this.connectedAddress = null; // Clear stored address
                 // Clear the ergo object reference
                 if (window.ergo) {
                     // Note: We can't actually remove the ergo object, but we mark as disconnected
@@ -583,6 +613,23 @@
             walletSection.appendChild(walletInfoDiv);
         }
 
+        // Helper function to check if transaction involves connected wallet
+        function isWalletTransaction(transaction, walletAddress) {
+            if (!walletAddress || !transaction) return false;
+            
+            // Check if wallet address appears in inputs
+            const inputMatch = transaction.inputs && transaction.inputs.some(input => 
+                input.address === walletAddress
+            );
+            
+            // Check if wallet address appears in outputs  
+            const outputMatch = transaction.outputs && transaction.outputs.some(output => 
+                output.address === walletAddress
+            );
+            
+            return inputMatch || outputMatch;
+        }
+
         // Helper function to shorten transaction IDs
         function shortenTransactionId(id, startChars = 5, endChars = 5) {
             if (!id || id.length <= startChars + endChars + 3) {
@@ -652,6 +699,21 @@
                 square.style.gridColumn = `span ${Math.max(1, Math.floor(size / 8))}`;
                 square.style.gridRow = `span ${Math.max(1, Math.floor(size / 8))}`;
 
+                // Check if this transaction involves the connected wallet
+                if (walletConnector.isConnected && walletConnector.connectedAddress) {
+                    if (isWalletTransaction(tx, walletConnector.connectedAddress)) {
+                        square.classList.add('wallet-transaction');
+                        // Enhanced gold glow effect - much larger and more prominent
+                        square.style.border = '3px solid #f39c12';
+                        square.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6), 0 0 45px rgba(243, 156, 18, 0.3)';
+                        square.style.zIndex = '10';
+                        square.style.position = 'relative';
+                        
+                        // Add subtle pulsing animation
+                        square.style.animation = 'walletGlow 2s ease-in-out infinite alternate';
+                    }
+                }
+
                 // Add hover events for tooltip
                 square.addEventListener('mouseenter', (e) => {
                     showTooltip(e, tx);
@@ -673,12 +735,24 @@
             const tooltip = document.getElementById('tooltip');
             const usdValue = tx.usd_value || 0;
             const shortId = shortenTransactionId(tx.id, 8, 8); // Use 8 chars for tooltip
+            
+            // Check if this is a wallet transaction
+            const isWalletTx = walletConnector.isConnected && walletConnector.connectedAddress && 
+                              isWalletTransaction(tx, walletConnector.connectedAddress);
+            
+            let walletInfo = '';
+            if (isWalletTx) {
+                // Options: 💰 🔥 ⭐ 💎 🎯 ⚡ 🌟 👑 🔸 🟡 🔶 🟠
+                walletInfo = '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🌟 Your Wallet Transaction</div>';
+            }
+            
             tooltip.innerHTML = `
+                ${walletInfo}
                 <strong>Transaction</strong><br>
                 ID: ${shortId}<br>
                 Size: ${tx.size || 'N/A'} bytes<br>
                 Value: ${(tx.value || 0).toFixed(4)} ERG<br>
-                Value: $${usdValue.toFixed(2)} USD
+                Value: ${usdValue.toFixed(2)} USD
             `;
             tooltip.style.display = 'block';
             tooltip.style.left = event.pageX + 10 + 'px';
@@ -986,9 +1060,23 @@
             displayTransactions.forEach(tx => {
                 const usdValue = tx.usd_value || 0;
                 const shortId = shortenTransactionId(tx.id); // Shorten the ID for display
+                
+                // Check if this is a wallet transaction
+                const isWalletTx = walletConnector.isConnected && walletConnector.connectedAddress && 
+                                  isWalletTransaction(tx, walletConnector.connectedAddress);
+                
                 const row = document.createElement('tr');
+                if (isWalletTx) {
+                    row.classList.add('wallet-transaction-row');
+                    row.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
+                    row.style.borderLeft = '3px solid #f39c12';
+                }
+                
                 row.innerHTML = `
-                    <td><a href="https://sigmaspace.io/en/transaction/${tx.id}" target="_blank">${shortId}</a></td>
+                    <td>
+                        ${isWalletTx ? '<span style="color: #f39c12; margin-right: 4px;">🌟</span>' : ''}
+                        <a href="https://sigmaspace.io/en/transaction/${tx.id}" target="_blank">${shortId}</a>
+                    </td>
                     <td>${tx.size || 'N/A'}</td>
                     <td>${(tx.value || 0).toFixed(4)}</td>
                     <td>${usdValue.toFixed(2)}</td>
