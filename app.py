@@ -106,7 +106,8 @@ def block_labels():
                 "minerReward": block['minerReward'],
                 "transactionsCount": block['transactionsCount'],
                 "timestamp": block['timestamp'],
-                "minerInfo": get_miner_info(block['miner'])
+                "minerInfo": get_miner_info(block['miner']),
+                "id": block['id'],
             }
             for block in blocks
         ]
