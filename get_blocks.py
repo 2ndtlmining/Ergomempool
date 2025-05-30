@@ -17,6 +17,7 @@ def get_block_details():
                 "minerReward": block["minerReward"] / 1_000_000_000,
                 "timestamp": block["timestamp"],
                 "miner": block ["miner"]["name"],
+                "id": block["id"],
             }
             blocks_info.append(block_info)
 

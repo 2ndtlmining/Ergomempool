@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ergo Mempool Visualizer</title>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <header class="header">
             <div class="logo">Ergo Mempool Visualizer</div>
-            <button id="connect-button" class="connect-button">Connect</button>
+            <div class="wallet-section">
+                <button id="connect-button" class="connect-button">
+                    <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+                    Connect Wallet
+                </button>
+            </div>
         </header>
 
         <div class="blocks-section">
@@ -38,7 +42,9 @@
                 <h3 class="section-title">Last 4 Blocks</h3>
                 <div class="blocks-grid">
                     <div class="block-container">
-                        <div class="block-height" id="block-height-0">Loading...</div>
+                        <a href="#" class="block-height-link" id="block-height-link-0" target="_blank">
+                            <div class="block-height" id="block-height-0">Loading...</div>
+                        </a>
                         <div class="dummy-block" id="block-0">
                             <div class="block-size">Loading...</div>
                             <div class="block-reward">Loading...</div>
@@ -47,7 +53,9 @@
                         <div class="block-miner" id="block-miner-0">Loading...</div>
                     </div>
                     <div class="block-container">
-                        <div class="block-height" id="block-height-1">Loading...</div>
+                        <a href="#" class="block-height-link" id="block-height-link-1" target="_blank">
+                            <div class="block-height" id="block-height-1">Loading...</div>
+                        </a>
                         <div class="dummy-block" id="block-1">
                             <div class="block-size">Loading...</div>
                             <div class="block-reward">Loading...</div>
@@ -56,7 +64,9 @@
                         <div class="block-miner" id="block-miner-1">Loading...</div>
                     </div>
                     <div class="block-container">
-                        <div class="block-height" id="block-height-2">Loading...</div>
+                        <a href="#" class="block-height-link" id="block-height-link-2" target="_blank">
+                            <div class="block-height" id="block-height-2">Loading...</div>
+                        </a>
                         <div class="dummy-block" id="block-2">
                             <div class="block-size">Loading...</div>
                             <div class="block-reward">Loading...</div>
@@ -65,7 +75,9 @@
                         <div class="block-miner" id="block-miner-2">Loading...</div>
                     </div>
                     <div class="block-container">
-                        <div class="block-height" id="block-height-3">Loading...</div>
+                        <a href="#" class="block-height-link" id="block-height-link-3" target="_blank">
+                            <div class="block-height" id="block-height-3">Loading...</div>
+                        </a>
                         <div class="dummy-block" id="block-3">
                             <div class="block-size">Loading...</div>
                             <div class="block-reward">Loading...</div>
@@ -141,6 +153,177 @@
 
     <div class="transaction-tooltip" id="tooltip"></div>
 
+    <style>
+        .block-height-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .block-height-link:hover {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        .block-height-link:visited {
+            color: inherit;
+        }
+
+        /* Wallet integration styles */
+        .wallet-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .connect-button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .connect-button .wallet-icon {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            margin-right: 2px;
+        }
+
+        .connect-button:hover .wallet-icon {
+            transform: scale(1.1);
+        }
+        
+        .wallet-info-display {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            min-width: 200px;
+            animation: fadeIn 0.3s ease-in;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+        }
+
+        .wallet-info-display:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+        }
+
+        .wallet-info-display.expanded {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .wallet-content {
+            transition: opacity 0.3s ease;
+        }
+
+        .wallet-disconnect {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .disconnect-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            width: 100%;
+        }
+
+        .disconnect-btn:hover {
+            background: #c0392b;
+        }
+        
+        .wallet-info-display strong {
+            color: #27ae60;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .wallet-info-display .balance {
+            opacity: 0.9;
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .wallet-info-display .address {
+            opacity: 0.7;
+            font-family: monospace;
+            font-size: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Wallet status notification */
+        .wallet-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            transform: translateX(100%);
+        }
+
+        .wallet-status.show {
+            transform: translateX(0);
+        }
+
+        .wallet-status.success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        
+        .wallet-status.error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
+        
+        .wallet-status.info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border: 1px solid #bee5eb; 
+        }
+
+        /* Responsive wallet info */
+        @media (max-width: 768px) {
+            .wallet-info-display {
+                margin-left: 10px;
+                min-width: 150px;
+                font-size: 11px;
+            }
+            
+            .connect-button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+
     <script>
         let transactions = [];
         let colorMode = 'size';
@@ -154,6 +337,251 @@
         const valueColors = [
             '#3498db', '#2980b9', '#9b59b6', '#8e44ad', '#e74c3c', '#c0392b'
         ];
+
+        // Ergo Wallet Connector Class
+        class ErgoWalletConnector {
+            constructor() {
+                this.connectedWallet = null;
+                this.isConnected = false;
+            }
+
+            async detectWallets() {
+                const wallets = [];
+                
+                if (window.ergoConnector) {
+                    if (window.ergoConnector.nautilus) {
+                        wallets.push({ name: 'Nautilus', api: window.ergoConnector.nautilus });
+                    }
+                    if (window.ergoConnector.eternl) {
+                        wallets.push({ name: 'Eternl', api: window.ergoConnector.eternl });
+                    }
+                    if (window.ergoConnector.minotaur) {
+                        wallets.push({ name: 'Minotaur', api: window.ergoConnector.minotaur });
+                    }
+                }
+                
+                return wallets;
+            }
+
+            async connectWallet() {
+                try {
+                    const wallets = await this.detectWallets();
+                    
+                    if (wallets.length === 0) {
+                        throw new Error('No Ergo wallets detected. Please install Nautilus, Eternl, or Minotaur wallet.');
+                    }
+
+                    // If multiple wallets, show selection modal
+                    if (wallets.length > 1) {
+                        const selectedWallet = await this.showWalletSelectionModal(wallets);
+                        if (!selectedWallet) {
+                            throw new Error('No wallet selected');
+                        }
+                        
+                        const access = await selectedWallet.api.connect();
+                        if (access) {
+                            this.connectedWallet = { name: selectedWallet.name };
+                            this.isConnected = true;
+                            return this.connectedWallet;
+                        }
+                    } else {
+                        // Single wallet, connect directly
+                        const wallet = wallets[0];
+                        const access = await wallet.api.connect();
+                        if (access) {
+                            this.connectedWallet = { name: wallet.name };
+                            this.isConnected = true;
+                            return this.connectedWallet;
+                        }
+                    }
+                    
+                    throw new Error('Failed to connect to wallet');
+                    
+                } catch (error) {
+                    throw error;
+                }
+            }
+
+            showWalletSelectionModal(wallets) {
+                return new Promise((resolve) => {
+                    // Create modal overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'wallet-modal-overlay';
+                    
+                    // Create modal content
+                    const modal = document.createElement('div');
+                    modal.className = 'wallet-modal';
+                    modal.innerHTML = `
+                        <div class="wallet-modal-header">
+                            <h3>Select Wallet</h3>
+                            <button class="modal-close">&times;</button>
+                        </div>
+                        <div class="wallet-modal-content">
+                            <p>Choose which wallet you'd like to connect:</p>
+                            <div class="wallet-options">
+                                ${wallets.map(wallet => `
+                                    <button class="wallet-option" data-wallet="${wallet.name}">
+                                        <img src="/static/wallet/ergo-wallet-white.png" alt="${wallet.name}" class="wallet-option-icon">
+                                        <span>${wallet.name}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    
+                    // Add event listeners
+                    const closeModal = () => {
+                        document.body.removeChild(overlay);
+                        resolve(null);
+                    };
+                    
+                    overlay.querySelector('.modal-close').addEventListener('click', closeModal);
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) closeModal();
+                    });
+                    
+                    // Handle wallet selection
+                    overlay.querySelectorAll('.wallet-option').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const walletName = button.getAttribute('data-wallet');
+                            const selectedWallet = wallets.find(w => w.name === walletName);
+                            document.body.removeChild(overlay);
+                            resolve(selectedWallet);
+                        });
+                    });
+                    
+                    // Show modal with animation
+                    setTimeout(() => {
+                        overlay.classList.add('show');
+                    }, 10);
+                });
+            }
+
+            async getBalance() {
+                if (!this.isConnected) {
+                    throw new Error('Wallet not connected');
+                }
+
+                try {
+                    // Use the global ergo object that gets injected after connection
+                    const balance = await window.ergo.get_balance();
+                    return (parseInt(balance) / 1000000000).toFixed(3); // Convert from nanoERG to ERG
+                } catch (error) {
+                    throw new Error('Failed to get balance: ' + error.message);
+                }
+            }
+
+            async getAddress() {
+                if (!this.isConnected) {
+                    throw new Error('Wallet not connected');
+                }
+
+                try {
+                    // Use the global ergo object that gets injected after connection
+                    const address = await window.ergo.get_change_address();
+                    return address || 'No address found';
+                } catch (error) {
+                    throw new Error('Failed to get address: ' + error.message);
+                }
+            }
+
+            disconnect() {
+                this.connectedWallet = null;
+                this.isConnected = false;
+                // Clear the ergo object reference
+                if (window.ergo) {
+                    // Note: We can't actually remove the ergo object, but we mark as disconnected
+                    console.log('Wallet disconnected');
+                }
+            }
+        }
+
+        // Initialize wallet connector
+        const walletConnector = new ErgoWalletConnector();
+
+        // Helper functions for wallet integration
+        function showWalletStatus(message, type = 'info') {
+            // Remove existing status
+            const existingStatus = document.querySelector('.wallet-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `wallet-status ${type}`;
+            statusDiv.textContent = message;
+            document.body.appendChild(statusDiv);
+            
+            // Show with animation
+            setTimeout(() => statusDiv.classList.add('show'), 100);
+            
+            // Hide after 4 seconds
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+                setTimeout(() => statusDiv.remove(), 300);
+            }, 4000);
+        }
+
+        function showWalletInfo(info) {
+            // Remove any existing wallet info
+            const existingInfo = document.querySelector('.wallet-info-display');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+
+            if (!info) return;
+
+            // Create wallet info display that's clickable
+            const walletInfoDiv = document.createElement('div');
+            walletInfoDiv.className = 'wallet-info-display';
+            walletInfoDiv.innerHTML = `
+                <div class="wallet-content">
+                    <strong>${info.name} Connected</strong>
+                    <div class="balance">Balance: ${info.balance} ERG</div>
+                    <div class="address">${info.address.substring(0, 20)}...</div>
+                </div>
+                <div class="wallet-disconnect" style="display: none;">
+                    <button class="disconnect-btn">Disconnect</button>
+                </div>
+            `;
+
+            // Add click functionality to toggle disconnect option
+            walletInfoDiv.addEventListener('click', function(e) {
+                if (e.target.classList.contains('disconnect-btn')) {
+                    // Handle disconnect
+                    walletConnector.disconnect();
+                    document.getElementById('connect-button').innerHTML = `
+                        <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+                        Connect Wallet
+                    `;
+                    document.getElementById('connect-button').classList.remove('connected');
+                    showWalletInfo(null);
+                    showWalletStatus('Wallet disconnected', 'info');
+                    return;
+                }
+
+                // Toggle disconnect option
+                const disconnectDiv = this.querySelector('.wallet-disconnect');
+                const content = this.querySelector('.wallet-content');
+                
+                if (disconnectDiv.style.display === 'none') {
+                    disconnectDiv.style.display = 'block';
+                    content.style.opacity = '0.7';
+                    this.classList.add('expanded');
+                } else {
+                    disconnectDiv.style.display = 'none';
+                    content.style.opacity = '1';
+                    this.classList.remove('expanded');
+                }
+            });
+
+            // Insert in wallet section (next to the button)
+            const walletSection = document.querySelector('.wallet-section');
+            walletSection.appendChild(walletInfoDiv);
+        }
 
         // Helper function to shorten transaction IDs
         function shortenTransactionId(id, startChars = 5, endChars = 5) {
@@ -436,6 +864,12 @@
                         heightElement.textContent = block.height;
                     }
 
+                    // Update block height link
+                    const heightLinkElement = document.getElementById(`block-height-link-${i}`);
+                    if (heightLinkElement && block.id) {
+                        heightLinkElement.href = `https://sigmaspace.io/en/block/${block.id}`;
+                    }
+
                     // Update block content with real data including timestamp
                     const blockElement = document.getElementById(`block-${i}`);  
                     if (blockElement) {
@@ -495,6 +929,12 @@
                                 const heightElement = document.getElementById(`block-height-${i}`);
                                 if (heightElement) {
                                     heightElement.textContent = block.height;
+                                }
+
+                                // Update block height link
+                                const heightLinkElement = document.getElementById(`block-height-link-${i}`);
+                                if (heightLinkElement && block.id) {
+                                    heightLinkElement.href = `https://sigmaspace.io/en/block/${block.id}`;
                                 }
 
                                 // Update block content with real data including timestamp
@@ -586,8 +1026,86 @@
             }, 1000);
         });
 
-        // Initial load
+        // Wallet connection event listener - INTEGRATED INTO EXISTING CONNECT BUTTON
         document.addEventListener('DOMContentLoaded', function() {
+            const connectButton = document.getElementById('connect-button');
+            
+            // Wallet connection functionality
+            connectButton.addEventListener('click', async function() {
+                if (walletConnector.isConnected) {
+                    // Disconnect wallet
+                    walletConnector.disconnect();
+                    this.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
+                            <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                        </svg>
+                        <span class="button-text">Connect Wallet</span>
+                    `;
+                    this.classList.remove('connected');
+                    showWalletInfo(null);
+                    showWalletStatus('Wallet disconnected', 'info');
+                } else {
+                    // Connect wallet
+                    try {
+                        this.innerHTML = `
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
+                                <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                            </svg>
+                            <span class="button-text">Connecting...</span>
+                        `;
+                        this.disabled = true;
+                        
+                        showWalletStatus('Connecting to wallet...', 'info');
+                        
+                        const wallet = await walletConnector.connectWallet();
+                        const address = await walletConnector.getAddress();
+                        const balance = await walletConnector.getBalance();
+                        
+                        this.innerHTML = `
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
+                                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                            </svg>
+                            <span class="button-text">Disconnect</span>
+                        `;
+                        this.classList.add('connected');
+                        
+                        showWalletInfo({
+                            name: wallet.name,
+                            address: address,
+                            balance: balance
+                        });
+                        
+                        showWalletStatus(`Successfully connected to ${wallet.name}!`, 'success');
+                        
+                    } catch (error) {
+                        showWalletStatus('Failed to connect: ' + error.message, 'error');
+                        console.error('Wallet connection error:', error);
+                    } finally {
+                        this.disabled = false;
+                        if (!walletConnector.isConnected) {
+                            this.innerHTML = `
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
+                                    <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                                </svg>
+                                <span class="button-text">Connect Wallet</span>
+                            `;
+                        }
+                    }
+                }
+            });
+
+            // Check for wallet availability on page load
+            setTimeout(async () => {
+                const wallets = await walletConnector.detectWallets();
+                if (wallets.length === 0) {
+                    connectButton.title = 'No Ergo wallets detected. Please install Nautilus, Eternl, or Minotaur.';
+                    connectButton.style.opacity = '0.7';
+                } else {
+                    connectButton.title = `Connect to your Ergo wallet (${wallets.map(w => w.name).join(', ')} detected)`;
+                }
+            }, 1000);
+
+            // Initialize app data loading
             loadPrice();
             loadTransactions();
             loadBlockLabels();
