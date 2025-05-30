@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ergo Mempool Visualizer</title>
+    <title>Ergomempool</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -29,7 +30,10 @@
                     <div class="block-height" id="next-block-height">Mining...</div>
                     <div class="dummy-block next-block" id="next-block">
                         <div class="block-size">Pending</div>
-                        <div class="block-reward">15.00 ERG</div>
+                        <div class="block-reward">
+                            <span class="reward-label">Est. Reward</span>
+                            <span class="reward-value">~15.00 ERG</span>
+                        </div>
                         <div class="block-tx-count">Processing...</div>
                     </div>
                 </div>
@@ -50,7 +54,10 @@
                         </a>
                         <div class="dummy-block" id="block-0">
                             <div class="block-size">Loading...</div>
-                            <div class="block-reward">Loading...</div>
+                            <div class="block-reward">
+                                <span class="reward-label">Total Reward</span>
+                                <span class="reward-value">Loading...</span>
+                            </div>
                             <div class="block-tx-count">Loading...</div>
                         </div>
                         <div class="block-miner" id="block-miner-0">Loading...</div>
@@ -61,7 +68,10 @@
                         </a>
                         <div class="dummy-block" id="block-1">
                             <div class="block-size">Loading...</div>
-                            <div class="block-reward">Loading...</div>
+                            <div class="block-reward">
+                                <span class="reward-label">Total Reward</span>
+                                <span class="reward-value">Loading...</span>
+                            </div>
                             <div class="block-tx-count">Loading...</div>
                         </div>
                         <div class="block-miner" id="block-miner-1">Loading...</div>
@@ -72,7 +82,10 @@
                         </a>
                         <div class="dummy-block" id="block-2">
                             <div class="block-size">Loading...</div>
-                            <div class="block-reward">Loading...</div>
+                            <div class="block-reward">
+                                <span class="reward-label">Total Reward</span>
+                                <span class="reward-value">Loading...</span>
+                            </div>
                             <div class="block-tx-count">Loading...</div>
                         </div>
                         <div class="block-miner" id="block-miner-2">Loading...</div>
@@ -83,7 +96,10 @@
                         </a>
                         <div class="dummy-block" id="block-3">
                             <div class="block-size">Loading...</div>
-                            <div class="block-reward">Loading...</div>
+                            <div class="block-reward">
+                                <span class="reward-label">Total Reward</span>
+                                <span class="reward-value">Loading...</span>
+                            </div>
                             <div class="block-tx-count">Loading...</div>
                         </div>
                         <div class="block-miner" id="block-miner-3">Loading...</div>
@@ -772,7 +788,10 @@
                 document.getElementById('next-block-height').textContent = 'Mining...';
                 document.getElementById('next-block').innerHTML = `
                     <div class="block-size">Pending</div>
-                    <div class="block-reward">15.00 ERG</div>
+                    <div class="block-reward">
+                        <span class="reward-label">Est. Reward</span>
+                        <span class="reward-value" id="next-block-reward">~15.00 ERG</span>
+                    </div>
                     <div class="block-tx-count">Processing...</div>
                 `;
                 return;
@@ -786,9 +805,20 @@
             document.getElementById('next-block-height').textContent = 'Mining...';
             document.getElementById('next-block').innerHTML = `
                 <div class="block-size">${(totalSize / 1000000).toFixed(2)} MB</div>
-                <div class="block-reward">15.00 ERG</div>
+                <div class="block-reward">
+                    <span class="reward-label">Est. Reward</span>
+                    <span class="reward-value" id="next-block-reward">~15.00 ERG</span>
+                </div>
                 <div class="block-tx-count">${totalTransactions.toLocaleString()} transactions</div>
             `;
+        }
+
+        // New function to update the next block reward when we get block data
+        function updateNextBlockReward(baseMinerReward) {
+            const rewardElement = document.getElementById('next-block-reward');
+            if (rewardElement && baseMinerReward) {
+                rewardElement.textContent = `~${baseMinerReward.toFixed(2)} ERG`;
+            }
         }
 
         function updateStats() {
@@ -960,9 +990,17 @@
                             timeAgoText = calculateTimeAgo(block.timestamp);
                         }
                         
+                        // Enhanced block display with better formatting
                         blockElement.innerHTML = `
                             <div class="block-size">${(block.size / 1000000).toFixed(2)} MB</div>
-                            <div class="block-reward">${block.minerReward.toFixed(2)} ERG</div>
+                            <div class="block-reward">
+                                <span class="reward-label">Total Reward</span>
+                                <span class="reward-value">${block.minerReward.toFixed(3)} ERG</span>
+                                ${block.totalFees && block.totalFees > 0 ? 
+                                    `<span class="fees-breakdown">${block.totalFees.toFixed(3)} fees</span>` : 
+                                    ''
+                                }
+                            </div>
                             <div class="block-tx-count">${block.transactionsCount.toLocaleString()} transactions</div>
                             ${timeAgoText ? `<div class="block-time">${timeAgoText}</div>` : ''}
                         `;
@@ -992,6 +1030,11 @@
                 .then(response => response.json())
                 .then(blockLabels => {
                     console.log('Block data received:', blockLabels); // Debug log
+                    
+                    // Update next block reward estimate with the base miner reward from the most recent block
+                    if (blockLabels && blockLabels.length > 0 && blockLabels[0].baseMinerReward) {
+                        updateNextBlockReward(blockLabels[0].baseMinerReward);
+                    }
                     
                     // Check if we should animate
                     const shouldAnimate = animateBlockTransition(blockLabels);
@@ -1024,9 +1067,17 @@
                                         console.log(`No timestamp for block ${i}`); // Debug log
                                     }
 
+                                    // Enhanced block display with better formatting
                                     blockElement.innerHTML = `
                                         <div class="block-size">${(block.size / 1000000).toFixed(2)} MB</div>
-                                        <div class="block-reward">${block.minerReward.toFixed(2)} ERG</div>
+                                        <div class="block-reward">
+                                            <span class="reward-label">Total Reward</span>
+                                            <span class="reward-value">${block.minerReward.toFixed(3)} ERG</span>
+                                            ${block.totalFees && block.totalFees > 0 ? 
+                                                `<span class="fees-breakdown">${block.totalFees.toFixed(3)} fees</span>` : 
+                                                ''
+                                            }
+                                        </div>
                                         <div class="block-tx-count">${block.transactionsCount.toLocaleString()} transactions</div>
                                         ${timeAgoText ? `<div class="block-time">${timeAgoText}</div>` : ''}
                                     `;
@@ -1127,10 +1178,8 @@
                     // Disconnect wallet
                     walletConnector.disconnect();
                     this.innerHTML = `
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
-                            <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                        </svg>
-                        <span class="button-text">Connect Wallet</span>
+                        <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+                        Connect Wallet
                     `;
                     this.classList.remove('connected');
                     showWalletInfo(null);
@@ -1139,10 +1188,8 @@
                     // Connect wallet
                     try {
                         this.innerHTML = `
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
-                                <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                            </svg>
-                            <span class="button-text">Connecting...</span>
+                            <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+                            Connecting...
                         `;
                         this.disabled = true;
                         
@@ -1153,10 +1200,8 @@
                         const balance = await walletConnector.getBalance();
                         
                         this.innerHTML = `
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
-                                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
-                            </svg>
-                            <span class="button-text">Disconnect</span>
+                            <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+                            Disconnect
                         `;
                         this.classList.add('connected');
                         
@@ -1175,10 +1220,8 @@
                         this.disabled = false;
                         if (!walletConnector.isConnected) {
                             this.innerHTML = `
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="wallet-icon">
-                                    <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                                </svg>
-                                <span class="button-text">Connect Wallet</span>
+                                <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+                                Connect Wallet
                             `;
                         }
                     }

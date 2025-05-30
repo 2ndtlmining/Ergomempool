@@ -112,7 +112,9 @@ def block_labels():
             {
                 "height": block['height'],
                 "size": block['size'],
-                "minerReward": block['minerReward'],
+                "minerReward": block['totalBlockValue'],  # Changed: Use totalBlockValue instead of minerReward
+                "baseMinerReward": block['minerReward'],  # New: Base reward for reference
+                "totalFees": block['totalFees'],  # New: Fees component 
                 "transactionsCount": block['transactionsCount'],
                 "timestamp": block['timestamp'],
                 "minerInfo": get_miner_info(block['miner']),
