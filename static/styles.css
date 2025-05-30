@@ -481,241 +481,138 @@ button#connect-button.wallet-connected-hidden,
     border: 1px solid #bee5eb; 
 }
 
-/* ============================================ */
-/* RESPONSIVE DESIGN */
-/* ============================================ */
-
-/* Responsive design for smaller screens */
-@media (max-width: 1024px) {
-    .blocks-grid {
-        flex-wrap: wrap;
-        gap: 15px;
-        max-width: 800px;
+/* Wallet transaction highlighting styles */
+@keyframes walletGlow {
+    from { 
+        box-shadow: 0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6), 0 0 45px rgba(243, 156, 18, 0.3);
+        transform: scale(1);
     }
-    
-    .stats {
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    
-    .wallet-info-display {
-        min-width: 180px;
-        font-size: 11px;
+    to { 
+        box-shadow: 0 0 20px rgba(243, 156, 18, 1), 0 0 40px rgba(243, 156, 18, 0.8), 0 0 60px rgba(243, 156, 18, 0.4);
+        transform: scale(1.05);
     }
 }
 
-@media (max-width: 768px) {
-    .header {
-        padding: 10px 15px; /* Even smaller on mobile */
-    }
-    
-    .logo-image {
-        height: 80px; /* Smaller on mobile */
-    }
-    
-    .blocks-section {
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .separator-container {
-        flex-direction: row;
-        align-items: center;
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .separator {
-        width: 60%;
-        height: 2px;
-        background: repeating-linear-gradient(
-            to right,
-            #7f8c8d 0px,
-            #7f8c8d 5px,
-            transparent 5px,
-            transparent 10px
-        );
-    }
-    
-    .blocks-grid {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-    }
-    
-    .dummy-block {
-        width: 150px;
-        height: 100px;
-    }
-    
-    .block-miner {
-        font-size: 11px;
-        max-width: 150px;
-        gap: 4px;
-    }
-    
-    .miner-logo {
-        width: 14px;
-        height: 14px;
-    }
-    
-    .logo {
-        font-size: 20px;
-    }
-    
-    .logo-text {
-        font-size: 18px;
-    }
-    
-    .stats {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    /* Make table responsive */
-    table {
-        font-size: 12px;
-    }
-    
-    th, td {
-        padding: 6px 4px;
-    }
-    
-    /* Footer responsive */
-    .footer {
-        padding: 12px 15px;
-    }
-    
-    .github-link {
-        font-size: 13px;
-        padding: 6px 10px;
-    }
-    
-    .github-link svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    /* Wallet responsive styles */
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    
-    .wallet-section {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    
-    .wallet-info-display {
-        width: 100%;
-        min-width: auto;
-        font-size: 11px;
-    }
-    
-    .connect-button {
-        width: 100%;
-        justify-content: center;
-        font-size: 14px;
-        padding: 8px 16px;
-    }
-    
-    .wallet-status {
-        top: 60px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-        font-size: 12px;
-    }
-    
-    /* Responsive block reward styling */
-    .reward-label {
-        font-size: 9px;
-    }
-    
-    .reward-value {
-        font-size: 12px;
-    }
-    
-    .fees-breakdown {
-        font-size: 8px;
-    }
+.wallet-transaction {
+    position: relative;
 }
 
-@media (max-width: 480px) {
-    .header {
-        padding: 8px 15px; /* Very compact on small screens */
-    }
-    
-    .logo {
-        font-size: 18px;
-    }
-    
-    .logo-image {
-        height: 60px; /* Even smaller on very small screens */
-    }
-    
-    .logo-text {
-        font-size: 16px;
-    }
-    
-    .wallet-section {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-    
-    .wallet-info-display {
-        font-size: 10px;
-        width: 100%;
-        min-width: auto;
-    }
-    
-    .connect-button {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .wallet-status {
-        left: 10px;
-        right: 10px;
-        max-width: none;
-        top: 50px;
-    }
-    
-    .blocks-section {
-        padding: 15px;
-    }
-    
-    .visualizer {
-        padding: 15px;
-    }
-    
-    .mempool-grid {
-        height: 250px;
-    }
-    
-    .transactions {
-        padding: 15px;
-    }
-    
-    /* Very small screen block reward styling */
-    .reward-label {
-        font-size: 8px;
-    }
-    
-    .reward-value {
-        font-size: 11px;
-    }
-    
-    .fees-breakdown {
-        font-size: 7px;
-    }
-} LOGO STYLES */
+.wallet-transaction-row {
+    transition: all 0.3s ease;
+}
+
+.wallet-transaction-row:hover {
+    background-color: rgba(243, 156, 18, 0.2) !important;
+}
+
+/* Wallet modal styles */
+.wallet-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.wallet-modal-overlay.show {
+    opacity: 1;
+}
+
+.wallet-modal {
+    background: #34495e;
+    border-radius: 8px;
+    padding: 0;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid #5a6774;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.wallet-modal-overlay.show .wallet-modal {
+    transform: scale(1);
+}
+
+.wallet-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #5a6774;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wallet-modal-header h3 {
+    margin: 0;
+    color: #ecf0f1;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #bdc3c7;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #ecf0f1;
+}
+
+.wallet-modal-content {
+    padding: 20px;
+}
+
+.wallet-modal-content p {
+    color: #bdc3c7;
+    margin-bottom: 20px;
+}
+
+.wallet-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.wallet-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #2c3e50;
+    border: 1px solid #5a6774;
+    border-radius: 6px;
+    color: #ecf0f1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.wallet-option:hover {
+    background: #3498db;
+    border-color: #2980b9;
+}
+
+.wallet-option-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ============================================ */
+/* LOGO STYLES */
 /* ============================================ */
 .logo {
     display: flex;
@@ -887,4 +784,234 @@ button#connect-button.wallet-connected-hidden,
 }
 
 /* ============================================ */
-/*
+/* RESPONSIVE DESIGN */
+/* ============================================ */
+
+/* Responsive design for smaller screens */
+@media (max-width: 1024px) {
+    .blocks-grid {
+        flex-wrap: wrap;
+        gap: 15px;
+        max-width: 800px;
+    }
+    
+    .stats {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .wallet-info-display {
+        min-width: 180px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 10px 15px; /* Even smaller on mobile */
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .logo-image {
+        height: 80px; /* Smaller on mobile */
+    }
+    
+    .blocks-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .separator-container {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .separator {
+        width: 60%;
+        height: 2px;
+        background: repeating-linear-gradient(
+            to right,
+            #7f8c8d 0px,
+            #7f8c8d 5px,
+            transparent 5px,
+            transparent 10px
+        );
+    }
+    
+    .blocks-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .dummy-block {
+        width: 150px;
+        height: 100px;
+    }
+    
+    .block-miner {
+        font-size: 11px;
+        max-width: 150px;
+        gap: 4px;
+    }
+    
+    .miner-logo {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .logo {
+        font-size: 20px;
+    }
+    
+    .logo-text {
+        font-size: 18px;
+    }
+    
+    .stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    /* Make table responsive */
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 6px 4px;
+    }
+    
+    /* Footer responsive */
+    .footer {
+        padding: 12px 15px;
+    }
+    
+    .github-link {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+    
+    .github-link svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    /* Wallet responsive styles */
+    .wallet-section {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .wallet-info-display {
+        width: 100%;
+        min-width: auto;
+        font-size: 11px;
+    }
+    
+    .connect-button {
+        width: 100%;
+        justify-content: center;
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+    
+    .wallet-status {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        font-size: 12px;
+    }
+    
+    /* Responsive block reward styling */
+    .reward-label {
+        font-size: 9px;
+    }
+    
+    .reward-value {
+        font-size: 12px;
+    }
+    
+    .fees-breakdown {
+        font-size: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 8px 15px; /* Very compact on small screens */
+    }
+    
+    .logo {
+        font-size: 18px;
+    }
+    
+    .logo-image {
+        height: 60px; /* Even smaller on very small screens */
+    }
+    
+    .logo-text {
+        font-size: 16px;
+    }
+    
+    .wallet-section {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .wallet-info-display {
+        font-size: 10px;
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .connect-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .wallet-status {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        top: 50px;
+    }
+    
+    .blocks-section {
+        padding: 15px;
+    }
+    
+    .visualizer {
+        padding: 15px;
+    }
+    
+    .mempool-grid {
+        height: 250px;
+    }
+    
+    .transactions {
+        padding: 15px;
+    }
+    
+    /* Very small screen block reward styling */
+    .reward-label {
+        font-size: 8px;
+    }
+    
+    .reward-value {
+        font-size: 11px;
+    }
+    
+    .fees-breakdown {
+        font-size: 7px;
+    }
+}
