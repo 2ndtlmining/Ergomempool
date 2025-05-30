@@ -16,13 +16,13 @@ body, html {
 
 .header {
     background-color: #34495e;
-    padding: 12px 20px; /* Reduced from 20px to 12px for top/bottom */
+    padding: 10px 10px; /* Reduced from 20px to 12px for top/bottom */
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 0px;
 }
 
 /* ============================================ */
