@@ -2,8 +2,14 @@ import requests
 #put the limit as a start to 99999 and see how we go. Doubt it will be more than that for a while 
 def get_unconfirmed_transactions(limit=99999, offset=0, sort_by="size", sort_direction="desc"):
     url = "https://api.ergoplatform.com/transactions/unconfirmed"
-
-    response = requests.get(url)
+        # Add parameters to the API call
+    params = {
+        'limit': limit,
+        'offset': offset,
+        'sortBy': sort_by,
+        'sortDirection': sort_direction
+    }
+    response = requests.get(url, params=params)
 
     if response.status_code == 200:
         transactions = response.json()

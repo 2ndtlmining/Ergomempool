@@ -25,9 +25,32 @@ body, html {
     gap: 10px;
 }
 
+/* ============================================ */
+/* LOGO STYLES */
+/* ============================================ */
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-size: 24px;
     font-weight: bold;
+}
+
+.logo-image {
+    height: 180px;
+    width: auto;
+    background: transparent;
+    opacity: 1;
+    transition: transform 0.2s ease;
+}
+
+.logo-image:hover {
+    transform: scale(1.05);
+}
+
+.logo-text {
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 /* New blocks section layout */
@@ -660,6 +683,14 @@ button#connect-button.wallet-connected-hidden,
         font-size: 20px;
     }
     
+    .logo-image {
+        height: 48px;
+    }
+    
+    .logo-text {
+        font-size: 18px;
+    }
+    
     .stats {
         flex-direction: column;
         gap: 10px;
@@ -732,6 +763,14 @@ button#connect-button.wallet-connected-hidden,
     
     .logo {
         font-size: 18px;
+    }
+    
+    .logo-image {
+        height: 42px;
+    }
+    
+    .logo-text {
+        font-size: 16px;
     }
     
     .wallet-section {
