@@ -309,12 +309,6 @@ async function processTestTransaction(testAmount, recipientAddress) {
         // Success!
         showTestStatus(`Test transaction successful! TX: ${txId.substring(0, 16)}...`, 'success');
         
-        setTimeout(() => {
-            if (confirm(`Test transaction sent successfully!\n\nTransaction ID: ${txId}\n\nWould you like to view it in the blockchain explorer?`)) {
-                window.open(`https://explorer.ergoplatform.com/en/transactions/${txId}`, '_blank');
-            }
-        }, 2000);
-        
         return txId;
 
     } catch (error) {
