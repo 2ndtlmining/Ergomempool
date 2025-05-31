@@ -61,6 +61,9 @@ function initializeApplication() {
     initializeVisualizationControls();
     initializeRefreshButton();
     
+    // Initialize donation functionality (will auto-setup when DOM ready)
+    // initializeDonation() is called automatically in donation.js
+    
     // Start data loading
     initializeDataLoading();
     

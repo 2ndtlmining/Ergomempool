@@ -1198,3 +1198,76 @@ button#connect-button.wallet-connected-hidden,
         font-size: 7px;
     }
 }
+/* ============================================ */
+/* PRESENTATION LINK STYLING */
+/* ============================================ */
+
+.presentation-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #3498db; /* Blue theme to differentiate from donation button */
+    text-decoration: none;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.presentation-link:hover {
+    color: #fff;
+    background-color: rgba(52, 152, 219, 0.2);
+    border-color: rgba(52, 152, 219, 0.4);
+    transform: translateY(-1px);
+}
+
+.presentation-link svg {
+    transition: all 0.3s ease;
+    fill: #3498db;
+}
+
+.presentation-link:hover svg {
+    transform: scale(1.2) rotate(5deg);
+    fill: #5dade2;
+    filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.6));
+}
+
+/* Slide animation for presentation icon */
+@keyframes slideIn {
+    0% { transform: translateX(-5px); }
+    50% { transform: translateX(2px); }
+    100% { transform: translateX(0); }
+}
+
+.presentation-link:hover svg {
+    animation: slideIn 0.4s ease-out;
+}
+
+/* Responsive updates for presentation link */
+@media (max-width: 768px) {
+    .presentation-link {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+    
+    .presentation-link svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-content {
+        gap: 8px;
+    }
+    
+    .presentation-link {
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+    
+    .presentation-link span {
+        display: none; /* Hide text on very small screens, show only icon */
+    }
+}

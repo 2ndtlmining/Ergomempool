@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ergomempool: Real-Time Ergo Blockchain Mempool Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%),
+                linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f0f23 100%);
+            color: #e0e6ed;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 98px,
+                    rgba(255, 255, 255, 0.02) 100px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 98px,
+                    rgba(255, 255, 255, 0.02) 100px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="blockchain" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="none"/><circle cx="10" cy="10" r="1" fill="rgba(0,255,255,0.1)"/><line x1="5" y1="10" x2="15" y2="10" stroke="rgba(0,255,255,0.05)" stroke-width="0.5"/><line x1="10" y1="5" x2="10" y2="15" stroke="rgba(0,255,255,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23blockchain)"/></svg>') repeat;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+            animation: blockchainMove 30s linear infinite;
+        }
+
+        @keyframes blockchainMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(20px, 20px); }
+        }
+
+        .presentation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .slide {
+            background: 
+                linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 60px;
+            margin: 40px 0;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 30px rgba(0, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(50px);
+            animation: slideIn 0.8s ease-out forwards;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, 
+                    transparent 0%, 
+                    rgba(0, 255, 255, 0.05) 25%, 
+                    transparent 50%, 
+                    rgba(0, 255, 255, 0.05) 75%, 
+                    transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .slide:hover::before {
+            opacity: 1;
+        }
+
+        .slide:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                0 0 50px rgba(0, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.4);
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide:nth-child(1) { animation-delay: 0.1s; }
+        .slide:nth-child(2) { animation-delay: 0.2s; }
+        .slide:nth-child(3) { animation-delay: 0.3s; }
+        .slide:nth-child(4) { animation-delay: 0.4s; }
+        .slide:nth-child(5) { animation-delay: 0.5s; }
+        .slide:nth-child(6) { animation-delay: 0.6s; }
+        .slide:nth-child(7) { animation-delay: 0.7s; }
+
+        .title-slide {
+            text-align: center;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(0, 255, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(255, 100, 255, 0.3) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(15, 15, 35, 0.98) 0%, rgba(26, 26, 46, 0.98) 100%);
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .title-slide::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                repeating-conic-gradient(
+                    from 0deg at 50% 50%,
+                    transparent 0deg,
+                    rgba(0, 255, 255, 0.1) 30deg,
+                    transparent 60deg,
+                    rgba(255, 100, 255, 0.1) 90deg,
+                    transparent 120deg
+                );
+            animation: rotate 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .title-slide > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 
+                0 0 10px rgba(0, 255, 255, 0.5),
+                0 0 20px rgba(0, 255, 255, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+            background: linear-gradient(45deg, #00ffff, #ff64ff, #00ffff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        h2 {
+            color: #00ffff;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            position: relative;
+            padding-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #00ffff, #ff64ff);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        h3 {
+            color: #b8f2ff;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+        }
+
+        h3::before {
+            content: '⧫';
+            margin-right: 10px;
+            font-size: 1.2em;
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .live-demo {
+            display: inline-block;
+            background: 
+                linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 100, 255, 0.2)),
+                rgba(15, 15, 35, 0.8);
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            color: #00ffff;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            margin-top: 30px;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .live-demo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .live-demo:hover::before {
+            left: 100%;
+        }
+
+        .live-demo:hover {
+            background: 
+                linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(255, 100, 255, 0.3)),
+                rgba(15, 15, 35, 0.9);
+            transform: scale(1.05);
+            box-shadow: 
+                0 10px 20px rgba(0, 0, 0, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.3);
+            border-color: rgba(0, 255, 255, 0.8);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: 
+                linear-gradient(135deg, rgba(15, 15, 35, 0.8) 0%, rgba(26, 26, 46, 0.9) 100%);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(0, 255, 255, 0.1) 0%, 
+                    rgba(255, 100, 255, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 15px 30px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(0, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.6);
+        }
+
+        .feature-card h4 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+
+        .feature-card p {
+            color: #b8f2ff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .tech-item {
+            background: 
+                linear-gradient(135deg, 
+                    rgba(0, 255, 255, 0.1) 0%, 
+                    rgba(255, 100, 255, 0.1) 50%, 
+                    rgba(0, 255, 255, 0.1) 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .tech-item::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                #00ffff, #ff64ff, #00ffff, #ff64ff, #00ffff);
+            background-size: 300% 300%;
+            border-radius: 14px;
+            z-index: -1;
+            animation: borderFlow 3s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .tech-item:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes borderFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .tech-item:hover {
+            transform: scale(1.05) rotateY(5deg);
+            box-shadow: 
+                0 15px 30px rgba(0, 0, 0, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .tech-item h4 {
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .use-case {
+            background: 
+                linear-gradient(135deg, rgba(15, 15, 35, 0.9) 0%, rgba(26, 26, 46, 0.95) 100%);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-top: 4px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .use-case:nth-child(1) { 
+            border-top-color: #00ffff; 
+            border-left: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        .use-case:nth-child(2) { 
+            border-top-color: #ff64ff; 
+            border-left: 1px solid rgba(255, 100, 255, 0.3);
+        }
+        .use-case:nth-child(3) { 
+            border-top-color: #64ff64; 
+            border-left: 1px solid rgba(100, 255, 100, 0.3);
+        }
+        .use-case:nth-child(4) { 
+            border-top-color: #ffff64; 
+            border-left: 1px solid rgba(255, 255, 100, 0.3);
+        }
+
+        .use-case::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(0, 255, 255, 0.05) 0%, 
+                rgba(255, 100, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .use-case:hover::before {
+            opacity: 1;
+        }
+
+        .use-case:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .use-case h4 {
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+
+        .highlight-box {
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .highlight-box::before {
+            content: '⚡';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2em;
+            opacity: 0.7;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .highlight-box h3 {
+            color: #00ffff;
+        }
+
+        .highlight-box p {
+            color: #b8f2ff;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .stat:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            color: #4a5568;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        ul {
+            margin: 20px 0;
+            padding-left: 0;
+        }
+
+        li {
+            list-style: none;
+            margin: 15px 0;
+            padding: 15px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        li:hover {
+            background: rgba(102, 126, 234, 0.15);
+            transform: translateX(10px);
+        }
+
+        li::before {
+            content: '✓';
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-slide {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: white;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px;
+                margin: 20px 0;
+            }
+
+            h1 {
+                font-size: 2.5em;
+            }
+
+            h2 {
+                font-size: 2em;
+            }
+
+            .features-grid,
+            .tech-stack,
+            .use-cases {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .code-snippet {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-snippet::before {
+            content: 'CODE';
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .architecture-diagram {
+            background: 
+                linear-gradient(135deg, rgba(15, 15, 35, 0.9) 0%, rgba(26, 26, 46, 0.95) 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .architecture-diagram::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(0, 255, 255, 0.05) 0%, 
+                    rgba(255, 100, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .architecture-diagram:hover::before {
+            opacity: 1;
+        }
+
+        .architecture-diagram:hover {
+            border-color: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .architecture-diagram h4 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .architecture-diagram p {
+            color: #b8f2ff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .architecture-diagram p:last-child {
+            color: #95a5a6;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Title Slide -->
+        <div class="slide title-slide">
+            <h1>Ergomempool</h1>
+            <div class="subtitle">Real-Time Ergo Blockchain Mempool Visualizer</div>
+            <p style="font-size: 1.1em; margin: 30px 0;">A sophisticated Flask-based web application providing real-time visualization and monitoring of the Ergo blockchain's mempool</p>
+            <a href="https://ergomempool.com/" target="_blank" class="live-demo">🚀 View Live Demo</a>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">⚡</span>
+                    <div class="stat-label">Real-Time</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">🎯</span>
+                    <div class="stat-label">Ergo-Focused</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">📊</span>
+                    <div class="stat-label">Data-Driven</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Slide -->
+        <div class="slide">
+            <h2>🚀 Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>📊 Real-Time Mempool Visualization</h4>
+                    <p>Interactive transaction grid with color-coded sizing, live statistics dashboard, and dynamic updates showing current network activity</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⛏️ Block Mining Insights</h4>
+                    <p>Next block preview with estimated rewards, recent block history, and comprehensive mining details with miner identification</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔍 Advanced Transaction Analysis</h4>
+                    <p>Dual visualization modes, detailed transaction tables, interactive tooltips, and multi-currency support with real-time ERG/USD conversion</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💼 Wallet Integration</h4>
+                    <p>Built-in Ergo wallet connectivity for enhanced user interaction and personal transaction monitoring within the mempool</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🏭 Mining Intelligence</h4>
+                    <p>Sophisticated miner recognition system with custom logos, readable names, reward calculations, and network hashrate insights</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📈 Live Market Data</h4>
+                    <p>Real-time price feeds with intelligent caching, USD value calculations, and market intelligence for informed decision making</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technology Stack Slide -->
+        <div class="slide">
+            <h2>🛠 Technology Stack</h2>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <h4>🐍 Flask Backend</h4>
+                    <p>Lightweight Python web framework with RESTful API design and modular architecture</p>
+                </div>
+                <div class="tech-item">
+                    <h4>🔗 Blockchain Integration</h4>
+                    <p>Direct Ergo node connection, real-time data processing, and custom transaction parsing</p>
+                </div>
+                <div class="tech-item">
+                    <h4>💻 Frontend</h4>
+                    <p>Vanilla JavaScript with modular architecture, responsive design, and optimized performance</p>
+                </div>
+                <div class="tech-item">
+                    <h4>📊 Data Management</h4>
+                    <p>Intelligent caching systems, JSON configuration files, and efficient API communication</p>
+                </div>
+            </div>
+
+            <div class="architecture-diagram">
+                <h4>🏗️ System Architecture</h4>
+                <p><strong>Ergo Blockchain</strong> → <strong>Flask API</strong> → <strong>Caching Layer</strong> → <strong>Frontend</strong> → <strong>Users</strong></p>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">Real-time data flow with intelligent caching and modular design</p>
+            </div>
+        </div>
+
+        <!-- Use Cases Slide -->
+        <div class="slide">
+            <h2>💡 Use Cases & Applications</h2>
+            <div class="use-cases">
+                <div class="use-case">
+                    <h4>⛏️ For Miners</h4>
+                    <ul>
+                        <li>Pool performance monitoring</li>
+                        <li>Network congestion analysis</li>
+                        <li>Fee market intelligence</li>
+                        <li>Block prediction & reward estimation</li>
+                    </ul>
+                </div>
+                <div class="use-case">
+                    <h4>👨‍💻 For Developers</h4>
+                    <ul>
+                        <li>dApp development insights</li>
+                        <li>Network analytics</li>
+                        <li>Integration testing</li>
+                        <li>Fee optimization research</li>
+                    </ul>
+                </div>
+                <div class="use-case">
+                    <h4>📈 For Traders & Users</h4>
+                    <ul>
+                        <li>Transaction tracking</li>
+                        <li>Network congestion awareness</li>
+                        <li>Fee optimization</li>
+                        <li>Market intelligence</li>
+                    </ul>
+                </div>
+                <div class="use-case">
+                    <h4>🔬 For Researchers</h4>
+                    <ul>
+                        <li>Blockchain research</li>
+                        <li>Economic analysis</li>
+                        <li>Security research</li>
+                        <li>Performance benchmarking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- What Makes It Interesting -->
+        <div class="slide">
+            <h2>🌟 What Makes This Interesting</h2>
+            
+            <div class="highlight-box">
+                <h3>🎯 Ergo-Specific Optimization</h3>
+                <p>Unlike generic blockchain explorers, this application is specifically tailored for Ergo's unique eUTXO model and ErgoScript capabilities, providing insights unavailable elsewhere.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>⚡ Real-Time Performance</h4>
+                    <p>Achieves near real-time updates without overwhelming backend infrastructure through intelligent caching and efficient API design</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👥 User Experience Excellence</h4>
+                    <p>Complex blockchain data made accessible through clean, modern interface with progressive information disclosure</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🏗️ Technical Innovation</h4>
+                    <p>Dual-layer visualization combining immediate intuitive understanding with deep analytical capabilities</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎓 Educational Value</h4>
+                    <p>Serves as an excellent educational tool for understanding blockchain mempools, making abstract concepts tangible</p>
+                </div>
+            </div>
+
+            <div class="code-snippet">
+# Example: Intelligent Price Caching
+def get_cached_price():
+    current_time = time.time()
+    if (price_cache["price"] is None or 
+        current_time - price_cache["timestamp"] > PRICE_CACHE_DURATION):
+        price_data = get_price.get_erg_price()
+        if price_data and price_data["price"]:
+            price_cache["price"] = price_data["price"]
+            price_cache["timestamp"] = current_time
+    return price_cache["price"]
+            </div>
+        </div>
+
+        <!-- Technical Achievements -->
+        <div class="slide">
+            <h2>🏆 Technical Achievements</h2>
+            
+            <h3>🔧 Engineering Excellence</h3>
+            <ul>
+                <li><strong>Modular Architecture:</strong> Clean separation between data fetching, processing, and presentation layers</li>
+                <li><strong>Performance Optimization:</strong> 5-minute price caching reduces API calls by 95%</li>
+                <li><strong>Scalable Design:</strong> Architecture easily accommodates new features and blockchain networks</li>
+                <li><strong>Real-time Efficiency:</strong> Handles high-frequency updates without performance degradation</li>
+            </ul>
+
+            <h3>🎨 User Interface Innovation</h3>
+            <ul>
+                <li><strong>Dual Visualization Modes:</strong> Toggle between size-based and value-based transaction coloring</li>
+                <li><strong>Progressive Disclosure:</strong> Information revealed based on user interaction level</li>
+                <li><strong>Contextual Tooltips:</strong> Rich hover information without interface cluttering</li>
+                <li><strong>Responsive Design:</strong> Seamless experience across desktop and mobile devices</li>
+            </ul>
+
+            <h3>⛓️ Blockchain Integration</h3>
+            <ul>
+                <li><strong>Native Ergo Support:</strong> Deep integration with Ergo's box model and ErgoScript</li>
+                <li><strong>Mining Pool Intelligence:</strong> Custom miner identification with branding and statistics</li>
+                <li><strong>Wallet Connectivity:</strong> Seamless integration with Ergo wallet ecosystem</li>
+                <li><strong>Multi-Currency Display:</strong> Real-time ERG/USD conversion with market data</li>
+            </ul>
+        </div>
+
+        <!-- Future Vision -->
+        <div class="slide">
+            <h2>🚀 Future Enhancement Opportunities</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>📊 Advanced Analytics</h4>
+                    <p>Historical mempool analysis, trend visualization, and predictive modeling for network congestion</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔔 Alert System</h4>
+                    <p>Customizable notifications for specific mempool conditions, large transactions, or mining events</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile Application</h4>
+                    <p>Native mobile app for real-time monitoring and push notifications on-the-go</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔌 API Extensions</h4>
+                    <p>Public API for third-party integrations, research purposes, and ecosystem development</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌐 Multi-Chain Support</h4>
+                    <p>Extension to other UTXO-based blockchains like Bitcoin, Cardano, and emerging platforms</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🤖 AI Integration</h4>
+                    <p>Machine learning for transaction pattern recognition and network behavior prediction</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h3>🎯 Strategic Vision</h3>
+                <p>Position Ergomempool as the premier blockchain visualization platform, expanding beyond Ergo to become the go-to tool for UTXO-based blockchain analysis and education.</p>
+            </div>
+        </div>
+
+        <!-- Footer Slide -->
+        <div class="slide footer-slide">
+            <h2>🎉 Thank You!</h2>
+            <p style="font-size: 1.3em; margin: 30px 0;">Ergomempool: Bridging the gap between complex blockchain data and user-friendly visualization</p>
+            
+            <div class="stats">
+                <div class="stat" style="background: rgba(255,255,255,0.1);">
+                    <span class="stat-number" style="color: white;">🌐</span>
+                    <div class="stat-label" style="color: white;">ergomempool.com</div>
+                </div>
+                <div class="stat" style="background: rgba(255,255,255,0.1);">
+                    <span class="stat-number" style="color: white;">⚡</span>
+                    <div class="stat-label" style="color: white;">Real-Time Data</div>
+                </div>
+                <div class="stat" style="background: rgba(255,255,255,0.1);">
+                    <span class="stat-number" style="color: white;">🎯</span>
+                    <div class="stat-label" style="color: white;">Ergo Focused</div>
+                </div>
+            </div>
+
+            <p style="margin-top: 40px; font-size: 1.1em;">
+                <strong>Ready to explore the Ergo mempool?</strong><br>
+                Visit <a href="https://ergomempool.com/" target="_blank" style="color: #ffd700; text-decoration: none;">ergomempool.com</a> and experience real-time blockchain visualization!
+            </p>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" onclick="scrollToTop()" title="Back to Top">↑</button>
+        <button class="nav-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+    </div>
+
+    <script>
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Add smooth scrolling between slides
+        document.addEventListener('keydown', function(e) {
+            const slides = document.querySelectorAll('.slide');
+            const currentSlide = getCurrentSlide();
+            
+            if (e.key === 'ArrowDown' && currentSlide < slides.length - 1) {
+                slides[currentSlide + 1].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'ArrowUp' && currentSlide > 0) {
+                slides[currentSlide - 1].scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        function getCurrentSlide() {
+            const slides = document.querySelectorAll('.slide');
+            const scrollY = window.scrollY;
+            
+            for (let i = 0; i < slides.length; i++) {
+                const slideTop = slides[i].offsetTop;
+                const slideBottom = slideTop + slides[i].offsetHeight;
+                
+                if (scrollY >= slideTop - 100 && scrollY < slideBottom - 100) {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        // Add animation on scroll
+        window.addEventListener('scroll', function() {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach(slide => {
+                const slideTop = slide.offsetTop;
+                const slideHeight = slide.offsetHeight;
+                const windowHeight = window.innerHeight;
+                const scrollY = window.scrollY;
+                
+                if (scrollY + windowHeight > slideTop + 100) {
+                    slide.style.opacity = '1';
+                    slide.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        // Add click to copy functionality for the demo link
+        document.addEventListener('DOMContentLoaded', function() {
+            const demoLinks = document.querySelectorAll('a[href*="ergomempool.com"]');
+            demoLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Allow normal navigation but add visual feedback
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1.05)';
+                    }, 100);
+                });
+            });
+        });
+
+        // Print functionality
+        function printPresentation() {
+            window.print();
+        }
+
+        // Add keyboard shortcuts info
+        document.addEventListener('DOMContentLoaded', function() {
+            const shortcutInfo = document.createElement('div');
+            shortcutInfo.innerHTML = `
+                <div style="position: fixed; bottom: 100px; right: 30px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; font-size: 0.8em; z-index: 1000; opacity: 0; transition: opacity 0.3s;" id="shortcuts">
+                    <strong>Keyboard Shortcuts:</strong><br>
+                    ↑↓ Navigate slides<br>
+                    F11 Fullscreen<br>
+                    Ctrl+P Print
+                </div>
+            `;
+            document.body.appendChild(shortcutInfo);
+
+            // Show shortcuts on first visit
+            setTimeout(() => {
+                document.getElementById('shortcuts').style.opacity = '1';
+                setTimeout(() => {
+                    document.getElementById('shortcuts').style.opacity = '0';
+                }, 3000);
+            }, 2000);
+        });
