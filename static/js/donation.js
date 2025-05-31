@@ -160,6 +160,9 @@ async function buildDonationTransaction(donationAmountERG) {
         throw new Error('Wallet not connected');
     }
 
+    // Always use donation address
+    const targetAddress = DONATION_CONFIG.recipientAddress;
+
     // Convert amount to nanoERGs
     const donationAmount = BigInt(Math.floor(donationAmountERG * Number(NANOERGS_PER_ERG)));
     const totalRequired = donationAmount + MIN_FEE;
@@ -177,7 +180,7 @@ async function buildDonationTransaction(donationAmountERG) {
     const { selectedInputs, totalInputValue, allTokens } = selectInputsAndTokens(utxos, totalRequired);
 
     // Get ErgoTrees
-    const donationErgoTree = addressToErgoTree(DONATION_CONFIG.recipientAddress);
+    const donationErgoTree = addressToErgoTree(targetAddress);
     const changeErgoTree = addressToErgoTree(changeAddress);
 
     // Verify addresses are different
@@ -261,6 +264,7 @@ async function processDonation(donationAmount) {
     donationInProgress = true;
     
     try {
+        console.log('💖 Starting DONATION process');
         showDonationStatus('Preparing donation...', 'info');
 
         if (!walletConnector?.isConnected) {
@@ -283,7 +287,7 @@ async function processDonation(donationAmount) {
 
         showDonationStatus('Building transaction...', 'info');
 
-        // Build the transaction
+        // Build the transaction (always goes to donation address)
         const transaction = await buildDonationTransaction(donationAmountERG);
 
         showDonationStatus('Please approve the transaction in your wallet...', 'info');
@@ -306,10 +310,18 @@ async function processDonation(donationAmount) {
         
         const txId = await window.ergo.submit_tx(signedTransaction);
 
+        // This is always a donation transaction
+        console.log('💖 Donation transaction submitted:', txId);
+
         // Success!
         showDonationStatus(`Donation successful! TX: ${txId.substring(0, 16)}...`, 'success');
         
-           
+        setTimeout(() => {
+            if (confirm(`Donation sent successfully!\n\nTransaction ID: ${txId}\n\nWould you like to view it in the blockchain explorer?`)) {
+                window.open(`https://explorer.ergoplatform.com/en/transactions/${txId}`, '_blank');
+            }
+        }, 2000);
+        
         return txId;
 
     } catch (error) {

@@ -141,6 +141,7 @@
         .slide:nth-child(5) { animation-delay: 0.5s; }
         .slide:nth-child(6) { animation-delay: 0.6s; }
         .slide:nth-child(7) { animation-delay: 0.7s; }
+        .slide:nth-child(8) { animation-delay: 0.8s; }
 
         .title-slide {
             text-align: center;
@@ -718,6 +719,62 @@
             margin-top: 15px;
             font-size: 0.9em;
         }
+
+        .test-demo-box {
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .test-demo-box::before {
+            content: '🧪';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2em;
+            opacity: 0.7;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .donation-box {
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(255, 100, 255, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 100, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .donation-box::before {
+            content: '💝';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2em;
+            opacity: 0.7;
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
     </style>
 </head>
 <body>
@@ -726,7 +783,7 @@
         <div class="slide title-slide">
             <h1>Ergomempool</h1>
             <div class="subtitle">Real-Time Ergo Blockchain Mempool Visualizer</div>
-            <p style="font-size: 1.1em; margin: 30px 0;">A sophisticated Flask-based web application providing real-time visualization and monitoring of the Ergo blockchain's mempool</p>
+            <p style="font-size: 1.1em; margin: 30px 0;">A sophisticated Flask-based web application providing real-time visualization and monitoring of the Ergo blockchain's mempool with interactive testing and donation features</p>
             <a href="https://ergomempool.com/" target="_blank" class="live-demo">🚀 View Live Demo</a>
             <div class="stats">
                 <div class="stat">
@@ -740,6 +797,10 @@
                 <div class="stat">
                     <span class="stat-number">📊</span>
                     <div class="stat-label">Data-Driven</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">🧪</span>
+                    <div class="stat-label">Interactive</div>
                 </div>
             </div>
         </div>
@@ -761,6 +822,14 @@
                     <p>Dual visualization modes, detailed transaction tables, interactive tooltips, and multi-currency support with real-time ERG/USD conversion</p>
                 </div>
                 <div class="feature-card">
+                    <h4>🧪 Test Transaction System</h4>
+                    <p>Interactive test transaction creation with real-time tracking, mempool visualization, and confirmation monitoring for testing and educational purposes</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💝 Donation Tracking</h4>
+                    <p>Built-in donation functionality with real-time transaction visualization, transparent tracking, and community support features</p>
+                </div>
+                <div class="feature-card">
                     <h4>💼 Wallet Integration</h4>
                     <p>Built-in Ergo wallet connectivity for enhanced user interaction and personal transaction monitoring within the mempool</p>
                 </div>
@@ -775,32 +844,114 @@
             </div>
         </div>
 
+        <!-- Test Transaction Demo -->
+        <div class="slide">
+            <h2>🧪 Interactive Test Transaction System</h2>
+            
+            <div class="test-demo-box">
+                <h3>🎯 Educational Testing Platform</h3>
+                <p>Create, track, and visualize test transactions in real-time to understand blockchain mechanics without financial risk.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>🔬 Transaction Creation</h4>
+                    <p>Simple interface for creating test transactions with customizable parameters including fees, amounts, and recipient addresses</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📡 Real-Time Tracking</h4>
+                    <p>Watch your test transaction appear in the mempool visualization with live status updates and confirmation tracking</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Visual Learning</h4>
+                    <p>See how your transaction interacts with the network, understanding mempool dynamics and blockchain confirmation process</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎓 Educational Value</h4>
+                    <p>Perfect for developers, students, and blockchain enthusiasts to learn about UTXO models and Ergo's unique features</p>
+                </div>
+            </div>
+
+            <div class="code-snippet">
+# Example: Test Transaction Creation
+def create_test_transaction():
+    transaction = {
+        "recipient": test_address,
+        "amount": 0.001,  # Small test amount
+        "fee": 0.001,
+        "purpose": "mempool_visualization_test"
+    }
+    
+    # Submit to network and track
+    tx_id = submit_transaction(transaction)
+    track_in_mempool(tx_id)
+    return tx_id
+            </div>
+        </div>
+
+        <!-- Donation System -->
+        <div class="slide">
+            <h2>💝 Transparent Donation System</h2>
+            
+            <div class="donation-box">
+                <h3>🤝 Community Support</h3>
+                <p>Support the development and hosting of Ergomempool with transparent, trackable donations visible in real-time.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>💰 Easy Donations</h4>
+                    <p>One-click donation system with multiple amount options and custom donation amounts for flexibility</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👁️ Full Transparency</h4>
+                    <p>All donations are publicly trackable through the mempool visualizer, ensuring complete transparency and accountability</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🏆 Contributor Recognition</h4>
+                    <p>Optional contributor recognition system celebrating community supporters while respecting privacy preferences</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Impact Tracking</h4>
+                    <p>Real-time visualization of donation impact on project development, hosting costs, and feature enhancement</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Technology Stack Slide -->
         <div class="slide">
             <h2>🛠 Technology Stack</h2>
             <div class="tech-stack">
                 <div class="tech-item">
                     <h4>🐍 Flask Backend</h4>
-                    <p>Lightweight Python web framework with RESTful API design and modular architecture</p>
+                    <p>Lightweight Python web framework with RESTful API design and modular architecture for scalable development</p>
                 </div>
                 <div class="tech-item">
                     <h4>🔗 Blockchain Integration</h4>
-                    <p>Direct Ergo node connection, real-time data processing, and custom transaction parsing</p>
+                    <p>Direct Ergo node connection, real-time data processing, custom transaction parsing, and wallet connectivity</p>
                 </div>
                 <div class="tech-item">
-                    <h4>💻 Frontend</h4>
-                    <p>Vanilla JavaScript with modular architecture, responsive design, and optimized performance</p>
+                    <h4>💻 Frontend Technologies</h4>
+                    <p>Vanilla JavaScript with modular architecture, responsive design, optimized performance, and interactive visualizations</p>
+                </div>
+                <div class="tech-item">
+                    <h4>☁️ Decentralized Hosting</h4>
+                    <p>Deployed on Flux network for censorship resistance, high availability, distributed infrastructure, and blockchain alignment</p>
                 </div>
                 <div class="tech-item">
                     <h4>📊 Data Management</h4>
-                    <p>Intelligent caching systems, JSON configuration files, and efficient API communication</p>
+                    <p>Intelligent caching systems, JSON configuration files, efficient API communication, and real-time data processing</p>
+                </div>
+                <div class="tech-item">
+                    <h4>🔧 Testing Infrastructure</h4>
+                    <p>Integrated test transaction system, donation tracking, wallet integration, and comprehensive monitoring tools</p>
                 </div>
             </div>
 
             <div class="architecture-diagram">
                 <h4>🏗️ System Architecture</h4>
-                <p><strong>Ergo Blockchain</strong> → <strong>Flask API</strong> → <strong>Caching Layer</strong> → <strong>Frontend</strong> → <strong>Users</strong></p>
-                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">Real-time data flow with intelligent caching and modular design</p>
+                <p><strong>Ergo Blockchain</strong> → <strong>Flask API</strong> → <strong>Caching Layer</strong> → <strong>Flux Network</strong> → <strong>Frontend</strong> → <strong>Users</strong></p>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">Decentralized hosting on Flux network with real-time data flow, intelligent caching, and interactive features</p>
             </div>
         </div>
 
@@ -815,33 +966,38 @@
                         <li>Network congestion analysis</li>
                         <li>Fee market intelligence</li>
                         <li>Block prediction & reward estimation</li>
+                        <li>Mining pool comparison</li>
                     </ul>
                 </div>
                 <div class="use-case">
                     <h4>👨‍💻 For Developers</h4>
                     <ul>
                         <li>dApp development insights</li>
-                        <li>Network analytics</li>
-                        <li>Integration testing</li>
+                        <li>Network analytics and testing</li>
+                        <li>Integration testing with test transactions</li>
                         <li>Fee optimization research</li>
+                        <li>Blockchain education and learning</li>
                     </ul>
                 </div>
                 <div class="use-case">
                     <h4>📈 For Traders & Users</h4>
                     <ul>
-                        <li>Transaction tracking</li>
+                        <li>Transaction tracking and monitoring</li>
                         <li>Network congestion awareness</li>
-                        <li>Fee optimization</li>
-                        <li>Market intelligence</li>
+                        <li>Fee optimization strategies</li>
+                        <li>Market intelligence and insights</li>
+                        <li>Test transaction creation and learning</li>
+                        <li>Community donation and support</li>
                     </ul>
                 </div>
                 <div class="use-case">
                     <h4>🔬 For Researchers</h4>
                     <ul>
-                        <li>Blockchain research</li>
-                        <li>Economic analysis</li>
-                        <li>Security research</li>
+                        <li>Blockchain research and analysis</li>
+                        <li>Economic analysis and modeling</li>
+                        <li>Security research and testing</li>
                         <li>Performance benchmarking</li>
+                        <li>Network behavior studies</li>
                     </ul>
                 </div>
             </div>
@@ -873,11 +1029,19 @@
                     <h4>🎓 Educational Value</h4>
                     <p>Serves as an excellent educational tool for understanding blockchain mempools, making abstract concepts tangible</p>
                 </div>
+                <div class="feature-card">
+                    <h4>🔌 Interactive Testing</h4>
+                    <p>Built-in test transaction system allows users to create and track transactions in real-time, perfect for learning and development</p>
+                </div>
+                <div class="feature-card">
+                    <h4>☁️ Decentralized Infrastructure</h4>
+                    <p>Hosted on Flux network ensuring censorship resistance, high availability, and alignment with decentralized principles</p>
+                </div>
             </div>
 
             <div class="code-snippet">
-# Example: Intelligent Price Caching
-def get_cached_price():
+# Example: Intelligent Price Caching with Donation Tracking
+def get_cached_price_with_donations():
     current_time = time.time()
     if (price_cache["price"] is None or 
         current_time - price_cache["timestamp"] > PRICE_CACHE_DURATION):
@@ -885,6 +1049,9 @@ def get_cached_price():
         if price_data and price_data["price"]:
             price_cache["price"] = price_data["price"]
             price_cache["timestamp"] = current_time
+            
+    # Update donation values in real-time
+    update_donation_usd_values(price_cache["price"])
     return price_cache["price"]
             </div>
         </div>
@@ -899,6 +1066,7 @@ def get_cached_price():
                 <li><strong>Performance Optimization:</strong> 5-minute price caching reduces API calls by 95%</li>
                 <li><strong>Scalable Design:</strong> Architecture easily accommodates new features and blockchain networks</li>
                 <li><strong>Real-time Efficiency:</strong> Handles high-frequency updates without performance degradation</li>
+                <li><strong>Interactive Testing:</strong> Seamless test transaction creation and tracking system</li>
             </ul>
 
             <h3>🎨 User Interface Innovation</h3>
@@ -907,6 +1075,7 @@ def get_cached_price():
                 <li><strong>Progressive Disclosure:</strong> Information revealed based on user interaction level</li>
                 <li><strong>Contextual Tooltips:</strong> Rich hover information without interface cluttering</li>
                 <li><strong>Responsive Design:</strong> Seamless experience across desktop and mobile devices</li>
+                <li><strong>Interactive Features:</strong> Test transactions and donations with real-time visualization</li>
             </ul>
 
             <h3>⛓️ Blockchain Integration</h3>
@@ -915,6 +1084,17 @@ def get_cached_price():
                 <li><strong>Mining Pool Intelligence:</strong> Custom miner identification with branding and statistics</li>
                 <li><strong>Wallet Connectivity:</strong> Seamless integration with Ergo wallet ecosystem</li>
                 <li><strong>Multi-Currency Display:</strong> Real-time ERG/USD conversion with market data</li>
+                <li><strong>Test Transaction System:</strong> Interactive transaction creation and real-time tracking</li>
+                <li><strong>Donation Transparency:</strong> Built-in donation tracking with full transaction visibility</li>
+            </ul>
+
+            <h3>🌐 Infrastructure & Deployment</h3>
+            <ul>
+                <li><strong>Decentralized Hosting:</strong> Deployed on Flux network for censorship resistance</li>
+                <li><strong>High Availability:</strong> Distributed infrastructure ensures 99.9% uptime</li>
+                <li><strong>Security First:</strong> No central points of failure with blockchain-aligned hosting</li>
+                <li><strong>Global CDN:</strong> Fast access worldwide through Flux's distributed network</li>
+                <li><strong>Cost Efficiency:</strong> Reduced hosting costs through decentralized infrastructure</li>
             </ul>
         </div>
 
@@ -940,6 +1120,14 @@ def get_cached_price():
                     <p>Public API for third-party integrations, research purposes, and ecosystem development</p>
                 </div>
                 <div class="feature-card">
+                    <h4>🧪 Testing Suite</h4>
+                    <p>Comprehensive test transaction tools for developers, educators, and researchers to experiment safely</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💰 Donation Platform</h4>
+                    <p>Enhanced donation system with contributor recognition, funding goals, and community governance</p>
+                </div>
+                <div class="feature-card">
                     <h4>🌐 Multi-Chain Support</h4>
                     <p>Extension to other UTXO-based blockchains like Bitcoin, Cardano, and emerging platforms</p>
                 </div>
@@ -951,14 +1139,14 @@ def get_cached_price():
 
             <div class="highlight-box">
                 <h3>🎯 Strategic Vision</h3>
-                <p>Position Ergomempool as the premier blockchain visualization platform, expanding beyond Ergo to become the go-to tool for UTXO-based blockchain analysis and education.</p>
+                <p>Position Ergomempool as the premier blockchain visualization platform, expanding beyond Ergo to become the go-to tool for UTXO-based blockchain analysis, education, and community engagement.</p>
             </div>
         </div>
 
         <!-- Footer Slide -->
         <div class="slide footer-slide">
             <h2>🎉 Thank You!</h2>
-            <p style="font-size: 1.3em; margin: 30px 0;">Ergomempool: Bridging the gap between complex blockchain data and user-friendly visualization</p>
+            <p style="font-size: 1.3em; margin: 30px 0;">Ergomempool: Bridging the gap between complex blockchain data and user-friendly visualization with interactive features and community support</p>
             
             <div class="stats">
                 <div class="stat" style="background: rgba(255,255,255,0.1);">
@@ -973,11 +1161,37 @@ def get_cached_price():
                     <span class="stat-number" style="color: white;">🎯</span>
                     <div class="stat-label" style="color: white;">Ergo Focused</div>
                 </div>
+                <div class="stat" style="background: rgba(255,255,255,0.1);">
+                    <span class="stat-number" style="color: white;">🧪</span>
+                    <div class="stat-label" style="color: white;">Interactive</div>
+                </div>
+            </div>
+
+            <div style="margin: 40px 0;">
+                <h3 style="color: #ffd700; margin-bottom: 20px;">🔗 Key Features Highlights</h3>
+                <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">🧪</div>
+                        <div>Test Transactions</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">💝</div>
+                        <div>Donation Tracking</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">☁️</div>
+                        <div>Flux Hosting</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; margin-bottom: 10px;">📊</div>
+                        <div>Real-Time Visualization</div>
+                    </div>
+                </div>
             </div>
 
             <p style="margin-top: 40px; font-size: 1.1em;">
                 <strong>Ready to explore the Ergo mempool?</strong><br>
-                Visit <a href="https://ergomempool.com/" target="_blank" style="color: #ffd700; text-decoration: none;">ergomempool.com</a> and experience real-time blockchain visualization!
+                Visit <a href="https://ergomempool.com/" target="_blank" style="color: #ffd700; text-decoration: none;">ergomempool.com</a> and experience real-time blockchain visualization with interactive testing and community features!
             </p>
         </div>
     </div>
@@ -1085,3 +1299,31 @@ def get_cached_price():
                 }, 3000);
             }, 2000);
         });
+
+        // Add special effects for test transaction and donation sections
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add interactive hover effects for feature cards
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Add pulsing effect to demo boxes
+            const demoBoxes = document.querySelectorAll('.test-demo-box, .donation-box');
+            demoBoxes.forEach(box => {
+                setInterval(() => {
+                    box.style.boxShadow = '0 0 30px rgba(0, 255, 255, 0.3)';
+                    setTimeout(() => {
+                        box.style.boxShadow = '0 0 15px rgba(0, 255, 255, 0.1)';
+                    }, 1000);
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>

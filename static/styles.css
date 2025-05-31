@@ -504,8 +504,7 @@ td:last-child {
 .wallet-section {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 10px;
 }
 
 /* Connect button styling - VISIBLE state */
@@ -1270,4 +1269,35 @@ button#connect-button.wallet-connected-hidden,
     .presentation-link span {
         display: none; /* Hide text on very small screens, show only icon */
     }
+}
+.test-transaction-button {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.test-transaction-button:hover {
+    background: linear-gradient(135deg, #e55a2b, #e0861a);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.test-transaction-button:active {
+    transform: translateY(0);
+}
+
+.test-transaction-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
