@@ -165,12 +165,22 @@
                         <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                     </svg>
                     <span>v.0.0.1</span>
+                 </a>
+        
+                 <a href="#" class="donation-link" title="Support the project with a donation" id="donation-button">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span>Donate</span>
                 </a>
             </div>
         </footer>
     </div>
 
     <div class="transaction-tooltip" id="tooltip"></div>
+
+    <!-- Load API functions first -->
+    <script src="/static/js/api.js"></script>
 
     <script>
         let transactions = [];
@@ -191,7 +201,7 @@
             constructor() {
                 this.connectedWallet = null;
                 this.isConnected = false;
-                this.connectedAddress = null; // NEW: Store wallet address for transaction matching
+                this.connectedAddress = null;
             }
 
             async detectWallets() {
@@ -220,7 +230,6 @@
                         throw new Error('No Ergo wallets detected. Please install Nautilus, Eternl, or Minotaur wallet.');
                     }
 
-                    // If multiple wallets, show selection modal
                     if (wallets.length > 1) {
                         const selectedWallet = await this.showWalletSelectionModal(wallets);
                         if (!selectedWallet) {
@@ -231,18 +240,15 @@
                         if (access) {
                             this.connectedWallet = { name: selectedWallet.name };
                             this.isConnected = true;
-                            // Store wallet address for transaction matching
                             this.connectedAddress = await this.getAddress();
                             return this.connectedWallet;
                         }
                     } else {
-                        // Single wallet, connect directly
                         const wallet = wallets[0];
                         const access = await wallet.api.connect();
                         if (access) {
                             this.connectedWallet = { name: wallet.name };
                             this.isConnected = true;
-                            // Store wallet address for transaction matching
                             this.connectedAddress = await this.getAddress();
                             return this.connectedWallet;
                         }
@@ -257,11 +263,9 @@
 
             showWalletSelectionModal(wallets) {
                 return new Promise((resolve) => {
-                    // Create modal overlay
                     const overlay = document.createElement('div');
                     overlay.className = 'wallet-modal-overlay';
                     
-                    // Create modal content
                     const modal = document.createElement('div');
                     modal.className = 'wallet-modal';
                     modal.innerHTML = `
@@ -285,7 +289,6 @@
                     overlay.appendChild(modal);
                     document.body.appendChild(overlay);
                     
-                    // Add event listeners
                     const closeModal = () => {
                         document.body.removeChild(overlay);
                         resolve(null);
@@ -296,7 +299,6 @@
                         if (e.target === overlay) closeModal();
                     });
                     
-                    // Handle wallet selection
                     overlay.querySelectorAll('.wallet-option').forEach(button => {
                         button.addEventListener('click', () => {
                             const walletName = button.getAttribute('data-wallet');
@@ -306,7 +308,6 @@
                         });
                     });
                     
-                    // Show modal with animation
                     setTimeout(() => {
                         overlay.classList.add('show');
                     }, 10);
@@ -319,9 +320,8 @@
                 }
 
                 try {
-                    // Use the global ergo object that gets injected after connection
                     const balance = await window.ergo.get_balance();
-                    return (parseInt(balance) / 1000000000).toFixed(3); // Convert from nanoERG to ERG
+                    return (parseInt(balance) / 1000000000).toFixed(3);
                 } catch (error) {
                     throw new Error('Failed to get balance: ' + error.message);
                 }
@@ -333,7 +333,6 @@
                 }
 
                 try {
-                    // Use the global ergo object that gets injected after connection
                     const address = await window.ergo.get_change_address();
                     return address || 'No address found';
                 } catch (error) {
@@ -344,10 +343,8 @@
             disconnect() {
                 this.connectedWallet = null;
                 this.isConnected = false;
-                this.connectedAddress = null; // Clear stored address
-                // Clear the ergo object reference
+                this.connectedAddress = null;
                 if (window.ergo) {
-                    // Note: We can't actually remove the ergo object, but we mark as disconnected
                     console.log('Wallet disconnected');
                 }
             }
@@ -358,7 +355,6 @@
 
         // Helper functions for wallet integration
         function showWalletStatus(message, type = 'info') {
-            // Remove existing status
             const existingStatus = document.querySelector('.wallet-status');
             if (existingStatus) {
                 existingStatus.remove();
@@ -369,10 +365,8 @@
             statusDiv.textContent = message;
             document.body.appendChild(statusDiv);
             
-            // Show with animation
             setTimeout(() => statusDiv.classList.add('show'), 100);
             
-            // Hide after 4 seconds
             setTimeout(() => {
                 statusDiv.classList.remove('show');
                 setTimeout(() => statusDiv.remove(), 300);
@@ -380,7 +374,6 @@
         }
 
         function showWalletInfo(info) {
-            // Remove any existing wallet info
             const existingInfo = document.querySelector('.wallet-info-display');
             if (existingInfo) {
                 existingInfo.remove();
@@ -388,7 +381,6 @@
 
             if (!info) return;
 
-            // Create wallet info display that's clickable
             const walletInfoDiv = document.createElement('div');
             walletInfoDiv.className = 'wallet-info-display';
             walletInfoDiv.innerHTML = `
@@ -402,10 +394,8 @@
                 </div>
             `;
 
-            // Add click functionality to toggle disconnect option
             walletInfoDiv.addEventListener('click', function(e) {
                 if (e.target.classList.contains('disconnect-btn')) {
-                    // Handle disconnect
                     walletConnector.disconnect();
                     document.getElementById('connect-button').innerHTML = `
                         <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
@@ -417,7 +407,6 @@
                     return;
                 }
 
-                // Toggle disconnect option
                 const disconnectDiv = this.querySelector('.wallet-disconnect');
                 const content = this.querySelector('.wallet-content');
                 
@@ -432,21 +421,17 @@
                 }
             });
 
-            // Insert in wallet section (next to the button)
             const walletSection = document.querySelector('.wallet-section');
             walletSection.appendChild(walletInfoDiv);
         }
 
-        // Helper function to check if transaction involves connected wallet
         function isWalletTransaction(transaction, walletAddress) {
             if (!walletAddress || !transaction) return false;
             
-            // Check if wallet address appears in inputs
             const inputMatch = transaction.inputs && transaction.inputs.some(input => 
                 input.address === walletAddress
             );
             
-            // Check if wallet address appears in outputs  
             const outputMatch = transaction.outputs && transaction.outputs.some(output => 
                 output.address === walletAddress
             );
@@ -454,10 +439,9 @@
             return inputMatch || outputMatch;
         }
 
-        // Helper function to shorten transaction IDs
         function shortenTransactionId(id, startChars = 5, endChars = 5) {
             if (!id || id.length <= startChars + endChars + 3) {
-                return id; // Return original if too short
+                return id;
             }
             return `${id.substring(0, startChars)}...${id.substring(id.length - endChars)}`;
         }
@@ -479,18 +463,6 @@
             return Math.max(minSize, Math.floor(minSize + (maxSizePixels - minSize) * normalized));
         }
 
-        function loadPrice() {
-            fetch('/get_price')
-                .then(response => response.json())
-                .then(data => {
-                    currentPrice = data.price;
-                    // Price loaded but not displayed in header
-                })
-                .catch(error => {
-                    console.error('Error fetching price:', error);
-                });
-        }
-
         function createVisualization() {
             const grid = document.getElementById('mempool-grid');
             grid.innerHTML = '';
@@ -503,7 +475,6 @@
             const maxSize = Math.max(...transactions.map(tx => tx.size || 0));
             const maxValue = Math.max(...transactions.map(tx => tx.value || 0));
 
-            // Limit to first 500 transactions for performance
             const displayTransactions = transactions.slice(0, 500);
 
             displayTransactions.forEach((tx, index) => {
@@ -523,22 +494,17 @@
                 square.style.gridColumn = `span ${Math.max(1, Math.floor(size / 8))}`;
                 square.style.gridRow = `span ${Math.max(1, Math.floor(size / 8))}`;
 
-                // Check if this transaction involves the connected wallet
                 if (walletConnector.isConnected && walletConnector.connectedAddress) {
                     if (isWalletTransaction(tx, walletConnector.connectedAddress)) {
                         square.classList.add('wallet-transaction');
-                        // Enhanced gold glow effect - much larger and more prominent
                         square.style.border = '3px solid #f39c12';
                         square.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6), 0 0 45px rgba(243, 156, 18, 0.3)';
                         square.style.zIndex = '10';
                         square.style.position = 'relative';
-                        
-                        // Add subtle pulsing animation
                         square.style.animation = 'walletGlow 2s ease-in-out infinite alternate';
                     }
                 }
 
-                // Add hover events for tooltip
                 square.addEventListener('mouseenter', (e) => {
                     showTooltip(e, tx);
                 });
@@ -558,15 +524,13 @@
         function showTooltip(event, tx) {
             const tooltip = document.getElementById('tooltip');
             const usdValue = tx.usd_value || 0;
-            const shortId = shortenTransactionId(tx.id, 8, 8); // Use 8 chars for tooltip
+            const shortId = shortenTransactionId(tx.id, 8, 8);
             
-            // Check if this is a wallet transaction
             const isWalletTx = walletConnector.isConnected && walletConnector.connectedAddress && 
                               isWalletTransaction(tx, walletConnector.connectedAddress);
             
             let walletInfo = '';
             if (isWalletTx) {
-                // Options: 💰 🔥 ⭐ 💎 🎯 ⚡ 🌟 👑 🔸 🟡 🔶 🟠
                 walletInfo = '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🌟 Your Wallet Transaction</div>';
             }
             
@@ -589,7 +553,6 @@
 
         function updateNextBlockInfo() {
             if (transactions.length === 0) {
-                // Show default values when no transactions
                 document.getElementById('next-block-height').textContent = 'Mining...';
                 document.getElementById('next-block').innerHTML = `
                     <div class="block-size">Pending</div>
@@ -602,11 +565,9 @@
                 return;
             }
 
-            // Calculate mempool stats
             const totalTransactions = transactions.length;
             const totalSize = transactions.reduce((sum, tx) => sum + (tx.size || 0), 0);
             
-            // Update next block display
             document.getElementById('next-block-height').textContent = 'Mining...';
             document.getElementById('next-block').innerHTML = `
                 <div class="block-size">${(totalSize / 1000000).toFixed(2)} MB</div>
@@ -618,7 +579,6 @@
             `;
         }
 
-        // New function to update the next block reward when we get block data
         function updateNextBlockReward(baseMinerReward) {
             const rewardElement = document.getElementById('next-block-reward');
             if (rewardElement && baseMinerReward) {
@@ -638,33 +598,14 @@
             document.getElementById('avg-size').textContent = avgSize;
         }
 
-        function loadTransactions() {
-            fetch('/get_transactions')
-                .then(response => response.json())
-                .then(data => {
-                    transactions = data;
-                    createVisualization();
-                    updateStats();
-                    updateNextBlockInfo();
-                    populateTransactionTable();
-                })
-                .catch(error => {
-                    console.error('Error fetching transactions:', error);
-                    document.getElementById('mempool-grid').innerHTML = 
-                        '<div class="loading">Error loading transactions</div>';
-                });
-        }
-
         let previousBlockData = null;
 
         function animateBlockTransition(newBlocks) {
-            // Check if we have new block data and it's different from previous
             if (!previousBlockData || !newBlocks || newBlocks.length === 0) {
-                previousBlockData = [...newBlocks]; // Create a copy
+                previousBlockData = [...newBlocks];
                 return false;
             }
 
-            // Check if the first block (newest) has changed
             const hasNewBlock = newBlocks[0] && previousBlockData[0] && 
                               newBlocks[0].height !== previousBlockData[0].height;
 
@@ -677,16 +618,15 @@
             if (hasNewBlock) {
                 console.log('New block detected, starting animation');
                 performBlockAnimation(newBlocks);
-                previousBlockData = [...newBlocks]; // Create a copy
+                previousBlockData = [...newBlocks];
                 return true;
             }
 
-            previousBlockData = [...newBlocks]; // Create a copy
+            previousBlockData = [...newBlocks];
             return false;
         }
 
         function performBlockAnimation(newBlocks) {
-            // Animate next block moving right (simplified to one direction)
             animateNextBlockToRight(newBlocks);
         }
 
@@ -694,18 +634,15 @@
             const nextBlock = document.getElementById('next-block');
             const nextBlockContainer = nextBlock.parentElement;
             
-            // Get all Last 4 Block containers
             const block0Container = document.getElementById('block-0').parentElement;
             const block1Container = document.getElementById('block-1').parentElement;
             const block2Container = document.getElementById('block-2').parentElement;
             const block3Container = document.getElementById('block-3').parentElement;
             
-            // Step 1: Animate next block moving right
             nextBlockContainer.style.transform = 'translateX(400px)';
             nextBlockContainer.style.transition = 'all 0.8s ease';
             
-            // Step 2: Shift all Last 4 Blocks to the right
-            block0Container.style.transform = 'translateX(220px)'; // Move right to make room
+            block0Container.style.transform = 'translateX(220px)';
             block0Container.style.transition = 'all 0.8s ease';
             
             block1Container.style.transform = 'translateX(220px)';
@@ -714,12 +651,10 @@
             block2Container.style.transform = 'translateX(220px)';
             block2Container.style.transition = 'all 0.8s ease';
             
-            // Step 3: Last block (position 3) moves off screen
             block3Container.style.transform = 'translateX(440px)';
             block3Container.style.opacity = '0';
             block3Container.style.transition = 'all 0.8s ease';
             
-            // Step 4: After animation, update data
             setTimeout(() => {
                 updateBlocksWithAnimation(newBlocks);
                 resetAllBlocks([nextBlockContainer, block0Container, block1Container, block2Container, block3Container]);
@@ -727,17 +662,14 @@
         }
 
         function resetAllBlocks(containers) {
-            // Reset transforms for all containers
             containers.forEach(container => {
                 container.style.transform = '';
                 container.style.transition = '';
                 container.style.opacity = '';
             });
             
-            // Update next block with new mempool data
             updateNextBlockInfo();
             
-            // Add fade-in animation to new next block
             const nextBlockContainer = document.getElementById('next-block').parentElement;
             nextBlockContainer.classList.add('block-fade-in');
             setTimeout(() => {
@@ -747,7 +679,7 @@
 
         function calculateTimeAgo(timestamp) {
             const now = Date.now();
-            const blockTime = timestamp; // Timestamp is already in milliseconds
+            const blockTime = timestamp;
             const diffInMinutes = Math.floor((now - blockTime) / (1000 * 60));
             
             if (diffInMinutes < 1) {
@@ -770,22 +702,18 @@
         function updateBlocksWithAnimation(blockLabels) {
             blockLabels.forEach((block, i) => {
                 if (i < 4) {
-                    // Update block height (just the number now)
                     const heightElement = document.getElementById(`block-height-${i}`);
                     if (heightElement) {
                         heightElement.textContent = block.height;
                     }
 
-                    // Update block height link
                     const heightLinkElement = document.getElementById(`block-height-link-${i}`);
                     if (heightLinkElement && block.id) {
                         heightLinkElement.href = `https://sigmaspace.io/en/block/${block.id}`;
                     }
 
-                    // Update block content with real data including timestamp
                     const blockElement = document.getElementById(`block-${i}`);  
                     if (blockElement) {
-                        // Change color from orange to purple when next block becomes mined
                         blockElement.style.background = 'linear-gradient(135deg, #8e44ad, #9b59b6)';
                         blockElement.style.border = '2px solid #7d3c98';
                         blockElement.style.animation = 'none';
@@ -795,7 +723,6 @@
                             timeAgoText = calculateTimeAgo(block.timestamp);
                         }
                         
-                        // Enhanced block display with better formatting
                         blockElement.innerHTML = `
                             <div class="block-size">${(block.size / 1000000).toFixed(2)} MB</div>
                             <div class="block-reward">
@@ -811,7 +738,6 @@
                         `;
                     }
 
-                    // Update miner name and logo
                     const minerElement = document.getElementById(`block-miner-${i}`);
                     if (minerElement && block.minerInfo) {
                         const minerName = block.minerInfo.name || 'Unknown';
@@ -830,97 +756,16 @@
             });
         }
 
-        function loadBlockLabels() {
-            fetch('/get_block_labels')
-                .then(response => response.json())
-                .then(blockLabels => {
-                    console.log('Block data received:', blockLabels); // Debug log
-                    
-                    // Update next block reward estimate with the base miner reward from the most recent block
-                    if (blockLabels && blockLabels.length > 0 && blockLabels[0].baseMinerReward) {
-                        updateNextBlockReward(blockLabels[0].baseMinerReward);
-                    }
-                    
-                    // Check if we should animate
-                    const shouldAnimate = animateBlockTransition(blockLabels);
-                    
-                    if (!shouldAnimate) {
-                        // No animation needed, just update normally
-                        blockLabels.forEach((block, i) => {
-                            if (i < 4) {
-                                console.log(`Block ${i} timestamp:`, block.timestamp); // Debug log
-                                
-                                // Update block height (just the number now)
-                                const heightElement = document.getElementById(`block-height-${i}`);
-                                if (heightElement) {
-                                    heightElement.textContent = block.height;
-                                }
-
-                                // Update block height link
-                                const heightLinkElement = document.getElementById(`block-height-link-${i}`);
-                                if (heightLinkElement && block.id) {
-                                    heightLinkElement.href = `https://sigmaspace.io/en/block/${block.id}`;
-                                }
-
-                                // Update block content with real data including timestamp
-                                const blockElement = document.getElementById(`block-${i}`);
-                                if (blockElement) {
-                                    let timeAgoText = '';
-                                    if (block.timestamp) {
-                                        timeAgoText = calculateTimeAgo(block.timestamp);
-                                    } else {
-                                        console.log(`No timestamp for block ${i}`); // Debug log
-                                    }
-
-                                    // Enhanced block display with better formatting
-                                    blockElement.innerHTML = `
-                                        <div class="block-size">${(block.size / 1000000).toFixed(2)} MB</div>
-                                        <div class="block-reward">
-                                            <span class="reward-label">Total Reward</span>
-                                            <span class="reward-value">${block.minerReward.toFixed(3)} ERG</span>
-                                            ${block.totalFees && block.totalFees > 0 ? 
-                                                `<span class="fees-breakdown">${block.totalFees.toFixed(3)} fees</span>` : 
-                                                ''
-                                            }
-                                        </div>
-                                        <div class="block-tx-count">${block.transactionsCount.toLocaleString()} transactions</div>
-                                        ${timeAgoText ? `<div class="block-time">${timeAgoText}</div>` : ''}
-                                    `;
-                                }
-
-                                // Update miner name and logo
-                                const minerElement = document.getElementById(`block-miner-${i}`);
-                                if (minerElement && block.minerInfo) {
-                                    const minerName = block.minerInfo.name || 'Unknown';
-                                    const minerLogo = block.minerInfo.logo;
-                                    
-                                    if (minerLogo) {
-                                        minerElement.innerHTML = `
-                                            <img src="${minerLogo}" alt="${minerName}" class="miner-logo" onerror="this.style.display='none'">
-                                            <span>${minerName}</span>
-                                        `;
-                                    } else {
-                                        minerElement.innerHTML = `<span>${minerName}</span>`;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                })
-                .catch(error => console.error('Error fetching block labels:', error));
-        }
-
         function populateTransactionTable() {
             const tbody = document.querySelector('#transaction-table tbody');
             tbody.innerHTML = '';
 
-            const displayTransactions = transactions.slice(0, 20); // Show first 20 in table
+            const displayTransactions = transactions.slice(0, 20);
 
             displayTransactions.forEach(tx => {
                 const usdValue = tx.usd_value || 0;
-                const shortId = shortenTransactionId(tx.id); // Shorten the ID for display
+                const shortId = shortenTransactionId(tx.id);
                 
-                // Check if this is a wallet transaction
                 const isWalletTx = walletConnector.isConnected && walletConnector.connectedAddress && 
                                   isWalletTransaction(tx, walletConnector.connectedAddress);
                 
@@ -973,14 +818,12 @@
             }, 1000);
         });
 
-        // Wallet connection event listener - INTEGRATED INTO EXISTING CONNECT BUTTON
+        // Wallet connection event listener
         document.addEventListener('DOMContentLoaded', function() {
             const connectButton = document.getElementById('connect-button');
             
-            // Wallet connection functionality
             connectButton.addEventListener('click', async function() {
                 if (walletConnector.isConnected) {
-                    // Disconnect wallet
                     walletConnector.disconnect();
                     this.innerHTML = `
                         <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
@@ -990,7 +833,6 @@
                     showWalletInfo(null);
                     showWalletStatus('Wallet disconnected', 'info');
                 } else {
-                    // Connect wallet
                     try {
                         this.innerHTML = `
                             <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
@@ -1033,7 +875,6 @@
                 }
             });
 
-            // Check for wallet availability on page load
             setTimeout(async () => {
                 const wallets = await walletConnector.detectWallets();
                 if (wallets.length === 0) {
@@ -1044,18 +885,15 @@
                 }
             }, 1000);
 
-            // Initialize app data loading
             loadPrice();
             loadTransactions();
             loadBlockLabels();
             
-            // Auto-refresh every 30 seconds
             setInterval(() => {
                 loadTransactions();
                 loadBlockLabels();
             }, 30000);
 
-            // Refresh price every 5 minutes
             setInterval(() => {
                 loadPrice();
             }, 300000);
