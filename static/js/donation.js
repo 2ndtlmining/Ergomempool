@@ -1,4 +1,4 @@
-// donation.js - Simplified approach based on working react-ergo-payments implementation
+// donation.js - Clean donation implementation for Ergo with Nautilus Wallet
 
 const DONATION_CONFIG = {
     recipientAddress: "9hF8coEmr6Mnfh3gexuwnnU816kbW8qrVBoUraJC5Zb79T9DRnx",
@@ -7,10 +7,19 @@ const DONATION_CONFIG = {
     maxAmount: "100.0"
 };
 
+// Ergo protocol constants
+const NANOERGS_PER_ERG = 1000000000n;
+const MIN_FEE = 1000000n; // 0.001 ERG minimum fee
+const FEE_ERGOTREE = "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304";
+
 let donationInProgress = false;
 
+// ===================================================================
+// UTILITY FUNCTIONS
+// ===================================================================
+
 function ergToNanoErg(ergAmount) {
-    return (parseFloat(ergAmount) * 1000000000).toString();
+    return (BigInt(Math.floor(parseFloat(ergAmount) * Number(NANOERGS_PER_ERG)))).toString();
 }
 
 function validateDonationAmount(amount) {
@@ -21,7 +30,227 @@ function validateDonationAmount(amount) {
 }
 
 /**
- * Simplified donation using the proven working pattern from react-ergo-payments
+ * Decodes a base58 address
+ */
+function base58Decode(str) {
+    const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const ALPHABET_MAP = {};
+    for (let i = 0; i < ALPHABET.length; i++) {
+        ALPHABET_MAP[ALPHABET[i]] = i;
+    }
+
+    let decoded = [0];
+
+    for (let i = 0; i < str.length; i++) {
+        let carry = ALPHABET_MAP[str[i]];
+        if (carry === undefined) throw new Error('Invalid base58 character');
+
+        for (let j = 0; j < decoded.length; j++) {
+            carry += decoded[j] * 58;
+            decoded[j] = carry & 255;
+            carry >>= 8;
+        }
+
+        while (carry > 0) {
+            decoded.push(carry & 255);
+            carry >>= 8;
+        }
+    }
+
+    // Handle leading zeros
+    for (let i = 0; i < str.length && str[i] === '1'; i++) {
+        decoded.push(0);
+    }
+
+    return new Uint8Array(decoded.reverse());
+}
+
+/**
+ * Converts Ergo address to ErgoTree
+ */
+function addressToErgoTree(address) {
+    try {
+        const decoded = base58Decode(address);
+
+        // Verify P2PK format
+        if (decoded.length < 34 || decoded[0] !== 0x01) {
+            throw new Error(`Invalid P2PK address format`);
+        }
+
+        // Extract public key (bytes 1-33)
+        const publicKey = decoded.slice(1, 34);
+        const publicKeyHex = Array.from(publicKey, byte =>
+            byte.toString(16).padStart(2, '0')
+        ).join('');
+
+        // Build P2PK ErgoTree: 0008cd + publicKey
+        return `0008cd${publicKeyHex}`;
+
+    } catch (error) {
+        console.error(`Address conversion failed: ${error.message}`);
+
+        // Hardcoded fallback for donation address
+        if (address === DONATION_CONFIG.recipientAddress) {
+            return "0008cd027ecf12ead2d42ab4ede6d6faf6f1fb0f2af84ee66a1a8be2f426b6bc2a2cccd4b";
+        }
+
+        throw error;
+    }
+}
+
+/**
+ * Selects UTXOs to cover required amount and collects all tokens
+ */
+function selectInputsAndTokens(utxos, requiredAmount) {
+    // Sort UTXOs by value (largest first)
+    const sortedUtxos = [...utxos].sort((a, b) =>
+        Number(BigInt(b.value) - BigInt(a.value))
+    );
+
+    let selectedInputs = [];
+    let totalInputValue = 0n;
+    const allTokens = new Map();
+
+    for (const utxo of sortedUtxos) {
+        selectedInputs.push(utxo);
+        totalInputValue += BigInt(utxo.value);
+
+        // Collect all tokens from this UTXO
+        if (utxo.assets && utxo.assets.length > 0) {
+            utxo.assets.forEach(token => {
+                const existing = allTokens.get(token.tokenId) || 0n;
+                allTokens.set(token.tokenId, existing + BigInt(token.amount));
+            });
+        }
+
+        if (totalInputValue >= requiredAmount) {
+            break;
+        }
+    }
+
+    if (totalInputValue < requiredAmount) {
+        throw new Error(
+            `Insufficient funds. Need ${Number(requiredAmount) / Number(NANOERGS_PER_ERG)} ERG ` +
+            `but only have ${Number(totalInputValue) / Number(NANOERGS_PER_ERG)} ERG`
+        );
+    }
+
+    return { selectedInputs, totalInputValue, allTokens };
+}
+
+/**
+ * Converts token map to output format
+ */
+function tokensToOutputFormat(tokenMap) {
+    return Array.from(tokenMap.entries()).map(([tokenId, amount]) => ({
+        tokenId,
+        amount: amount.toString()
+    }));
+}
+
+// ===================================================================
+// TRANSACTION BUILDING
+// ===================================================================
+
+/**
+ * Builds a proper donation transaction according to Ergo protocol
+ */
+async function buildDonationTransaction(donationAmountERG) {
+    if (!walletConnector?.isConnected) {
+        throw new Error('Wallet not connected');
+    }
+
+    // Convert amount to nanoERGs
+    const donationAmount = BigInt(Math.floor(donationAmountERG * Number(NANOERGS_PER_ERG)));
+    const totalRequired = donationAmount + MIN_FEE;
+
+    // Get blockchain data
+    const currentHeight = await window.ergo.get_current_height();
+    const utxos = await window.ergo.get_utxos();
+    const changeAddress = await window.ergo.get_change_address();
+
+    if (!utxos || utxos.length === 0) {
+        throw new Error('No UTXOs available');
+    }
+
+    // Select inputs
+    const { selectedInputs, totalInputValue, allTokens } = selectInputsAndTokens(utxos, totalRequired);
+
+    // Get ErgoTrees
+    const donationErgoTree = addressToErgoTree(DONATION_CONFIG.recipientAddress);
+    const changeErgoTree = addressToErgoTree(changeAddress);
+
+    // Verify addresses are different
+    if (donationErgoTree === changeErgoTree) {
+        throw new Error('Donation and change addresses cannot be the same');
+    }
+
+    // Build outputs
+    const outputs = [];
+
+    // OUTPUT 1: Donation (pure ERG, no tokens)
+    outputs.push({
+        value: donationAmount.toString(),
+        ergoTree: donationErgoTree,
+        assets: [],
+        additionalRegisters: {},
+        creationHeight: currentHeight
+    });
+
+    // OUTPUT 2: Fee (explicit fee output)
+    outputs.push({
+        value: MIN_FEE.toString(),
+        ergoTree: FEE_ERGOTREE,
+        assets: [],
+        additionalRegisters: {},
+        creationHeight: currentHeight
+    });
+
+    // OUTPUT 3: Change (remaining ERG + ALL tokens)
+    const changeAmount = totalInputValue - donationAmount - MIN_FEE;
+
+    if (changeAmount > 0n || allTokens.size > 0) {
+        const changeTokens = tokensToOutputFormat(allTokens);
+
+        // Ensure minimum value for box with tokens
+        let finalChangeAmount = changeAmount;
+        if (changeAmount < 1000000n && allTokens.size > 0) {
+            finalChangeAmount = 1000000n;
+        }
+
+        if (finalChangeAmount > 0n || changeTokens.length > 0) {
+            outputs.push({
+                value: finalChangeAmount.toString(),
+                ergoTree: changeErgoTree,
+                assets: changeTokens,
+                additionalRegisters: {},
+                creationHeight: currentHeight
+            });
+        }
+    }
+
+    // Build transaction
+    const transaction = {
+        inputs: selectedInputs,
+        outputs: outputs,
+        dataInputs: []
+    };
+
+    // Critical balance verification
+    const totalOutputValue = outputs.reduce((sum, output) => sum + BigInt(output.value), 0n);
+    if (totalInputValue !== totalOutputValue) {
+        throw new Error(`Balance mismatch! Inputs: ${Number(totalInputValue)} ≠ Outputs: ${Number(totalOutputValue)}`);
+    }
+
+    return transaction;
+}
+
+// ===================================================================
+// MAIN DONATION FUNCTION
+// ===================================================================
+
+/**
+ * Main donation processing function
  */
 async function processDonation(donationAmount) {
     if (donationInProgress) {
@@ -32,8 +261,6 @@ async function processDonation(donationAmount) {
     donationInProgress = true;
     
     try {
-        console.log('=== STARTING SIMPLIFIED DONATION ===');
-        console.log('Using proven react-ergo-payments pattern');
         showDonationStatus('Preparing donation...', 'info');
 
         if (!walletConnector?.isConnected) {
@@ -44,47 +271,33 @@ async function processDonation(donationAmount) {
             throw new Error(`Invalid amount. Must be between ${DONATION_CONFIG.minAmount} and ${DONATION_CONFIG.maxAmount} ERG`);
         }
 
-        const donationNanoErg = ergToNanoErg(donationAmount);
-        console.log('Donation amount (nanoERG):', donationNanoErg);
-
-        // Get basic wallet info
+        // Check wallet balance
         const balance = await window.ergo.get_balance();
-        console.log('Wallet balance:', balance);
-
-        // Check if we have enough funds (rough check)
-        const totalNeeded = BigInt(donationNanoErg) + BigInt("2000000"); // 0.002 ERG buffer for fees
-        if (BigInt(balance) < totalNeeded) {
-            const availableERG = Number(balance) / 1e9;
-            const neededERG = Number(totalNeeded) / 1e9;
-            throw new Error(`Insufficient funds. Need approximately ${neededERG.toFixed(3)} ERG, have ${availableERG.toFixed(3)} ERG`);
+        const donationAmountERG = parseFloat(donationAmount);
+        const requiredTotal = donationAmountERG + 0.001; // donation + fee
+        const availableERG = Number(balance) / Number(NANOERGS_PER_ERG);
+        
+        if (availableERG < requiredTotal) {
+            throw new Error(`Insufficient funds. Need ${requiredTotal.toFixed(3)} ERG, have ${availableERG.toFixed(3)} ERG`);
         }
 
+        showDonationStatus('Building transaction...', 'info');
+
+        // Build the transaction
+        const transaction = await buildDonationTransaction(donationAmountERG);
+
         showDonationStatus('Please approve the transaction in your wallet...', 'info');
-
-        // Use the simplest possible format that works (based on react-ergo-payments success)
-        const transactionRequest = {
-            outputs: [{
-                address: DONATION_CONFIG.recipientAddress,
-                value: donationNanoErg
-            }]
-        };
-
-        console.log('Simple transaction request:', JSON.stringify(transactionRequest, null, 2));
 
         // Sign transaction
         let signedTransaction;
         try {
-            signedTransaction = await window.ergo.sign_tx(transactionRequest);
-            console.log('Transaction signed successfully!');
+            signedTransaction = await window.ergo.sign_tx(transaction);
             
         } catch (signError) {
-            console.error('Signing error:', signError);
-            
             if (signError.info === "User rejected." || signError.code === 2) {
                 throw new Error('Transaction was cancelled by user');
             }
             
-            // If simple format fails, the issue might be fundamental
             throw new Error(`Transaction signing failed: ${signError.info || signError.message || 'Unknown error'}`);
         }
 
@@ -92,17 +305,11 @@ async function processDonation(donationAmount) {
         showDonationStatus('Submitting transaction to blockchain...', 'info');
         
         const txId = await window.ergo.submit_tx(signedTransaction);
-        console.log('Transaction submitted successfully:', txId);
 
         // Success!
         showDonationStatus(`Donation successful! TX: ${txId.substring(0, 16)}...`, 'success');
         
-        setTimeout(() => {
-            if (confirm(`Donation sent successfully!\n\nTransaction ID: ${txId}\n\nWould you like to view it in the blockchain explorer?`)) {
-                window.open(`https://explorer.ergoplatform.com/en/transactions/${txId}`, '_blank');
-            }
-        }, 2000);
-        
+           
         return txId;
 
     } catch (error) {
@@ -121,6 +328,10 @@ async function processDonation(donationAmount) {
         donationInProgress = false;
     }
 }
+
+// ===================================================================
+// UI FUNCTIONS
+// ===================================================================
 
 function showDonationStatus(message, type = 'info') {
     const existingStatus = document.querySelector('.donation-status');
@@ -247,19 +458,14 @@ function showDonationModal() {
 }
 
 function initializeDonation() {
-    console.log('=== INITIALIZING SIMPLIFIED DONATION SYSTEM ===');
-    console.log('Based on proven react-ergo-payments implementation');
-    
     const donationButton = document.getElementById('donation-button');
     if (donationButton) {
         donationButton.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('Donation button clicked!');
             showDonationModal();
         });
-        console.log('✓ Donation button found and event listener added');
     } else {
-        console.warn('⚠ Donation button not found');
+        console.warn('Donation button not found');
     }
 }
 
