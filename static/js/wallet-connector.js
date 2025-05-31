@@ -198,11 +198,10 @@ function showWalletInfo(info) {
     walletInfoDiv.addEventListener('click', function(e) {
         if (e.target.classList.contains('disconnect-btn')) {
             walletConnector.disconnect();
-            document.getElementById('connect-button').innerHTML = `
-                <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
-                Connect Wallet
-            `;
-            document.getElementById('connect-button').classList.remove('connected');
+            
+            // Show the connect button again when disconnecting
+            updateWalletButtonVisibility(false);
+            
             showWalletInfo(null);
             showWalletStatus('Wallet disconnected', 'info');
             return;
@@ -249,12 +248,12 @@ function initializeWalletConnection() {
     
     connectButton.addEventListener('click', async function() {
         if (walletConnector.isConnected) {
+            // Disconnect wallet
             walletConnector.disconnect();
-            this.innerHTML = `
-                <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
-                Connect Wallet
-            `;
-            this.classList.remove('connected');
+            
+            // Show the connect button again
+            updateWalletButtonVisibility(false);
+            
             showWalletInfo(null);
             showWalletStatus('Wallet disconnected', 'info');
         } else {
@@ -271,11 +270,8 @@ function initializeWalletConnection() {
                 const address = await walletConnector.getAddress();
                 const balance = await walletConnector.getBalance();
                 
-                this.innerHTML = `
-                    <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
-                    Disconnect
-                `;
-                this.classList.add('connected');
+                // Hide the connect button when successfully connected
+                updateWalletButtonVisibility(true);
                 
                 showWalletInfo({
                     name: wallet.name,
@@ -288,14 +284,11 @@ function initializeWalletConnection() {
             } catch (error) {
                 showWalletStatus('Failed to connect: ' + error.message, 'error');
                 console.error('Wallet connection error:', error);
+                
+                // Make sure button is visible and reset if connection failed
+                updateWalletButtonVisibility(false);
             } finally {
                 this.disabled = false;
-                if (!walletConnector.isConnected) {
-                    this.innerHTML = `
-                        <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
-                        Connect Wallet
-                    `;
-                }
             }
         }
     });
@@ -310,4 +303,120 @@ function initializeWalletConnection() {
             connectButton.title = `Connect to your Ergo wallet (${wallets.map(w => w.name).join(', ')} detected)`;
         }
     }, 1000);
+}
+
+    // Check for wallet availability on page load
+    setTimeout(async () => {
+        const wallets = await walletConnector.detectWallets();
+        if (wallets.length === 0) {
+            connectButton.title = 'No Ergo wallets detected. Please install Nautilus, Eternl, or Minotaur.';
+            connectButton.style.opacity = '0.7';
+        } else {
+            connectButton.title = `Connect to your Ergo wallet (${wallets.map(w => w.name).join(', ')} detected)`;
+        }
+    }, 1000);
+
+
+// Add this to your wallet-connector.js or main.js file
+
+// Function to update button visibility based on wallet connection status
+function updateWalletButtonVisibility(isConnected) {
+    const connectButton = document.getElementById('connect-button');
+    
+    if (isConnected) {
+        // Hide the button when wallet is connected
+        connectButton.style.display = 'none';
+    } else {
+        // Show the button when wallet is not connected
+        connectButton.style.display = 'block';
+        // Reset button text when showing
+        connectButton.innerHTML = `
+            <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+            Connect Wallet
+        `;
+    }
+}
+
+// Call this function whenever the wallet connection status changes
+// Example usage in your existing wallet connection logic:
+
+// When wallet connects successfully:
+function onWalletConnected() {
+    // Your existing connection logic here...
+    
+    // Hide the connect button
+    updateWalletButtonVisibility(true);
+}
+
+// When wallet disconnects:
+function onWalletDisconnected() {
+    // Your existing disconnection logic here...
+    
+    // Show the connect button
+    updateWalletButtonVisibility(false);
+}
+
+// Alternative approach using CSS classes (recommended):
+// Add this CSS to your styles.css file:
+/*
+.wallet-connected .connect-button {
+    display: none !important;
+}
+*/
+
+// Then use this JavaScript approach instead:
+function updateWalletButtonWithClass(isConnected) {
+    const walletSection = document.querySelector('.wallet-section');
+    
+    if (isConnected) {
+        walletSection.classList.add('wallet-connected');
+    } else {
+        walletSection.classList.remove('wallet-connected');
+    }
+}
+
+// If you want to show a disconnect button instead, you can create a new button:
+function createDisconnectButton() {
+    const disconnectButton = document.createElement('button');
+    disconnectButton.id = 'disconnect-button';
+    disconnectButton.className = 'disconnect-button';
+    disconnectButton.innerHTML = `
+        <img src="/static/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
+        Disconnect Wallet
+    `;
+    
+    disconnectButton.addEventListener('click', () => {
+        // Your disconnect logic here
+        disconnectWallet();
+    });
+    
+    return disconnectButton;
+}
+
+// Complete solution with disconnect button:
+function manageWalletButtons(isConnected) {
+    const walletSection = document.querySelector('.wallet-section');
+    const connectButton = document.getElementById('connect-button');
+    let disconnectButton = document.getElementById('disconnect-button');
+    
+    if (isConnected) {
+        // Hide connect button
+        connectButton.style.display = 'none';
+        
+        // Show disconnect button if it doesn't exist
+        if (!disconnectButton) {
+            disconnectButton = createDisconnectButton();
+            walletSection.appendChild(disconnectButton);
+        } else {
+            disconnectButton.style.display = 'block';
+        }
+    } else {
+        // Show connect button
+        connectButton.style.display = 'block';
+        
+        // Hide disconnect button
+        if (disconnectButton) {
+            disconnectButton.style.display = 'none';
+        }
+    }
 }
