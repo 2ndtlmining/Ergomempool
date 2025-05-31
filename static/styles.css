@@ -1301,3 +1301,13 @@ button#connect-button.wallet-connected-hidden,
     transform: none;
     box-shadow: none;
 }
+
+.block-container {
+    position: relative;
+    transform: translateZ(0);
+}
+
+.block-container.animating {
+    backface-visibility: hidden;
+    perspective: 1000px;
+}

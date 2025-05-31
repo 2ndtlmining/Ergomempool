@@ -1,4 +1,4 @@
-// blocks.js - Block display, animation, and update functions
+// blocks.js - Block display, animation, and update functions with debugging
 
 // Global variable to track previous block data for animation detection
 let previousBlockData = null;
@@ -86,72 +86,217 @@ function animateBlockTransition(newBlocks) {
  * @param {Array} newBlocks - Array of new block data
  */
 function performBlockAnimation(newBlocks) {
-    // Animate next block moving right (simplified to one direction)
-    animateNextBlockToRight(newBlocks);
+    console.log('performBlockAnimation called with:', newBlocks.length, 'blocks');
+    
+    // Choose animation method:
+    // Method 1: Simple transform animation (recommended for debugging)
+    animateNextBlockToRightSimple(newBlocks);
+    
+    // Method 2: CSS keyframes (alternative)
+    // animateNextBlockToRightCSS(newBlocks);
+    
+    // Method 3: Original improved version 
+    // animateNextBlockToRightAdvanced(newBlocks);
 }
 
 /**
- * Animate the next block transitioning to the last 4 blocks section
+ * Simple, debuggable animation that should definitely work
  * @param {Array} newBlocks - Array of new block data
  */
-function animateNextBlockToRight(newBlocks) {
-    const nextBlock = document.getElementById('next-block');
-    const nextBlockContainer = nextBlock.parentElement;
+function animateNextBlockToRightSimple(newBlocks) {
+    console.log('Starting simple block animation...');
     
-    // Get all Last 4 Block containers
-    const block0Container = document.getElementById('block-0').parentElement;
-    const block1Container = document.getElementById('block-1').parentElement;
-    const block2Container = document.getElementById('block-2').parentElement;
-    const block3Container = document.getElementById('block-3').parentElement;
+    // Get ALL block containers using the exact structure from your HTML
+    const containers = [];
     
-    // Step 1: Animate next block moving right
-    nextBlockContainer.style.transform = 'translateX(400px)';
-    nextBlockContainer.style.transition = 'all 0.8s ease';
+    // Next block container
+    const nextBlockContainer = document.querySelector('#next-block-section .block-container');
+    if (nextBlockContainer) {
+        containers.push({ element: nextBlockContainer, type: 'next' });
+        console.log('Found next block container');
+    } else {
+        console.error('Could not find next block container');
+    }
     
-    // Step 2: Shift all Last 4 Blocks to the right
-    block0Container.style.transform = 'translateX(220px)'; // Move right to make room
-    block0Container.style.transition = 'all 0.8s ease';
+    // Existing block containers (0, 1, 2, 3)
+    for (let i = 0; i < 4; i++) {
+        const blockElement = document.getElementById(`block-${i}`);
+        if (blockElement) {
+            const container = blockElement.closest('.block-container');
+            if (container) {
+                containers.push({ element: container, type: 'existing', index: i });
+                console.log(`Found block container ${i}`);
+            }
+        }
+    }
     
-    block1Container.style.transform = 'translateX(220px)';
-    block1Container.style.transition = 'all 0.8s ease';
+    console.log(`Total containers found: ${containers.length}`);
     
-    block2Container.style.transform = 'translateX(220px)';
-    block2Container.style.transition = 'all 0.8s ease';
-    
-    // Step 3: Last block (position 3) moves off screen
-    block3Container.style.transform = 'translateX(440px)';
-    block3Container.style.opacity = '0';
-    block3Container.style.transition = 'all 0.8s ease';
-    
-    // Step 4: After animation, update data
-    setTimeout(() => {
+    if (containers.length < 5) {
+        console.error('Not enough containers found for animation');
+        // Fallback: just update without animation
         updateBlocksWithAnimation(newBlocks);
-        resetAllBlocks([nextBlockContainer, block0Container, block1Container, block2Container, block3Container]);
-    }, 800);
+        updateNextBlockInfo();
+        return;
+    }
+    
+    // Animation settings
+    const DURATION = 1200; // 1.2 seconds for visibility
+    const DISTANCE = 240; // Pixels to move
+    
+    // Prepare all containers for animation
+    containers.forEach(({ element, type, index }, i) => {
+        element.style.transition = `transform ${DURATION}ms ease-in-out, opacity ${DURATION}ms ease-in-out`;
+        element.style.position = 'relative';
+        element.style.zIndex = '100';
+        
+        // Debug: Add temporary colored border
+        //element.style.outline = `3px solid ${type === 'next' ? 'red' : 'blue'}`;
+        
+        console.log(`Prepared container ${type} ${index !== undefined ? index : ''}`);
+    });
+    
+    // Start animation after small delay
+    setTimeout(() => {
+        containers.forEach(({ element, type, index }) => {
+            if (type === 'next') {
+                // Next block moves right
+                element.style.transform = `translateX(${DISTANCE}px)`;
+                console.log('Moving next block right');
+            } else if (type === 'existing') {
+                if (index === 3) {
+                    // Last block fades and moves
+                    element.style.transform = `translateX(${DISTANCE}px)`;
+                    element.style.opacity = '0';
+                    console.log('Moving and fading last block');
+                } else {
+                    // Other blocks just move
+                    element.style.transform = `translateX(${DISTANCE}px)`;
+                    console.log(`Moving block ${index} right`);
+                }
+            }
+        });
+    }, 50);
+    
+    // Clean up after animation
+    setTimeout(() => {
+        console.log('Cleaning up animation...');
+        
+        containers.forEach(({ element }) => {
+            element.style.transition = '';
+            element.style.transform = '';
+            element.style.opacity = '';
+            element.style.position = '';
+            element.style.zIndex = '';
+            //element.style.outline = ''; // Remove debug border
+        });
+        
+        // Update blocks with new data
+        updateBlocksWithAnimation(newBlocks);
+        updateNextBlockInfo();
+        
+        console.log('Animation cleanup complete');
+    }, DURATION + 100);
 }
 
 /**
- * Reset all block container transforms and update displays
- * @param {Array} containers - Array of DOM containers to reset
+ * CSS Keyframes approach as alternative
+ * @param {Array} newBlocks - Array of new block data
  */
-function resetAllBlocks(containers) {
-    // Reset transforms for all containers
-    containers.forEach(container => {
-        container.style.transform = '';
-        container.style.transition = '';
-        container.style.opacity = '';
-    });
+function animateNextBlockToRightCSS(newBlocks) {
+    console.log('Starting CSS keyframe animation...');
     
-    // Update next block with new mempool data
-    updateNextBlockInfo();
+    // Create dynamic CSS keyframes
+    const animationCSS = `
+        <style id="block-animation-styles">
+            @keyframes slideBlockRight {
+                from { transform: translateX(0px); }
+                to { transform: translateX(240px); }
+            }
+            
+            @keyframes slideAndFadeRight {
+                from { 
+                    transform: translateX(0px); 
+                    opacity: 1; 
+                }
+                to { 
+                    transform: translateX(240px); 
+                    opacity: 0; 
+                }
+            }
+            
+            .block-slide-right {
+                animation: slideBlockRight 1s ease-in-out forwards !important;
+                position: relative !important;
+                z-index: 100 !important;
+            }
+            
+            .block-slide-fade-right {
+                animation: slideAndFadeRight 1s ease-in-out forwards !important;
+                position: relative !important;
+                z-index: 100 !important;
+            }
+        </style>
+    `;
     
-    // Add fade-in animation to new next block
-    const nextBlockContainer = document.getElementById('next-block').parentElement;
-    nextBlockContainer.classList.add('block-fade-in');
+    // Add styles to head
+    document.head.insertAdjacentHTML('beforeend', animationCSS);
+    
+    // Apply animations
+    const nextContainer = document.querySelector('#next-block-section .block-container');
+    if (nextContainer) {
+        nextContainer.classList.add('block-slide-right');
+    }
+    
+    for (let i = 0; i < 4; i++) {
+        const blockElement = document.getElementById(`block-${i}`);
+        if (blockElement) {
+            const container = blockElement.closest('.block-container');
+            if (container) {
+                if (i === 3) {
+                    container.classList.add('block-slide-fade-right');
+                } else {
+                    container.classList.add('block-slide-right');
+                }
+            }
+        }
+    }
+    
+    // Clean up after animation
     setTimeout(() => {
-        nextBlockContainer.classList.remove('block-fade-in');
-    }, 600);
+        // Remove animation classes
+        document.querySelectorAll('.block-slide-right, .block-slide-fade-right').forEach(el => {
+            el.classList.remove('block-slide-right', 'block-slide-fade-right');
+        });
+        
+        // Remove styles
+        const styleEl = document.getElementById('block-animation-styles');
+        if (styleEl) styleEl.remove();
+        
+        // Update blocks
+        updateBlocksWithAnimation(newBlocks);
+        updateNextBlockInfo();
+        
+        console.log('CSS Animation complete');
+    }, 1100);
 }
+
+/**
+ * Test function for manual debugging
+ */
+function testBlockAnimation() {
+    console.log('Testing block animation...');
+    
+    const testData = [
+        { height: 999999, id: 'test', size: 1000000, minerReward: 15.5, transactionsCount: 150, timestamp: Date.now() },
+        { height: 999998, id: 'test2', size: 900000, minerReward: 15.2, transactionsCount: 120, timestamp: Date.now() - 60000 }
+    ];
+    
+    performBlockAnimation(testData);
+}
+
+// Make test function available globally for debugging
+window.testBlockAnimation = testBlockAnimation;
 
 /**
  * Calculate how long ago a block was mined
@@ -312,3 +457,9 @@ function updateBlocksNormal(blockLabels) {
         }
     });
 }
+
+// Debug logging
+console.log('Blocks.js loaded with debugging enabled');
+console.log('Available debug functions:');
+console.log('- window.testBlockAnimation() - Test the block animation manually');
+console.log('- Check browser console for animation debugging info');
