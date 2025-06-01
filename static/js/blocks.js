@@ -347,9 +347,10 @@ function updateBlocksWithAnimation(blockLabels) {
             // Update block content with real data including timestamp
             const blockElement = document.getElementById(`block-${i}`);  
             if (blockElement) {
-                // Change color from orange to purple when next block becomes mined
-                blockElement.style.background = 'linear-gradient(135deg, #8e44ad, #9b59b6)';
-                blockElement.style.border = '2px solid #7d3c98';
+                // REMOVED: The problematic color override that was forcing purple
+                // Let CSS handle the styling instead
+                
+                // Clear any animation styles to let CSS take over
                 blockElement.style.animation = 'none';
                 
                 let timeAgoText = '';
@@ -416,6 +417,9 @@ function updateBlocksNormal(blockLabels) {
             // Update block content with real data including timestamp
             const blockElement = document.getElementById(`block-${i}`);
             if (blockElement) {
+                // REMOVED: The problematic color override that was forcing purple
+                // Let CSS handle the styling instead
+                
                 let timeAgoText = '';
                 if (block.timestamp) {
                     timeAgoText = calculateTimeAgo(block.timestamp);

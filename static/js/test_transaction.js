@@ -4,7 +4,7 @@ const TEST_CONFIG = {
     defaultAmount: "0.001",
     minAmount: "0.001",
     maxAmount: "100.0",
-    defaultAddress: "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY" // Different default for testing
+    defaultAddress: "9hF8coEmr6Mnfh3gexuwnnU816kbW8qrVBoUraJC5Zb79T9DRnx" // Different default for testing
 };
 
 // Ergo protocol constants (same as donation)
