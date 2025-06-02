@@ -4,6 +4,7 @@
     align-items: center;
     position: relative;
     margin-bottom: 0;
+    transform: translateZ(0);
 }
 
 .block-container.animating {
@@ -26,16 +27,16 @@
     --secondary-blue: #3d5a7a;
     --accent-blue: #4a6b8a;
     --light-blue: #5a7b9a;
-    --primary-orange: #e67e22;
-    --secondary-orange: #f39c12;
-    --light-orange: #f5b041;
+    --primary-orange: #d4651b;
+    --secondary-orange: #e8730f;
+    --light-orange: #f2892a;
     --dark-bg: #1a2332;
     --darker-bg: #0f1419;
     --text-light: #ecf0f1;
     --text-muted: #bdc3c7;
     --border-color: rgba(74, 107, 138, 0.3);
     --glow-blue: rgba(44, 74, 107, 0.6);
-    --glow-orange: rgba(230, 126, 34, 0.6);
+    --glow-orange: rgba(212, 101, 27, 0.6);
 }
 
 /* Global Styles */
@@ -135,6 +136,7 @@ body, html {
 
 .logo-image {
     height: 60px;
+    transform: scale(1.9);
     width: auto;
     background: transparent;
     opacity: 1;
@@ -143,7 +145,7 @@ body, html {
 }
 
 .logo-image:hover {
-    transform: scale(1.05) rotate(2deg);
+    transform: scale(1.95) rotate(2deg);
     filter: drop-shadow(0 4px 12px rgba(230, 126, 34, 0.5));
 }
 
@@ -623,14 +625,14 @@ button#connect-button.wallet-connected-hidden,
 .blocks-section {
     display: flex;
     align-items: flex-start;
-    padding: 20px 25px;
+    padding: 8px 20px 12px 20px;
     background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
     justify-content: center;
-    gap: 35px;
+    gap: 30px;
     border-bottom: 1px solid var(--border-color);
     flex-direction: row;
     min-height: auto;
-    max-height: 220px;
+    max-height: 180px;
     overflow: hidden;
     position: relative;
 }
@@ -641,6 +643,7 @@ button#connect-button.wallet-connected-hidden,
     align-items: center;
     position: relative;
     z-index: 1;
+    min-height: 220px;
 }
 
 .blocks-grid {
@@ -656,7 +659,8 @@ button#connect-button.wallet-connected-hidden,
     color: var(--primary-orange);
     font-size: 16px;
     font-weight: bold;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+    margin-top: 0;
     text-align: center;
     text-shadow: 0 2px 4px rgba(230, 126, 34, 0.3);
     position: relative;
@@ -809,7 +813,8 @@ button#connect-button.wallet-connected-hidden,
     position: relative;
     justify-content: flex-start;
     padding-top: 0;
-    height: 180px;
+    height: 100%;
+    min-height: 220px;
 }
 
 .separator {
@@ -827,17 +832,10 @@ button#connect-button.wallet-connected-hidden,
     position: relative;
 }
 
+
+/* Remove the center dot that was added by the enhanced theme */
 .separator::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 8px;
-    height: 8px;
-    background: var(--primary-orange);
-    border-radius: 50%;
-    box-shadow: 0 0 10px var(--glow-orange);
+    display: none !important;
 }
 
 /* ============================================ */
@@ -1146,8 +1144,10 @@ td:last-child {
 @media (max-width: 1024px) {
     .blocks-grid {
         flex-wrap: wrap;
+        gap: 20px;
         gap: 18px;
         max-width: 800px;
+        flex-grow: 1;
     }
     
     .blocks-section {
@@ -1194,12 +1194,13 @@ td:last-child {
     
     .logo-image {
         height: 50px;
+        transform: scale(1.9);
     }
     
     .blocks-section {
         flex-direction: column;
-        gap: 25px;
-        padding: 25px 18px;
+        gap: 15px;
+        padding: 8px 15px 15px 15px;
         max-height: 400px;
     }
     
@@ -1207,22 +1208,25 @@ td:last-child {
         flex-direction: row;
         align-items: center;
         width: 100%;
+        min-height: auto;
         justify-content: center;
         height: auto;
     }
     
     .separator {
         width: 60%;
-        height: 2px;
-        background: linear-gradient(
-            to right,
-            var(--primary-orange) 0px,
-            var(--primary-orange) 8px,
-            transparent 8px,
-            transparent 16px
-        );
-        background-size: 16px 2px;
-        margin-top: 0;
+        height: calc(100% + 8px);
+        min-height: 280px;
+        background: repeating-linear-gradient(
+            to bottom,
+            #7f8c8d 0px,
+            #7f8c8d 3px,  /* Solid segment */
+            transparent 3px,
+            transparent 6px  /* Gap between segments */
+    );
+            margin-top: -4px; /* Pull it up slightly to align with titles */
+            flex-grow: 1;
+            position: relative;;
     }
     
     .blocks-grid {
@@ -1274,6 +1278,7 @@ td:last-child {
     
     .logo-image {
         height: 55px;
+        transform: scale(1.9);
     }
     
     .wallet-section {
