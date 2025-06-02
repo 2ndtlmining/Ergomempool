@@ -373,48 +373,117 @@ button#connect-button.wallet-connected-hidden,
     }
 }
 
-/* Wallet status notification */
+/* Wallet status notification - enhanced to match site theme */
 .wallet-status {
     position: fixed;
     top: 80px;
     right: 20px;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
     z-index: 1000;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transform: translateX(100%);
-    max-width: 320px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    max-width: 380px;
+    min-width: 280px;
+    
+    /* Enhanced styling to match site theme */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     border: 2px solid transparent;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    /* Font styling to match site */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    letter-spacing: 0.3px;
+    line-height: 1.4;
+    
+    /* Subtle animation shimmer */
+    position: relative;
+    overflow: hidden;
+}
+
+.wallet-status::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.1) 50%, 
+        transparent 100%
+    );
+    transition: left 0.6s ease;
 }
 
 .wallet-status.show {
     transform: translateX(0);
 }
 
+/* Success messages - using site's orange theme */
 .wallet-status.success { 
-    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+    background: linear-gradient(135deg, 
+        var(--primary-orange, #d4651b) 0%, 
+        var(--secondary-orange, #e8730f) 100%
+    );
     color: white;
-    border-color: var(--light-orange);
-    box-shadow: 0 4px 20px rgba(230, 126, 34, 0.4);
+    border-color: var(--light-orange, #f2892a);
+    box-shadow: 
+        0 8px 32px rgba(212, 101, 27, 0.4),
+        0 4px 16px rgba(212, 101, 27, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+/* Error messages - enhanced red theme */
 .wallet-status.error { 
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    background: linear-gradient(135deg, 
+        #e74c3c 0%, 
+        #c0392b 100%
+    );
     color: white;
     border-color: #f5b7b1;
-    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+    box-shadow: 
+        0 8px 32px rgba(231, 76, 60, 0.4),
+        0 4px 16px rgba(231, 76, 60, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+.wallet-status.error::after {
+    content: '❌';
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    font-size: 18px;
+}
+
+/* Info messages - using site's blue theme */
 .wallet-status.info { 
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    background: linear-gradient(135deg, 
+        var(--primary-blue, #2c4a6b) 0%, 
+        var(--secondary-blue, #3d5a7a) 100%
+    );
     color: white;
-    border-color: var(--accent-blue);
-    box-shadow: 0 4px 20px rgba(44, 74, 107, 0.4);
+    border-color: var(--accent-blue, #4a6b8a);
+    box-shadow: 
+        0 8px 32px rgba(44, 74, 107, 0.4),
+        0 4px 16px rgba(44, 74, 107, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.wallet-status.info::after {
+    content: 'ℹ️';
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    font-size: 18px;
 }
 
 /* Wallet transaction highlighting styles */

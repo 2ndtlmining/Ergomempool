@@ -1,11 +1,11 @@
-// visualization.js - Enhanced mempool visualization with transaction type icons
+// visualization.js - Clean mempool visualization with 2 modes: Grid and ERGO Block
 
 // Configuration for transaction type detection
 const TRANSACTION_TYPES = {
     DONATION: {
         icon: '💖',
         color: '#e74c3c',
-        addresses: ['9hF8coEmr6Mnfh3gexuwnnU816kbW8qrVBoUraJC5Zb79T9DRnx'] // Your donation address
+        addresses: ['9hF8coEmr6Mnfh3gexuwnnU816kbW8qrVBoUraJC5Zb79T9DRnx']
     },
     TEST: {
         icon: '🧪',
@@ -20,56 +20,43 @@ const TRANSACTION_TYPES = {
 // Track test transactions by storing their IDs when they're created
 let testTransactionIds = new Set();
 
+// Visualization mode - only 'grid' or 'ergo-block'
+let visualizationMode = 'grid';
+
 /**
  * Registers a transaction as a test transaction
- * This should be called when a test transaction is successfully submitted
  */
 function trackSpecialTransaction(txId, type = 'test') {
     if (type === 'test') {
         testTransactionIds.add(txId);
         console.log(`🧪 Registered test transaction: ${txId}`);
-        console.log(`🧪 Total test transactions tracked: ${testTransactionIds.size}`);
-        console.log(`🧪 All tracked test IDs:`, Array.from(testTransactionIds));
         
-        // Add a visual confirmation
+        // Refresh to show the new transaction
         setTimeout(() => {
-            console.log(`🔍 Checking if ${txId} is in tracked set:`, testTransactionIds.has(txId));
-        }, 100);
+            if (typeof loadTransactions === 'function') {
+                console.log('🔄 Refreshing transactions to show new test transaction');
+                loadTransactions();
+            }
+        }, 1000);
     }
-    
-    // Optional: Force refresh mempool visualization to show the new transaction
-    setTimeout(() => {
-        if (typeof loadTransactions === 'function') {
-            console.log('🔄 Refreshing transactions to show new test transaction');
-            loadTransactions();
-        }
-    }, 1000);
 }
 
 /**
  * Identifies the type of transaction based on outputs
  */
 function identifyTransactionType(transaction) {
-    // IMPORTANT: Check test transactions FIRST (before donation address check)
-    // because test transactions might also go to the donation address
+    // Check test transactions first
     if (testTransactionIds.has(transaction.id)) {
-        console.log('✅ Identified as TEST transaction:', transaction.id);
         return TRANSACTION_TYPES.TEST;
     }
     
-    // Then check if any output goes to donation address
+    // Check if any output goes to donation address
     if (transaction.outputs && transaction.outputs.length > 0) {
         for (const output of transaction.outputs) {
             if (output.address && TRANSACTION_TYPES.DONATION.addresses.includes(output.address)) {
-                console.log('✅ Identified as DONATION transaction:', transaction.id);
                 return TRANSACTION_TYPES.DONATION;
             }
         }
-    }
-    
-    // Debug logging to understand transaction structure (only when we have test transactions)
-    if (testTransactionIds.size > 0) {
-        console.log('📄 Regular transaction:', transaction.id);
     }
     
     return TRANSACTION_TYPES.REGULAR;
@@ -77,9 +64,6 @@ function identifyTransactionType(transaction) {
 
 /**
  * Get color based on transaction size
- * @param {number} size - Transaction size in bytes
- * @param {number} maxSize - Maximum size in the dataset
- * @returns {string} - Hex color code
  */
 function getColorBySize(size, maxSize) {
     const normalized = Math.min(size / maxSize, 1);
@@ -89,9 +73,6 @@ function getColorBySize(size, maxSize) {
 
 /**
  * Get color based on transaction value
- * @param {number} value - Transaction value in ERG
- * @param {number} maxValue - Maximum value in the dataset
- * @returns {string} - Hex color code
  */
 function getColorByValue(value, maxValue) {
     const normalized = Math.min(value / maxValue, 1);
@@ -101,11 +82,6 @@ function getColorByValue(value, maxValue) {
 
 /**
  * Calculate square size based on value
- * @param {number} value - The value to base size on
- * @param {number} maxValue - Maximum value in the dataset
- * @param {number} minSize - Minimum square size in pixels
- * @param {number} maxSizePixels - Maximum square size in pixels
- * @returns {number} - Square size in pixels
  */
 function getSquareSize(value, maxValue, minSize = 8, maxSizePixels = 24) {
     const normalized = Math.min(value / maxValue, 1);
@@ -113,12 +89,101 @@ function getSquareSize(value, maxValue, minSize = 8, maxSizePixels = 24) {
 }
 
 /**
- * Create the main mempool visualization grid with enhanced transaction type detection
- * Uses global variables: transactions, colorMode, walletConnector
+ * Create a transaction square element for grid mode
  */
-function createVisualization() {
+function createTransactionSquare(tx, maxSize, maxValue) {
+    const square = document.createElement('div');
+    square.className = 'transaction-square';
+    square.style.position = 'relative';
+    
+    // Identify transaction type
+    const transactionType = identifyTransactionType(tx);
+    
+    const size = getSquareSize(colorMode === 'size' ? tx.size : tx.value, 
+                             colorMode === 'size' ? maxSize : maxValue);
+    
+    const color = colorMode === 'size' 
+        ? getColorBySize(tx.size || 0, maxSize)
+        : getColorByValue(tx.value || 0, maxValue);
+
+    square.style.width = `${size}px`;
+    square.style.height = `${size}px`;
+    square.style.backgroundColor = color;
+    square.style.borderRadius = '3px';
+    square.style.cursor = 'pointer';
+    square.style.transition = 'all 0.3s ease';
+
+    // Add transaction type styling and data attributes
+    if (transactionType.color) {
+        square.dataset.type = transactionType === TRANSACTION_TYPES.DONATION ? 'donation' : 'test';
+        square.style.border = `2px solid ${transactionType.color}`;
+    }
+
+    // Check if this transaction involves the connected wallet
+    if (walletConnector.isConnected && walletConnector.connectedAddress) {
+        if (isWalletTransaction(tx, walletConnector.connectedAddress)) {
+            square.classList.add('wallet-transaction');
+            square.style.border = '3px solid #f39c12';
+            square.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6), 0 0 45px rgba(243, 156, 18, 0.3)';
+            square.style.zIndex = '10';
+            square.style.position = 'relative';
+            square.style.animation = 'walletGlow 2s ease-in-out infinite alternate';
+        }
+    }
+
+    // Add transaction type icon if it has one
+    if (transactionType.icon) {
+        const iconOverlay = document.createElement('div');
+        iconOverlay.className = 'transaction-type-icon';
+        iconOverlay.textContent = transactionType.icon;
+        iconOverlay.style.cssText = `
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            font-size: ${Math.min(size * 0.4, 12)}px;
+            z-index: 20;
+            pointer-events: none;
+            text-shadow: 0 0 3px rgba(0,0,0,0.8);
+            filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
+            line-height: 1;
+        `;
+        square.appendChild(iconOverlay);
+    }
+
+    // Add hover events for tooltip
+    square.addEventListener('mouseenter', (e) => {
+        showTooltipEnhanced(e, tx, transactionType);
+    });
+
+    square.addEventListener('mouseleave', () => {
+        hideTooltip();
+    });
+
+    // Add click event to open transaction in new tab
+    square.addEventListener('click', () => {
+        window.open(`https://sigmaspace.io/en/transaction/${tx.id}`, '_blank');
+    });
+
+    return square;
+}
+
+/**
+ * Create the main mempool grid visualization
+ */
+function createGridVisualization() {
     const grid = document.getElementById('mempool-grid');
     grid.innerHTML = '';
+    
+    // Reset grid styles to original
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(8px, 1fr))';
+    grid.style.gridTemplateRows = 'auto';
+    grid.style.gap = '2px';
+    grid.style.padding = '15px';
+    grid.style.flexDirection = '';
+    grid.style.alignItems = '';
+    grid.style.justifyContent = '';
+    grid.style.minHeight = '300px';
 
     if (transactions.length === 0) {
         grid.innerHTML = '<div class="loading">No transactions available</div>';
@@ -132,94 +197,47 @@ function createVisualization() {
     const displayTransactions = transactions.slice(0, 500);
 
     displayTransactions.forEach((tx, index) => {
-        const square = document.createElement('div');
-        square.className = 'transaction-square';
-        square.style.position = 'relative'; // Important for icon positioning
-        
-        // Identify transaction type
-        const transactionType = identifyTransactionType(tx);
+        const square = createTransactionSquare(tx, maxSize, maxValue);
         
         const size = getSquareSize(colorMode === 'size' ? tx.size : tx.value, 
                                  colorMode === 'size' ? maxSize : maxValue);
         
-        const color = colorMode === 'size' 
-            ? getColorBySize(tx.size || 0, maxSize)
-            : getColorByValue(tx.value || 0, maxValue);
-
-        square.style.width = `${size}px`;
-        square.style.height = `${size}px`;
-        square.style.backgroundColor = color;
         square.style.gridColumn = `span ${Math.max(1, Math.floor(size / 8))}`;
         square.style.gridRow = `span ${Math.max(1, Math.floor(size / 8))}`;
-
-        // Add transaction type styling and data attributes
-        if (transactionType.color) {
-            square.dataset.type = transactionType === TRANSACTION_TYPES.DONATION ? 'donation' : 'test';
-            square.style.border = `2px solid ${transactionType.color}`;
-        }
-
-        // Check if this transaction involves the connected wallet
-        if (walletConnector.isConnected && walletConnector.connectedAddress) {
-            if (isWalletTransaction(tx, walletConnector.connectedAddress)) {
-                square.classList.add('wallet-transaction');
-                // Enhanced gold glow effect - much larger and more prominent
-                square.style.border = '3px solid #f39c12';
-                square.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6), 0 0 45px rgba(243, 156, 18, 0.3)';
-                square.style.zIndex = '10';
-                square.style.position = 'relative';
-                
-                // Add subtle pulsing animation
-                square.style.animation = 'walletGlow 2s ease-in-out infinite alternate';
-            }
-        }
-
-        // Add transaction type icon if it has one
-        if (transactionType.icon) {
-            const iconOverlay = document.createElement('div');
-            iconOverlay.className = 'transaction-type-icon';
-            iconOverlay.textContent = transactionType.icon;
-            iconOverlay.style.cssText = `
-                position: absolute;
-                top: 1px;
-                right: 1px;
-                font-size: ${Math.min(size * 0.4, 12)}px;
-                z-index: 20;
-                pointer-events: none;
-                text-shadow: 0 0 3px rgba(0,0,0,0.8);
-                filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
-                line-height: 1;
-            `;
-            square.appendChild(iconOverlay);
-        }
-
-        // Add hover events for tooltip
-        square.addEventListener('mouseenter', (e) => {
-            showTooltipEnhanced(e, tx, transactionType);
-        });
-
-        square.addEventListener('mouseleave', () => {
-            hideTooltip();
-        });
-
-        // Add click event to open transaction in new tab
-        square.addEventListener('click', () => {
-            window.open(`https://sigmaspace.io/en/transaction/${tx.id}`, '_blank');
-        });
 
         grid.appendChild(square);
     });
 }
 
 /**
+ * Main visualization function - chooses between grid and ERGO block mode
+ */
+function createVisualization() {
+    console.log(`🎨 Creating visualization in ${visualizationMode} mode`);
+    
+    if (visualizationMode === 'ergo-block') {
+        // Use the byte-based ERGO block visualization from logo_visualization.js
+        if (typeof window.createERGOBlockVisualization === 'function') {
+            window.createERGOBlockVisualization();
+        } else {
+            console.error('❌ ERGO Block visualization not loaded. Make sure logo_visualization.js is included.');
+            console.log('🔄 Falling back to grid view');
+            visualizationMode = 'grid';
+            createGridVisualization();
+        }
+    } else {
+        // Default grid visualization
+        createGridVisualization();
+    }
+}
+
+/**
  * Enhanced tooltip function that shows transaction type
- * @param {MouseEvent} event - Mouse event for positioning
- * @param {Object} tx - Transaction object
- * @param {Object} transactionType - Transaction type object
  */
 function showTooltipEnhanced(event, tx, transactionType) {
     const tooltip = document.getElementById('tooltip');
     const usdValue = tx.usd_value || 0;
-    const shortId = shortenTransactionId(tx.id, 8, 8); // Use 8 chars for tooltip
+    const shortId = shortenTransactionId(tx.id, 8, 8);
     
     // Check if this is a wallet transaction
     const isWalletTx = walletConnector.isConnected && walletConnector.connectedAddress && 
@@ -254,8 +272,6 @@ function showTooltipEnhanced(event, tx, transactionType) {
 
 /**
  * Show tooltip on transaction hover (legacy function for compatibility)
- * @param {MouseEvent} event - Mouse event for positioning
- * @param {Object} tx - Transaction object
  */
 function showTooltip(event, tx) {
     const transactionType = identifyTransactionType(tx);
@@ -270,20 +286,50 @@ function hideTooltip() {
 }
 
 /**
- * Initialize visualization control event listeners
- * Sets up color mode switching buttons
+ * Initialize visualization controls with 2 modes only
  */
 function initializeVisualizationControls() {
+    const controlsDiv = document.querySelector('.controls');
+    
+    // Add ERGO Block view toggle button
+    const ergoBlockButton = document.createElement('button');
+    ergoBlockButton.className = 'control-button';
+    ergoBlockButton.id = 'ergo-block-toggle';
+    ergoBlockButton.innerHTML = '📦 ERGO Block';
+    ergoBlockButton.title = 'View mempool as bytes filling an ERGO block (2MB capacity)';
+    
+    // Insert the button before refresh button
+    const refreshButton = document.getElementById('refresh-data');
+    controlsDiv.insertBefore(ergoBlockButton, refreshButton);
+    
+    ergoBlockButton.addEventListener('click', function() {
+        if (visualizationMode === 'grid') {
+            visualizationMode = 'ergo-block';
+            this.textContent = '📊 Grid View';
+            this.classList.add('active');
+        } else {
+            visualizationMode = 'grid';
+            this.textContent = '📦 ERGO Block';
+            this.classList.remove('active');
+        }
+        createVisualization();
+    });
+    
+    // Keep existing color mode controls
     document.getElementById('color-by-size').addEventListener('click', function() {
         colorMode = 'size';
-        document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.control-button').forEach(btn => {
+            if (btn.id !== 'ergo-block-toggle') btn.classList.remove('active');
+        });
         this.classList.add('active');
         createVisualization();
     });
 
     document.getElementById('color-by-value').addEventListener('click', function() {
         colorMode = 'value';
-        document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.control-button').forEach(btn => {
+            if (btn.id !== 'ergo-block-toggle') btn.classList.remove('active');
+        });
         this.classList.add('active');
         createVisualization();
     });
@@ -348,6 +394,57 @@ function addTransactionIconStyles() {
         .transaction-square[data-type="test"]:hover {
             transform: scale(1.05);
             z-index: 100;
+        }
+        
+        /* ERGO Block toggle button styling */
+        #ergo-block-toggle {
+            background: linear-gradient(135deg, #e8731f 0%, #d4651b 100%);
+            color: white;
+            border: 2px solid #f39c12;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #ergo-block-toggle:hover {
+            background: linear-gradient(135deg, #d4651b 0%, #e8731f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232, 115, 31, 0.4);
+        }
+        
+        #ergo-block-toggle.active {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border-color: #27ae60;
+            animation: ergoButtonPulse 2s infinite ease-in-out;
+        }
+        
+        @keyframes ergoButtonPulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(39, 174, 96, 0);
+            }
+        }
+        
+        /* Enhanced control button layout */
+        .controls {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .control-button {
+            min-width: 110px;
+            font-size: 13px;
+            padding: 8px 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .control-button {
+                min-width: 90px;
+                font-size: 12px;
+                padding: 6px 10px;
+            }
         }
     `;
     document.head.appendChild(styleElement);
