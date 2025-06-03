@@ -53,6 +53,46 @@ function updateNextBlockReward(baseMinerReward) {
  * @param {Array} newBlocks - Array of new block data
  * @returns {boolean} - Whether animation should occur
  */
+/**
+ * Check if we should animate block transitions (UPDATED)
+ */
+function animateBlockTransition(newBlocks) {
+    // IMPORTANT: Block animations should work regardless of dummy state
+    // Dummy transactions don't affect real blockchain data
+    
+    if (!previousBlockData || !newBlocks || newBlocks.length === 0) {
+        previousBlockData = [...newBlocks];
+        return false;
+    }
+
+    // Check if the first block (newest) has changed
+    const hasNewBlock = newBlocks[0] && previousBlockData[0] && 
+                      newBlocks[0].height !== previousBlockData[0].height;
+
+    console.log('Checking for new block:', {
+        newHeight: newBlocks[0]?.height,
+        previousHeight: previousBlockData[0]?.height,
+        hasNewBlock: hasNewBlock,
+        dummyMode: typeof window.dummyModeActive !== 'undefined' ? window.dummyModeActive : false
+    });
+
+    if (hasNewBlock) {
+        console.log('🎉 New block detected, starting animation');
+        
+        // Clear dummy transactions when new block arrives
+        if (typeof window.checkForNewBlockAndClearDummies === 'function') {
+            window.checkForNewBlockAndClearDummies(newBlocks[0].height);
+        }
+        
+        performBlockAnimation(newBlocks);
+        previousBlockData = [...newBlocks];
+        return true;
+    }
+
+    previousBlockData = [...newBlocks];
+    return false;
+}
+
 function animateBlockTransition(newBlocks) {
     // Check if we have new block data and it's different from previous
     if (!previousBlockData || !newBlocks || newBlocks.length === 0) {
@@ -457,6 +497,20 @@ function updateBlocksNormal(blockLabels) {
                 } else {
                     minerElement.innerHTML = `<span>${minerName}</span>`;
                 }
+            }
+        }
+    });
+}
+
+// Add this to the updateBlocksNormal function in blocks.js
+function updateBlocksNormal(blockLabels) {
+    blockLabels.forEach((block, i) => {
+        if (i < 4) {
+            // ... existing code ...
+            
+            // NEW: Check for new block and clear dummies
+            if (i === 0 && typeof checkForNewBlockAndClearDummies === 'function') {
+                checkForNewBlockAndClearDummies(block.height);
             }
         }
     });

@@ -1,17 +1,4 @@
-.block-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    margin-bottom: 0;
-    transform: translateZ(0);
-}
-
-.block-container.animating {
-    backface-visibility: hidden;
-    perspective: 1000px;
-    z-index: 100;
-}/* Enhanced Ergomempool Theme - Blue & Orange Design */
+/* Enhanced Ergomempool Theme - Blue & Orange Design */
 
 /* Logo Colors Extracted:
    Primary Blue: #2c4a6b (dark blue from logo)
@@ -39,7 +26,10 @@
     --glow-orange: rgba(212, 101, 27, 0.6);
 }
 
-/* Global Styles */
+/* ============================================ */
+/* GLOBAL STYLES */
+/* ============================================ */
+
 body, html {
     margin: 0;
     padding: 0;
@@ -55,11 +45,40 @@ body, html {
     flex-direction: column;
     min-height: 100vh;
     background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Subtle parallax effect for background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(230, 126, 34, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(44, 74, 107, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(230, 126, 34, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 /* ============================================ */
 /* ENHANCED HEADER - SLIM & BORDERED */
 /* ============================================ */
+
 .header {
     background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
     padding: 8px 20px;
@@ -124,6 +143,7 @@ body, html {
 /* ============================================ */
 /* LOGO STYLING */
 /* ============================================ */
+
 .logo {
     display: flex;
     align-items: center;
@@ -153,7 +173,6 @@ body, html {
 /* WALLET INTEGRATION STYLES */
 /* ============================================ */
 
-/* Wallet section layout */
 .wallet-section {
     display: flex;
     align-items: center;
@@ -162,7 +181,6 @@ body, html {
     z-index: 2;
 }
 
-/* Connect button styling - VISIBLE state */
 .connect-button {
     display: flex;
     align-items: center;
@@ -373,7 +391,7 @@ button#connect-button.wallet-connected-hidden,
     }
 }
 
-/* Wallet status notification - enhanced to match site theme */
+/* Wallet status notification */
 .wallet-status {
     position: fixed;
     top: 80px;
@@ -388,7 +406,6 @@ button#connect-button.wallet-connected-hidden,
     max-width: 380px;
     min-width: 280px;
     
-    /* Enhanced styling to match site theme */
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 2px solid transparent;
@@ -397,12 +414,10 @@ button#connect-button.wallet-connected-hidden,
         0 4px 16px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     
-    /* Font styling to match site */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     letter-spacing: 0.3px;
     line-height: 1.4;
     
-    /* Subtle animation shimmer */
     position: relative;
     overflow: hidden;
 }
@@ -426,7 +441,6 @@ button#connect-button.wallet-connected-hidden,
     transform: translateX(0);
 }
 
-/* Success messages - using site's orange theme */
 .wallet-status.success { 
     background: linear-gradient(135deg, 
         var(--primary-orange, #d4651b) 0%, 
@@ -440,7 +454,6 @@ button#connect-button.wallet-connected-hidden,
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* Error messages - enhanced red theme */
 .wallet-status.error { 
     background: linear-gradient(135deg, 
         #e74c3c 0%, 
@@ -463,7 +476,6 @@ button#connect-button.wallet-connected-hidden,
     font-size: 18px;
 }
 
-/* Info messages - using site's blue theme */
 .wallet-status.info { 
     background: linear-gradient(135deg, 
         var(--primary-blue, #2c4a6b) 0%, 
@@ -486,28 +498,86 @@ button#connect-button.wallet-connected-hidden,
     font-size: 18px;
 }
 
-/* Wallet transaction highlighting styles */
+/* Wallet transaction highlighting styles - ENHANCED */
 @keyframes walletGlow {
     from { 
-        box-shadow: 0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6), 0 0 45px rgba(243, 156, 18, 0.3);
+        box-shadow: 0 0 8px rgba(243, 156, 18, 0.8), 
+                    0 0 16px rgba(243, 156, 18, 0.6), 
+                    0 0 24px rgba(243, 156, 18, 0.4);
+        transform: scale(1);
+        border-color: #f39c12;
+    }
+    to { 
+        box-shadow: 0 0 12px rgba(243, 156, 18, 1), 
+                    0 0 24px rgba(243, 156, 18, 0.8), 
+                    0 0 36px rgba(243, 156, 18, 0.6);
+        transform: scale(1.05);
+        border-color: #ffdd44;
+    }
+}
+
+/* Enhanced wallet glow for larger squares */
+@keyframes walletGlowLarge {
+    from { 
+        box-shadow: 0 0 15px rgba(243, 156, 18, 0.9), 
+                    0 0 30px rgba(243, 156, 18, 0.6), 
+                    0 0 45px rgba(243, 156, 18, 0.3);
         transform: scale(1);
     }
     to { 
-        box-shadow: 0 0 20px rgba(243, 156, 18, 1), 0 0 40px rgba(243, 156, 18, 0.8), 0 0 60px rgba(243, 156, 18, 0.4);
+        box-shadow: 0 0 20px rgba(243, 156, 18, 1), 
+                    0 0 40px rgba(243, 156, 18, 0.8), 
+                    0 0 60px rgba(243, 156, 18, 0.4);
         transform: scale(1.05);
     }
 }
 
-.wallet-transaction {
-    position: relative;
+/* Apply wallet glow to BOTH grid mode and packing mode transaction squares */
+.transaction-square.wallet-transaction,
+.ergo-transaction-square.wallet-transaction {
+    position: relative !important;
+    border: 3px solid #f39c12 !important;
+    box-shadow: 0 0 8px rgba(243, 156, 18, 0.8), 
+                0 0 16px rgba(243, 156, 18, 0.6), 
+                0 0 24px rgba(243, 156, 18, 0.4) !important;
+    z-index: 50 !important;
+    animation: walletGlow 2s ease-in-out infinite alternate !important;
+}
+
+/* Enhanced glow for larger squares (over 16px) */
+.transaction-square.wallet-transaction.large-square,
+.ergo-transaction-square.wallet-transaction.large-square {
+    animation: walletGlowLarge 2s ease-in-out infinite alternate !important;
+}
+
+/* Hover effect for wallet transactions */
+.transaction-square.wallet-transaction:hover,
+.ergo-transaction-square.wallet-transaction:hover {
+    animation-play-state: paused !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 0 20px rgba(243, 156, 18, 1), 
+                0 0 40px rgba(243, 156, 18, 0.8), 
+                0 0 60px rgba(243, 156, 18, 0.6) !important;
+    z-index: 100 !important;
+}
+
+/* Additional emphasis for small squares in packing mode */
+.ergo-transaction-square.wallet-transaction {
+    border-width: 2px !important;
+    box-shadow: 0 0 6px rgba(243, 156, 18, 1), 
+                0 0 12px rgba(243, 156, 18, 0.8), 
+                0 0 18px rgba(243, 156, 18, 0.6) !important;
 }
 
 .wallet-transaction-row {
-    transition: all 0.3s ease;
+    background-color: rgba(243, 156, 18, 0.1) !important;
+    border-left: 3px solid #f39c12 !important;
+    transition: all 0.3s ease !important;
 }
 
 .wallet-transaction-row:hover {
     background-color: rgba(243, 156, 18, 0.2) !important;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.3) !important;
 }
 
 /* Wallet modal styles */
@@ -616,11 +686,15 @@ button#connect-button.wallet-connected-hidden,
     height: 20px;
 }
 
+/* ============================================ */
+/* TEST TRANSACTION BUTTON */
+/* ============================================ */
+
 .test-transaction-button {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 18px; /* Match Connect Wallet button */
+    padding: 10px 18px;
     cursor: pointer;
     background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
     color: white;
@@ -660,7 +734,6 @@ button#connect-button.wallet-connected-hidden,
     box-shadow: 0 2px 8px var(--glow-orange);
 }
 
-/* Tooltip for test transaction button */
 .test-transaction-button::after {
     content: 'Send Test Transaction';
     position: absolute;
@@ -688,9 +761,21 @@ button#connect-button.wallet-connected-hidden,
     bottom: -40px;
 }
 
+.test-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+    filter: brightness(0) invert(1);
+}
+
+.test-transaction-button:hover .test-icon {
+    transform: scale(1.1);
+}
+
 /* ============================================ */
 /* BLOCKS SECTION ENHANCEMENTS */
 /* ============================================ */
+
 .blocks-section {
     display: flex;
     align-items: flex-start;
@@ -747,9 +832,45 @@ button#connect-button.wallet-connected-hidden,
     border-radius: 1px;
 }
 
-/* ============================================ */
-/* ENHANCED BLOCK STYLING */
-/* ============================================ */
+/* Block containers */
+.block-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin-bottom: 0;
+    transform: translateZ(0);
+}
+
+.block-container.animating {
+    backface-visibility: hidden;
+    perspective: 1000px;
+    z-index: 100;
+}
+
+/* Block heights and links */
+.block-height {
+    color: var(--primary-orange);
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(230, 126, 34, 0.4);
+}
+
+.block-height-link {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+.block-height-link:hover {
+    opacity: 0.8;
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+/* Enhanced block styling */
 .dummy-block {
     position: relative;
     width: 160px;
@@ -803,6 +924,20 @@ button#connect-button.wallet-connected-hidden,
     border-color: var(--primary-orange);
 }
 
+.dummy-block:hover .block-size {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+.dummy-block:hover .reward-value {
+    color: #ffed4e;
+    text-shadow: 0 0 6px rgba(255, 237, 78, 0.5);
+}
+
+.dummy-block:hover .block-miner {
+    color: #ffbb33;
+}
+
 /* Next block special styling */
 .next-block {
     background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
@@ -826,36 +961,109 @@ button#connect-button.wallet-connected-hidden,
         0 4px 15px rgba(243, 156, 18, 0.3);
 }
 
-/* ============================================ */
-/* BLOCK HEIGHT & MINER STYLING */
-/* ============================================ */
-.block-height {
-    color: var(--primary-orange);
+/* Block text styling */
+.block-size {
     font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    text-align: center;
-    text-shadow: 0 2px 4px rgba(230, 126, 34, 0.4);
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    letter-spacing: 0.3px;
+    padding: 0 4px;
 }
 
-.block-height-link {
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.3s ease;
+.block-reward {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 4px;
+    line-height: 1.0;
 }
 
-.block-height-link:hover {
-    opacity: 0.8;
-    cursor: pointer;
-    transform: scale(1.05);
+.reward-label {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    font-style: italic;
 }
 
-.block-miner {
+.reward-value {
+    font-size: 14px;
+    color: #f39c12;
+    font-weight: 800;
+    text-shadow: 0 0 4px rgba(243, 156, 18, 0.3);
+    letter-spacing: 0.2px;
+}
+
+.fees-breakdown {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 1px;
+    font-style: italic;
+    font-weight: 300;
+    opacity: 0.9;
+}
+
+.block-tx-count {
+    font-size: 10px;
+    color: #e8f4ff;
+    margin-bottom: 2px;
+    font-weight: 500;
+    text-transform: capitalize;
+    padding: 0 4px;
+}
+
+.block-time {
+    font-size: 9px;
+    color: #b8d4f0;
+    margin-top: 2px;
+    font-style: italic;
+    font-weight: 400;
+    opacity: 0.85;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    padding: 0 4px;
+    line-height: 1.2;
+}
+
+/* Next block text styling */
+.next-block .block-size {
+    color: #2c3e50;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+    font-size: 17px;
+}
+
+.next-block .reward-label {
+    color: rgba(44, 62, 80, 0.8);
+    font-weight: 700;
+}
+
+.next-block .reward-value {
+    color: #2c3e50;
+    text-shadow: 0 0 4px rgba(243, 156, 18, 0.3);
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.next-block .fees-breakdown {
+    color: rgba(44, 62, 80, 0.7);
+}
+
+.next-block .block-tx-count {
+    color: #34495e;
+    font-weight: 600;
     font-size: 11px;
+}
+
+/* Miner styling */
+.block-miner {
+    font-size: 10px;
     color: var(--secondary-orange);
-    margin-top: 6px;
+    margin-top: 4px;
     text-align: center;
-    font-weight: bold;
+    font-weight: 700;
     max-width: 160px;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -863,18 +1071,23 @@ button#connect-button.wallet-connected-hidden,
     align-items: center;
     justify-content: center;
     gap: 4px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    padding: 0 4px;
+    line-height: 1.1;
 }
 
 .miner-logo {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     object-fit: contain;
     border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    filter: brightness(1.1) contrast(1.1);
 }
 
-/* ============================================ */
-/* SEPARATOR ENHANCEMENT */
-/* ============================================ */
+/* Separator styling */
 .separator-container {
     display: flex;
     flex-direction: column;
@@ -901,15 +1114,30 @@ button#connect-button.wallet-connected-hidden,
     position: relative;
 }
 
-
-/* Remove the center dot that was added by the enhanced theme */
 .separator::before {
     display: none !important;
+}
+
+/* Block animations */
+.block-fade-in {
+    animation: blockFadeIn 0.8s ease-in-out;
+}
+
+@keyframes blockFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* ============================================ */
 /* MAIN CONTENT AREAS */
 /* ============================================ */
+
 .visualizer {
     flex: 1;
     background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
@@ -930,9 +1158,42 @@ button#connect-button.wallet-connected-hidden,
     text-shadow: 0 2px 4px rgba(230, 126, 34, 0.3);
 }
 
+/* Packing mode adjustments */
+.visualizer.packing-mode {
+    flex: 1 !important;
+    background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%) !important;
+    padding: 25px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    min-height: 600px !important;
+}
+
+.visualizer.packing-mode h2 {
+    margin-top: 0 !important;
+    margin-bottom: 20px !important;
+    color: var(--primary-orange) !important;
+    font-size: 28px !important;
+    text-shadow: 0 2px 4px rgba(230, 126, 34, 0.3) !important;
+    text-align: center !important;
+}
+
+.visualizer.packing-mode .mempool-grid {
+    width: 100% !important;
+    max-width: 900px !important;
+    height: auto !important;
+    overflow: visible !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    display: block !important;
+}
+
 /* ============================================ */
 /* MEMPOOL GRID ENHANCEMENTS */
 /* ============================================ */
+
 .mempool-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(8px, 1fr));
@@ -953,6 +1214,7 @@ button#connect-button.wallet-connected-hidden,
 /* ============================================ */
 /* TRANSACTION SQUARES ENHANCEMENT */
 /* ============================================ */
+
 .transaction-square {
     border-radius: 3px;
     cursor: pointer;
@@ -969,14 +1231,67 @@ button#connect-button.wallet-connected-hidden,
     box-shadow: 0 4px 15px var(--glow-orange);
 }
 
+/* Transaction type icons and animations */
+.transaction-type-icon {
+    animation: iconPulse 2s infinite ease-in-out;
+}
+
+@keyframes iconPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 0.9;
+    }
+    50% { 
+        transform: scale(1.1); 
+        opacity: 1;
+    }
+}
+
+.transaction-square[data-type="donation"] {
+    animation: donationGlow 3s infinite ease-in-out;
+}
+
+.transaction-square[data-type="test"] {
+    animation: testGlow 2s infinite ease-in-out;
+}
+
+@keyframes donationGlow {
+    0%, 100% { 
+        box-shadow: 0 0 8px #e74c3c40;
+    }
+    50% { 
+        box-shadow: 0 0 12px #e74c3c80;
+    }
+}
+
+@keyframes testGlow {
+    0%, 100% { 
+        box-shadow: 0 0 8px #f39c1240;
+    }
+    50% { 
+        box-shadow: 0 0 12px #f39c1280;
+    }
+}
+
+.transaction-square[data-type="donation"]:hover,
+.transaction-square[data-type="test"]:hover {
+    transform: scale(1.05);
+    z-index: 100;
+}
+
 /* ============================================ */
 /* CONTROLS & BUTTONS */
 /* ============================================ */
+
 .controls {
     display: flex;
     gap: 12px;
     margin-bottom: 25px;
     align-items: center;
+}
+
+.controls.packing-mode {
+    margin-bottom: 20px;
 }
 
 .control-button {
@@ -1024,50 +1339,416 @@ button#connect-button.wallet-connected-hidden,
     box-shadow: 0 6px 20px var(--glow-orange);
 }
 
+
+/* Pack button specific styling */
+.control-button#pack-button {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    border: 2px solid #27ae60;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+.control-button#pack-button::before {
+    content: '📦';
+    margin-right: 8px;
+}
+
+.control-button#pack-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.control-button#pack-button:hover::after {
+    left: 100%;
+}
+
+.control-button#pack-button:hover {
+    background: linear-gradient(135deg, #2ecc71 0%, #58d68d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+.control-button#pack-button.packing-active {
+    background: linear-gradient(135deg, #e8731f 0%, #f39c12 100%);
+    border-color: #e8731f;
+    box-shadow: 0 4px 15px rgba(232, 115, 31, 0.4);
+}
+
+.control-button#pack-button.packing-active:hover {
+    background: linear-gradient(135deg, #f39c12 0%, #f5b041 100%);
+    box-shadow: 0 6px 20px rgba(232, 115, 31, 0.5);
+}
+
+.control-button.packing-active {
+    background-color: #e8731f;
+    border: 2px solid #d4651b;
+}
+
+.control-button.packing-active:hover {
+    background-color: #d4651b;
+}
+
 /* ============================================ */
 /* STATS ENHANCEMENT */
 /* ============================================ */
+
 .stats {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 15px;
-    font-size: 14px;
-    gap: 25px;
-    background: linear-gradient(135deg, rgba(44, 74, 107, 0.1) 0%, rgba(26, 35, 50, 0.1) 100%);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
     padding: 20px;
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
+    background: linear-gradient(135deg, rgba(44, 74, 107, 0.15) 0%, rgba(26, 35, 50, 0.15) 100%);
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 900px;
+}
+
+.stats.packing-mode {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+    padding: 25px !important;
+    background: linear-gradient(135deg, rgba(44, 74, 107, 0.15) 0%, rgba(26, 35, 50, 0.15) 100%) !important;
+    border-radius: 12px !important;
+    border: 2px solid var(--border-color) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
 }
 
 .stat-item {
     text-align: center;
-    min-width: 120px;
-    padding: 10px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.02);
+    padding: 15px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(74, 107, 138, 0.2);
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(230, 126, 34, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.stat-item:hover::before {
+    left: 100%;
 }
 
 .stat-item:hover {
     background: rgba(230, 126, 34, 0.1);
-    transform: translateY(-2px);
+    border-color: rgba(230, 126, 34, 0.4);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(230, 126, 34, 0.2);
 }
 
 .stat-value {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     color: var(--primary-orange);
     text-shadow: 0 1px 3px rgba(230, 126, 34, 0.3);
+    margin-bottom: 5px;
+    position: relative;
+    z-index: 2;
 }
 
-/* Special styling for USD stat */
+.stat-item div:last-child {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    position: relative;
+    z-index: 2;
+}
+
 .stat-item:nth-child(3) .stat-value {
     color: var(--secondary-orange);
+}
+
+/* Special styling for percentage values */
+.ergo-packing-percentage {
+    color: #f39c12 !important;
+}
+
+/* Color coding for utilization */
+.stat-item:nth-child(8) .stat-value {
+    transition: color 0.3s ease;
+}
+
+@keyframes statusShimmer {
+    0%, 100% { left: -100%; }
+    50% { left: 100%; }
+}
+
+/* ============================================ */
+/* BLOCK PACKING STATS SECTION */
+/* ============================================ */
+
+.block-packing-stats {
+    background-color: rgba(52, 73, 94, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.packing-title {
+    color: #3498db;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 15px 0;
+    text-align: center;
+}
+
+.packing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.packing-stat {
+    text-align: center;
+    background-color: rgba(44, 62, 80, 0.5);
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.packing-label {
+    font-size: 11px;
+    color: #bdc3c7;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.packing-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ecf0f1;
+}
+
+.packing-percentage {
+    color: #f39c12;
+}
+
+
+/* ============================================ */
+/* SIMPLIFIED ERGO PACKING LAYOUT */
+/* ============================================ */
+
+.ergo-packing-simplified-container {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 30px 20px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+    min-height: 480px !important;
+    max-width: 900px !important;
+}
+
+.ergo-packing-hexagon-container-centered {
+    position: relative !important;
+    width: 480px !important;          /* Updated from 400px */
+    height: 480px !important;         /* Updated from 400px */
+    filter: drop-shadow(0 6px 25px rgba(232, 115, 31, 0.3)) !important;
+    transition: all 0.3s ease !important;
+    margin: 0 auto !important;
+}
+
+.ergo-packing-hexagon-container-centered:hover {
+    filter: drop-shadow(0 8px 30px rgba(232, 115, 31, 0.4)) !important;
+    transform: scale(1.02) !important;
+}
+
+.ergo-packing-area {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10 !important;
+    overflow: hidden !important;
+    border-radius: 8px !important;
+}
+
+.ergo-packing-hexagon-container-centered svg {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 15 !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+}
+
+.ergo-packing-hexagon-container-centered svg path {
+    stroke: var(--primary-orange) !important;
+    stroke-width: 4 !important;
+    fill: none !important;
+    opacity: 0.9 !important;
+    filter: drop-shadow(0 0 8px rgba(232, 115, 31, 0.4)) !important;
+    animation: hexagonPulse 4s ease-in-out infinite !important;
+}
+
+@keyframes hexagonPulse {
+    0%, 100% { 
+        opacity: 0.8;
+        stroke-width: 4;
+        filter: drop-shadow(0 0 8px rgba(232, 115, 31, 0.3));
+    }
+    50% { 
+        opacity: 1;
+        stroke-width: 5;
+        filter: drop-shadow(0 0 12px rgba(232, 115, 31, 0.5));
+    }
+}
+
+.ergo-transaction-square {
+    position: absolute !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    z-index: 20 !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.ergo-transaction-square:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+    transform: scale(1.15) !important;
+    z-index: 30 !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.ergo-transaction-square .transaction-type-icon {
+    position: absolute !important;
+    top: 1px !important;
+    right: 1px !important;
+    z-index: 25 !important;
+    pointer-events: none !important;
+    text-shadow: 0 0 3px rgba(0,0,0,0.8) !important;
+    line-height: 1 !important;
+    animation: iconPulse 2s infinite ease-in-out !important;
+}
+
+.ergo-packing-overflow {
+    text-align: center !important;
+    padding: 25px !important;
+    border: 3px dashed var(--primary-orange) !important;
+    border-radius: 15px !important;
+    background: linear-gradient(135deg, rgba(232, 115, 31, 0.1) 0%, rgba(232, 115, 31, 0.05) 100%) !important;
+    margin: 30px auto !important;
+    max-width: 700px !important;
+    box-shadow: 0 6px 25px rgba(232, 115, 31, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.ergo-packing-overflow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(232, 115, 31, 0.05) 10px,
+        rgba(232, 115, 31, 0.05) 20px
+    );
+    pointer-events: none;
+    animation: overflowPattern 20s linear infinite;
+}
+
+@keyframes overflowPattern {
+    0% { transform: translateX(-20px); }
+    100% { transform: translateX(20px); }
+}
+
+.ergo-packing-overflow h4 {
+    color: var(--primary-orange) !important;
+    margin: 0 0 15px 0 !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    text-shadow: 0 2px 4px rgba(232, 115, 31, 0.3) !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.ergo-packing-overflow p {
+    color: var(--secondary-orange) !important;
+    margin: 10px 0 !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+
+/* Packing animations */
+@keyframes ergoRepackingBounce {
+    0%, 100% { 
+        transform: scale(0.8) translateY(0px); 
+        opacity: 0.6;
+    }
+    25% { 
+        transform: scale(1.1) translateY(-8px); 
+        opacity: 0.8;
+    }
+    50% { 
+        transform: scale(0.9) translateY(-4px); 
+        opacity: 0.7;
+    }
+    75% { 
+        transform: scale(1.05) translateY(-6px); 
+        opacity: 0.8;
+    }
+}
+
+@keyframes ergoPackingOverflowAlert {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.95) translateY(20px);
+    }
+    50% {
+        transform: scale(1.02) translateY(-5px);
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* ============================================ */
 /* TRANSACTIONS TABLE */
 /* ============================================ */
+
 .transactions {
     background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
     padding: 25px;
@@ -1115,8 +1796,51 @@ td:last-child {
 }
 
 /* ============================================ */
+/* WALLET TRANSACTION ENHANCEMENTS */
+/* ============================================ */
+
+/* Star icon for wallet transactions in the table */
+.wallet-transaction-row .wallet-star {
+    color: #f39c12 !important;
+    text-shadow: 0 0 4px rgba(243, 156, 18, 0.6) !important;
+    animation: starTwinkle 2s ease-in-out infinite alternate !important;
+}
+
+@keyframes starTwinkle {
+    from { 
+        text-shadow: 0 0 4px rgba(243, 156, 18, 0.6);
+        transform: scale(1);
+    }
+    to { 
+        text-shadow: 0 0 8px rgba(243, 156, 18, 0.9);
+        transform: scale(1.1);
+    }
+}
+
+/* Responsive adjustments for wallet glow on smaller screens */
+@media (max-width: 768px) {
+    .transaction-square.wallet-transaction,
+    .ergo-transaction-square.wallet-transaction {
+        border-width: 2px !important;
+        box-shadow: 0 0 6px rgba(243, 156, 18, 0.8), 
+                    0 0 12px rgba(243, 156, 18, 0.6) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .transaction-square.wallet-transaction,
+    .ergo-transaction-square.wallet-transaction {
+        border-width: 1px !important;
+        box-shadow: 0 0 4px rgba(243, 156, 18, 0.8), 
+                    0 0 8px rgba(243, 156, 18, 0.6) !important;
+    }
+}
+
+
+/* ============================================ */
 /* FOOTER ENHANCEMENT */
 /* ============================================ */
+
 .footer {
     background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
     padding: 18px 25px;
@@ -1195,25 +1919,176 @@ td:last-child {
     transform: scale(1.1);
 }
 
-/* Test icon styling */
-.test-icon {
-    width: 16px;
-    height: 16px;
-    transition: transform 0.2s ease;
-    filter: brightness(0) invert(1); /* Ensures white color */
+@keyframes heartbeat {
+    0% { transform: scale(1.2); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1.2); }
 }
 
-.test-transaction-button:hover .test-icon {
-    transform: scale(1.1);
+/* ============================================ */
+/* TOOLTIPS AND UI ELEMENTS */
+/* ============================================ */
+
+.loading {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
+
+.transaction-tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+    border: 2px solid var(--primary-orange);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-light);
+    pointer-events: none;
+    z-index: 1000;
+    white-space: nowrap;
+    display: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+/* ============================================ */
+/* ENHANCED EFFICIENCY INDICATORS */
+/* ============================================ */
+
+.packing-stat.low-efficiency .packing-value {
+    color: #e74c3c;
+}
+
+.packing-stat.medium-efficiency .packing-value {
+    color: #f39c12;
+}
+
+.packing-stat.high-efficiency .packing-value {
+    color: #27ae60;
+}
+
+/* Animation for updating values */
+.packing-value.updating {
+    animation: valueUpdate 0.3s ease-in-out;
+}
+
+@keyframes valueUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); color: #3498db; }
+    100% { transform: scale(1); }
+}
+
+/* Dummy transaction button states */
+.control-button#pack-button.packing-active {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    border-color: #e74c3c !important;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4) !important;
+}
+
+.control-button#pack-button.packing-active:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5) !important;
+}
+
+.control-button#pack-button::before {
+    content: '🎭';
+    margin-right: 6px;
+}
+
+/* Dummy status notifications */
+.dummy-status {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dummy transaction styling */
+.transaction-square[data-type="dummy"],
+.dummy-transaction {
+    background-color: #e91e63 !important; /* Pink color */
+    border: 2px solid #ad1457 !important; /* Darker pink border */
+    box-shadow: 0 0 8px rgba(233, 30, 99, 0.4) !important;
+    animation: dummyGlow 2.5s infinite ease-in-out !important;
+}
+
+.transaction-square[data-type="dummy"]:hover,
+.dummy-transaction:hover {
+    border-color: #c2185b !important;
+    box-shadow: 0 0 15px rgba(233, 30, 99, 0.7) !important;
+    transform: scale(1.1) !important;
+    z-index: 100 !important;
+}
+
+/* Dummy transaction glow animation */
+@keyframes dummyGlow {
+    0%, 100% { 
+        box-shadow: 0 0 8px rgba(233, 30, 99, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 12px rgba(233, 30, 99, 0.6);
+    }
+}
+
+
+/* Enhanced dummy button styling */
+.control-button#pack-button {
+    background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%) !important;
+    border: 2px solid #e91e63 !important;
+    color: white !important;
+}
+
+.control-button#pack-button:hover {
+    background: linear-gradient(135deg, #ad1457 0%, #880e4f 100%) !important;
+    box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4) !important;
+}
+
+.control-button#pack-button::before {
+    content: '🎭';
+    margin-right: 6px;
+}
+
+/* Active state when dummies are loaded */
+.control-button#pack-button.packing-active {
+    background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%) !important;
+    border-color: #c62828 !important;
+    box-shadow: 0 4px 15px rgba(198, 40, 40, 0.4) !important;
+}
+
+.control-button#pack-button.packing-active::before {
+    content: '❌';
+    margin-right: 6px;
+}
+
+/* Smooth packing transitions */
+.ergo-packing-area {
+    transition: opacity 0.3s ease-in-out !important;
+}
+
+.ergo-transaction-square {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Smooth refresh animation */
+.ergo-packing-refreshing {
+    opacity: 0.7 !important;
+}
+
+.ergo-packing-refreshing .ergo-transaction-square {
+    transform: scale(0.95) !important;
+    opacity: 0.8 !important;
+}
+
 
 /* ============================================ */
 /* RESPONSIVE DESIGN */
 /* ============================================ */
+
 @media (max-width: 1024px) {
     .blocks-grid {
         flex-wrap: wrap;
-        gap: 20px;
         gap: 18px;
         max-width: 800px;
         flex-grow: 1;
@@ -1225,8 +2100,9 @@ td:last-child {
     }
     
     .stats {
-        flex-wrap: wrap;
-        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+        padding: 18px;
     }
     
     .wallet-info-display {
@@ -1234,14 +2110,16 @@ td:last-child {
         max-width: 200px;
         font-size: 10px;
     }
+    
     .wallet-info-display strong {
         font-size: 11px;
     }
+    
     .disconnect-btn {
         font-size: 9px;
         padding: 5px 12px;
     }
-        /* Test transaction button responsive */
+    
     .test-transaction-button {
         width: 42px;
         height: 42px;
@@ -1251,6 +2129,23 @@ td:last-child {
         width: 20px;
         height: 20px;
     }
+    
+    .ergo-packing-simplified-container {
+        padding: 25px 15px !important;
+        min-height: 500px !important;
+    }
+    
+    .ergo-packing-hexagon-container-centered {
+        width: 420px !important;
+        height: 420px !important;
+    }
+    
+    .stats.packing-mode {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+        gap: 12px !important;
+        padding: 20px !important;
+    }
+
 }
 
 @media (max-width: 768px) {
@@ -1289,13 +2184,13 @@ td:last-child {
         background: repeating-linear-gradient(
             to bottom,
             #7f8c8d 0px,
-            #7f8c8d 3px,  /* Solid segment */
+            #7f8c8d 3px,
             transparent 3px,
-            transparent 6px  /* Gap between segments */
-    );
-            margin-top: -4px; /* Pull it up slightly to align with titles */
-            flex-grow: 1;
-            position: relative;;
+            transparent 6px
+        );
+        margin-top: -4px;
+        flex-grow: 1;
+        position: relative;
     }
     
     .blocks-grid {
@@ -1310,15 +2205,29 @@ td:last-child {
     }
     
     .stats {
-        flex-direction: column;
-        gap: 12px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .stat-item {
+        padding: 10px 8px;
+    }
+
+    .stat-value {
+        font-size: 14px;
+    }
+
+    .stat-item div:last-child {
+        font-size: 10px;
     }
     
     .footer-content {
         flex-direction: column;
         gap: 15px;
     }
-        .wallet-section {
+    
+    .wallet-section {
         width: 100%;
         flex-direction: column;
         align-items: stretch;
@@ -1338,342 +2247,36 @@ td:last-child {
         font-size: 14px;
         padding: 10px 16px;
     }
-}
-
-@media (max-width: 480px) {
-    .header {
-        padding: 8px 15px;
+    
+    .ergo-packing-simplified-container {
+        padding: 20px 10px !important;
+        min-height: 460px !important;
     }
     
-    .logo-image {
-        height: 55px;
-        transform: scale(1.9);
+    .ergo-packing-hexagon-container-centered {
+        width: 320px !important;
+        height: 320px !important;
     }
     
-    .wallet-section {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    .wallet-info-display {
-        font-size: 9px;
-        padding: 5px 10px;
-    }
-    .wallet-info-display strong {
-        font-size: 10px;
-    }
-    .wallet-info-display .balance {
-        font-size: 9px;
-    }
-    .wallet-info-display .address {
-        font-size: 8px;
+    .stats.packing-mode {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        padding: 15px !important;
     }
     
-    .connect-button, .test-transaction-button {
-        width: 100%;
-        justify-content: center;
+    .ergo-packing-overflow {
+        padding: 20px !important;
+        margin: 20px auto !important;
     }
     
-    .disconnect-btn {
-        font-size: 8px;
-        padding: 4px 10px;
-    }
-    .wallet-status {
-        left: 10px;
-        right: 10px;
-        top: 50px;
-        font-size: 11px;
+    .ergo-packing-overflow h4 {
+        font-size: 18px !important;
     }
     
-    .blocks-section {
-        padding: 18px;
+    .ergo-packing-overflow p {
+        font-size: 14px !important;
     }
     
-    .visualizer {
-        padding: 18px;
-    }
-    
-    .mempool-grid {
-        height: 280px;
-    }
-
-    .test-transaction-button {
-        width: 38px;
-        height: 38px;
-    }
-    
-    .test-icon {
-        width: 12px;
-        height: 12px;
-    }
-}
-
-/* ============================================ */
-/* SPECIAL ANIMATIONS & EFFECTS */
-/* ============================================ */
-
-/* Smooth page transitions */
-.container {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Enhanced glow effects */
-.wallet-transaction {
-    animation: walletGlow 2s ease-in-out infinite alternate;
-}
-
-@keyframes walletGlow {
-    from { 
-        box-shadow: 0 0 15px rgba(243, 156, 18, 0.9), 0 0 30px rgba(243, 156, 18, 0.6);
-        transform: scale(1);
-    }
-    to { 
-        box-shadow: 0 0 20px rgba(243, 156, 18, 1), 0 0 40px rgba(243, 156, 18, 0.8);
-        transform: scale(1.05);
-    }
-}
-
-/* Loading states */
-.loading {
-    text-align: center;
-    color: var(--text-muted);
-    font-style: italic;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-/* Tooltips enhancement */
-.transaction-tooltip {
-    position: absolute;
-    background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
-    border: 2px solid var(--primary-orange);
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--text-light);
-    pointer-events: none;
-    z-index: 1000;
-    white-space: nowrap;
-    display: none;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-}
-
-/* Enhanced block animations */
-.block-fade-in {
-    animation: blockFadeIn 0.8s ease-in-out;
-}
-
-@keyframes blockFadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.8) translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-/* Subtle parallax effect for background */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(230, 126, 34, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(44, 74, 107, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(230, 126, 34, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: -1;
-}
-/* Enhanced Block Text Styling for Better Visual Hierarchy */
-
-/* Enhanced Block Text Styling for Better Visual Hierarchy */
-
-/* Block size styling - make it more prominent */
-.block-size {
-    font-size: 16px; /* Reduced to fit better */
-    font-weight: 900; /* Extra bold */
-    color: #ffffff;
-    margin-bottom: 4px; /* Reduced margin */
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
-    letter-spacing: 0.3px; /* Reduced letter spacing */
-    padding: 0 4px; /* Add horizontal padding to prevent touching borders */
-}
-
-/* Enhanced block reward styling with better hierarchy */
-.block-reward {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 4px; /* Reduced margin */
-    line-height: 1.0; /* Tighter line height */
-}
-
-.reward-label {
-    font-size: 8px; /* Slightly smaller to fit */
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 1px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px; /* Reduced letter spacing */
-    font-weight: 600;
-    font-style: italic; /* Add italic for elegance */
-}
-
-.reward-value {
-    font-size: 14px; /* Reduced to fit better */
-    color: #f39c12; /* Gold color for prominence */
-    font-weight: 800; /* Extra bold */
-    text-shadow: 0 0 4px rgba(243, 156, 18, 0.3);
-    letter-spacing: 0.2px; /* Reduced letter spacing */
-}
-
-/* Fees breakdown - make it more subtle but readable */
-.fees-breakdown {
-    font-size: 8px;
-    color: rgba(255, 255, 255, 0.6);
-    margin-top: 1px;
-    font-style: italic;
-    font-weight: 300;
-    opacity: 0.9;
-}
-
-/* Transaction count styling - add emphasis */
-.block-tx-count {
-    font-size: 10px; /* Reduced to fit better */
-    color: #e8f4ff;
-    margin-bottom: 2px; /* Reduced margin */
-    font-weight: 500;
-    text-transform: capitalize;
-    padding: 0 4px; /* Add horizontal padding */
-}
-
-/* Time ago styling - make it distinctive */
-.block-time {
-    font-size: 9px; /* Reduced to fit better */
-    color: #b8d4f0;
-    margin-top: 2px; /* Reduced margin */
-    font-style: italic;
-    font-weight: 400;
-    opacity: 0.85;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-    padding: 0 4px; /* Add horizontal padding */
-    line-height: 1.2; /* Ensure it doesn't get cut off */
-}
-
-/* Next block specific styling - different color scheme */
-.next-block .block-size {
-    color: #2c3e50; /* Dark color for contrast on orange background */
-    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
-    font-size: 17px; /* Slightly larger for emphasis but still fitting */
-}
-
-.next-block .reward-label {
-    color: rgba(44, 62, 80, 0.8);
-    font-weight: 700;
-}
-
-.next-block .reward-value {
-    color: #2c3e50; /* Orange color to match the block theme instead of gold */
-    text-shadow: 0 0 4px rgba(243, 156, 18, 0.3);
-    font-size: 15px; /* Larger for next block but fitting */
-    font-weight: 900;
-}
-
-.next-block .fees-breakdown {
-    color: rgba(44, 62, 80, 0.7);
-}
-
-.next-block .block-tx-count {
-    color: #34495e;
-    font-weight: 600;
-    font-size: 11px; /* Adjusted to fit */
-}
-
-/* Block height styling - make it more prominent */
-.block-height {
-    color: #3498db;
-    font-size: 18px; /* Reduced slightly for better fit */
-    font-weight: 800; /* Extra bold */
-    margin-bottom: 6px; /* Reduced margin */
-    text-align: center;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    letter-spacing: 0.3px; /* Reduced letter spacing */
-    padding: 0 4px; /* Add horizontal padding */
-}
-
-/* Miner name styling - add more character */
-.block-miner {
-    font-size: 10px; /* Reduced to fit better */
-    color: #f39c12;
-    margin-top: 4px; /* Reduced margin */
-    text-align: center;
-    font-weight: 700; /* Bold */
-    max-width: 180px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px; /* Reduced gap */
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-    text-transform: uppercase; /* Make miner names stand out */
-    letter-spacing: 0.2px; /* Reduced letter spacing */
-    padding: 0 4px; /* Add horizontal padding */
-    line-height: 1.1; /* Tighter line height */
-}
-
-/* Miner logo styling */
-.miner-logo {
-    width: 18px; /* Slightly larger */
-    height: 18px;
-    object-fit: contain;
-    border-radius: 3px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    filter: brightness(1.1) contrast(1.1); /* Make logos pop */
-}
-
-/* Add additional container padding to ensure no text touches borders */
-.dummy-block {
-    transition: all 0.3s ease;
-    padding: 8px; /* Ensure consistent padding inside all blocks */
-    box-sizing: border-box; /* Include padding in the total width/height */
-}
-
-.dummy-block:hover .block-size {
-    transform: scale(1.05);
-    transition: transform 0.2s ease;
-}
-
-.dummy-block:hover .reward-value {
-    color: #ffed4e; /* Brighter gold on hover */
-    text-shadow: 0 0 6px rgba(255, 237, 78, 0.5);
-}
-
-.dummy-block:hover .block-miner {
-    color: #ffbb33; /* Brighter orange on hover */
-}
-
-/* Responsive adjustments for smaller screens */
-@media (max-width: 768px) {
     .block-size {
         font-size: 16px;
     }
@@ -1710,7 +2313,7 @@ body::before {
         width: 16px;
         height: 16px;
     }
-
+    
     .test-transaction-button {
         width: 40px;
         height: 40px;
@@ -1720,9 +2323,126 @@ body::before {
         width: 14px;
         height: 14px;
     }
+    
+    .packing-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .packing-stat {
+        padding: 8px;
+    }
+    
+    .packing-value {
+        font-size: 14px;
+    }
+    
+    .block-packing-stats {
+        padding: 15px;
+    }
+    
+    .stats {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+    }
+    
+    .stat-item {
+        min-width: auto;
+    }
+    
 }
 
 @media (max-width: 480px) {
+    .header {
+        padding: 8px 15px;
+    }
+    
+    .logo-image {
+        height: 55px;
+        transform: scale(1.9);
+    }
+    
+    .wallet-section {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .wallet-info-display {
+        font-size: 9px;
+        padding: 5px 10px;
+    }
+    
+    .wallet-info-display strong {
+        font-size: 10px;
+    }
+    
+    .wallet-info-display .balance {
+        font-size: 9px;
+    }
+    
+    .wallet-info-display .address {
+        font-size: 8px;
+    }
+    
+    .connect-button, .test-transaction-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .disconnect-btn {
+        font-size: 8px;
+        padding: 4px 10px;
+    }
+    
+    .wallet-status {
+        left: 10px;
+        right: 10px;
+        top: 50px;
+        font-size: 11px;
+    }
+    
+    .blocks-section {
+        padding: 18px;
+    }
+    
+    .visualizer {
+        padding: 18px;
+    }
+    
+    .mempool-grid {
+        height: 280px;
+    }
+    
+    .test-transaction-button {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .test-icon {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .ergo-packing-simplified-container {
+        gap: 10px !important;
+        padding: 8px !important;
+    }
+    
+    .ergo-packing-hexagon-container-centered {
+        width: 336px !important;
+        height: 336px !important;
+    }
+    
+    .stats.packing-mode {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 12px !important;
+    }
+    
+    
     .block-size {
         font-size: 15px;
     }
@@ -1741,5 +2461,44 @@ body::before {
     
     .next-block .reward-value {
         font-size: 13px;
+    }
+    
+    .packing-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .packing-title {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .packing-label {
+        font-size: 10px;
+    }
+    
+    .packing-value {
+        font-size: 13px;
+    }
+    
+    .block-packing-stats {
+        padding: 12px;
+    }
+    .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px;
+    }
+
+    .stat-item {
+        padding: 8px 6px;
+    }
+
+    .stat-value {
+        font-size: 13px;
+    }
+
+    .stat-item div:last-child {
+        font-size: 9px;
     }
 }
