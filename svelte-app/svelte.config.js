@@ -1,12 +1,18 @@
 import adapter from '@sveltejs/adapter-auto';
+// Alternative adapters if auto doesn't work:
+// import adapter from '@sveltejs/adapter-static';  // For static sites
+// import adapter from '@sveltejs/adapter-node';    // For Node.js servers
+// import adapter from '@sveltejs/adapter-netlify'; // For Netlify
+// import adapter from '@sveltejs/adapter-vercel';  // For Vercel
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
+		adapter: adapter(),
+		// If using static adapter, uncomment this:
+		// prerender: {
+		// 	handleHttpError: 'warn'
+		// }
 	}
 };
 

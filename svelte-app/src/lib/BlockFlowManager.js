@@ -1,4 +1,4 @@
-// BlockFlowManager.js - Updated with proper top spawn logic
+// BlockFlowManager.js - Complete version with destroy() method
 // Phase 2: Transaction Flow Management (With Container Safety)
 
 export class BlockFlowManager {
@@ -9,6 +9,7 @@ export class BlockFlowManager {
         this.lastTransactionIds = new Set();
         this.isBlockMining = false;
         this.monitoringActive = true;
+        this.subscriptions = []; // Track subscriptions for cleanup
         
         // Animation configuration
         this.config = {
@@ -35,7 +36,9 @@ export class BlockFlowManager {
     setupStoreSubscriptions() {
         // Subscribe to block data changes
         if (this.stores.blockData && this.stores.blockData.subscribe) {
-            this.stores.blockData.subscribe(blocks => {
+            const blockSubscription = this.stores.blockData.subscribe(blocks => {
+                if (!this.monitoringActive) return;
+                
                 if (blocks.length > 0) {
                     const latestHeight = blocks[0].height;
                     if (this.lastBlockHeight > 0 && latestHeight > this.lastBlockHeight) {
@@ -45,13 +48,16 @@ export class BlockFlowManager {
                     this.lastBlockHeight = latestHeight;
                 }
             });
+            this.subscriptions.push(blockSubscription);
         }
         
         // Subscribe to transaction changes
         if (this.stores.transactions && this.stores.transactions.subscribe) {
-            this.stores.transactions.subscribe(transactions => {
+            const transactionSubscription = this.stores.transactions.subscribe(transactions => {
+                if (!this.monitoringActive) return;
                 this.handleTransactionChanges(transactions);
             });
+            this.subscriptions.push(transactionSubscription);
         }
         
         console.log('📡 Store subscriptions active');
@@ -449,5 +455,49 @@ export class BlockFlowManager {
         
         console.log('🧪 Triggering test transaction entry...');
         this.animateTransactionEntry(testTx);
+    }
+    
+    // 🧹 CLEANUP - This was the missing method!
+    destroy() {
+        console.log('🧹 Destroying BlockFlowManager...');
+        
+        // Stop monitoring
+        this.monitoringActive = false;
+        
+        // Unsubscribe from all stores
+        this.subscriptions.forEach(unsubscribe => {
+            if (typeof unsubscribe === 'function') {
+                try {
+                    unsubscribe();
+                } catch (error) {
+                    console.warn('⚠️ Error unsubscribing:', error);
+                }
+            }
+        });
+        this.subscriptions = [];
+        
+        // Clear any running animations or intervals
+        this.isBlockMining = false;
+        
+        // Remove any lingering block confirmation notifications
+        const confirmations = document.querySelectorAll('.block-confirmation');
+        confirmations.forEach(el => {
+            if (el.parentNode) {
+                el.remove();
+            }
+        });
+        
+        // Remove CSS keyframes if they exist
+        const keyframeStyle = document.querySelector('#mining-keyframes');
+        if (keyframeStyle && keyframeStyle.parentNode) {
+            keyframeStyle.remove();
+        }
+        
+        // Clear references
+        this.ballPhysics = null;
+        this.stores = null;
+        this.lastTransactionIds.clear();
+        
+        console.log('✅ BlockFlowManager destroyed successfully');
     }
 }
