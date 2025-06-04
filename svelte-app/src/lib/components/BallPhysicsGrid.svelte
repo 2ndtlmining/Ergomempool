@@ -950,7 +950,6 @@ updateDOMPosition() {
         class:block-full={isBlockFull}
         class:block-flow-active={blockFlowActive}
         bind:this={physicsContainer}
-        on:load={initializePhysicsEngine}
     >
         <div class="block-label">
             Enhanced Block Physics: 2.0 MB 

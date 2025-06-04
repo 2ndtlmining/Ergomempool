@@ -1,9 +1,16 @@
+// Updated src/lib/api.js - Fixed networking for Docker
 import axios from 'axios';
 
-// Centralized API calls
+// Configure axios with relative URLs to avoid 0.0.0.0:5173 errors
+const api = axios.create({
+    baseURL: '', // Use relative URLs
+    timeout: 10000,
+});
+
+// Centralized API calls with proper error handling
 export async function fetchTransactions() {
     try {
-        const response = await axios.get('/api?endpoint=transactions');
+        const response = await api.get('/api?endpoint=transactions');
         return response.data;
     } catch (error) {
         console.error('Error fetching transactions:', error);
@@ -13,7 +20,7 @@ export async function fetchTransactions() {
 
 export async function fetchBlocks() {
     try {
-        const response = await axios.get('/api?endpoint=blocks');
+        const response = await api.get('/api?endpoint=blocks');
         return response.data;
     } catch (error) {
         console.error('Error fetching blocks:', error);
@@ -23,7 +30,7 @@ export async function fetchBlocks() {
 
 export async function fetchPrice() {
     try {
-        const response = await axios.get('/api?endpoint=price');
+        const response = await api.get('/api?endpoint=price');
         return response.data;
     } catch (error) {
         console.error('Error fetching price:', error);
