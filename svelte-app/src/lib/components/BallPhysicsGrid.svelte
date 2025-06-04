@@ -4,7 +4,6 @@
     import { isWalletTransaction } from '$lib/wallet.js';
     import { identifyTransactionType } from '$lib/transactionTypes.js';
     import { BlockFlowManager } from '$lib/BlockFlowManager.js';
-    import { PhysicsEngine } from '$lib/PhysicsEngine.js'; // Import our new physics engine
     
     // BLOCKCHAIN CAPACITY CONFIGURATION
     const BLOCKCHAIN_CONFIG = {
@@ -16,36 +15,36 @@
     
     // Enhanced Physics Configuration - CALMER SETTINGS
     const ENHANCED_PHYSICS_CONFIG = {
-        // Basic physics - REDUCED for more settling
-        gravity: 0.18,        // Reduced from 0.25 - gentler falling
-        friction: 0.992,      // Increased from 0.985 - more damping
-        bounce: 0.35,         // Reduced from 0.6 - much less bouncy
-        
-        // Enhanced separation system - TUNED for stability
-        separationForce: 0.8, // Reduced from 1.5 - less aggressive pushing
-        minSeparationDistance: 3, // Keep same - minimum gap
-        separationDecay: 0.95,
-        
-        // Pressure system - REDUCED to allow settling
-        pressureRadius: 60,        // Reduced from 70 - smaller pressure area
-        maxPressureForce: 2.0,     // Reduced from 3.5 - gentler upward force
-        pressureThreshold: 3,      // Increased from 2 - need more neighbors for pressure
-        densityMultiplier: 0.6,    // Reduced from 0.9 - less pressure per neighbor
-        
-        // Capacity simulation - GENTLER global pressure
-        capacityPressureStart: 0.75, // Increased from 0.6 - pressure starts later
-        maxCapacityPressure: 3.0,    // Reduced from 5 - gentler global pressure
-        
-        // Visual feedback
-        enablePressureVisuals: true,
-        pressureColorIntensity: 0.4,
-        
-        // Ball constraints
-        minBallSize: 12,
-        maxBallSize: 32,
-        maxBalls: 120, // Reduced for better performance with enhanced physics
-        targetFPS: 60
-    };
+    // MUCH CALMER PHYSICS - These values will make balls settle
+    gravity: 0.08,        // Reduced from 0.18 - very gentle falling
+    friction: 0.998,      // Increased from 0.992 - high damping
+    bounce: 0.15,         // Reduced from 0.35 - very low bounce
+    
+    // SIMPLIFIED SEPARATION (remove pressure entirely)
+    separationForce: 0.2, // Reduced from 0.8 - very gentle pushing
+    minSeparationDistance: 2, // Reduced from 3 - allow closer packing
+    
+    // REMOVE ALL PRESSURE SYSTEM - these values are ignored now
+    // (keeping them for compatibility but they won't be used)
+    pressureRadius: 0,
+    maxPressureForce: 0,
+    pressureThreshold: 999,
+    densityMultiplier: 0,
+    capacityPressureStart: 1.0,
+    maxCapacityPressure: 0,
+    
+    // Visual feedback - disabled for now
+    enablePressureVisuals: false,
+    pressureColorIntensity: 0,
+    
+    // Ball constraints
+    minBallSize: 12,
+    maxBallSize: 32,
+    maxBalls: 150,        // Increased since we removed pressure system
+    targetFPS: 60
+};
+
+    
     
     // Component state
     let physicsContainer;
@@ -55,8 +54,6 @@
     let animationId;
     let lastTime = 0;
     
-    // Enhanced Physics Engine
-    let physicsEngine;
     
     // PHASE 2: Block Flow Manager
     let blockFlowManager;
@@ -89,23 +86,15 @@
         avgNeighbors: 0
     };
     
-    // Initialize physics engine when container is ready
-    function initializePhysicsEngine() {
-        if (!physicsContainer) return;
-        
-        physicsEngine = new PhysicsEngine(ENHANCED_PHYSICS_CONFIG);
-        physicsEngine.initialize(
-            physicsContainer.clientWidth,
-            physicsContainer.clientHeight,
-            BLOCKCHAIN_CONFIG.maxBlockSizeBytes
-        );
-        
-        console.log('⚡ Enhanced Physics Engine initialized');
-    }
     
     // Enhanced Ball Class with physics integration
     class Ball {
         constructor(transaction, spawnFromTop = false) {
+            this.settled = false;
+            this.settleTimer = 0;
+            this.lastPosition = { x: this.x, y: this.y };
+            this.settleThreshold = 0.3;  // Movement threshold for settling
+            this.settleFrames = 45;      // Frames of stillness required (about 0.75 seconds)
             this.transaction = transaction;
             this.size = this.calculateSize(transaction.size || 1000);
             this.color = this.calculateColor(transaction.value || 1);
@@ -114,14 +103,14 @@
             if (spawnFromTop) {
                 this.x = Math.random() * (physicsContainer.clientWidth - this.size);
                 this.y = -this.size - 20; // Start above container
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = 2 + Math.random() * 3; // Gentle downward velocity
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = 0.5 + Math.random() * 1; // Gentle downward velocity
             } else {
                 const position = this.findValidSpawnPosition();
                 this.x = position.x;
                 this.y = position.y;
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
             }
             
             this.element = this.createElement();
@@ -135,10 +124,6 @@
                 totalPressure: 0
             };
             
-            // Add to physics engine
-            if (physicsEngine) {
-                physicsEngine.addBall(this);
-            }
         }
         
         calculateSize(sizeBytes) {
@@ -191,6 +176,100 @@
                 y: 0
             };
         }
+
+        checkSettling() {
+    const dx = Math.abs(this.x - this.lastPosition.x);
+    const dy = Math.abs(this.y - this.lastPosition.y);
+    const totalVelocity = Math.abs(this.vx) + Math.abs(this.vy);
+    
+    // Check if movement is below threshold
+    if (dx < this.settleThreshold && dy < this.settleThreshold && totalVelocity < this.settleThreshold) {
+        this.settleTimer++;
+        
+        // If still for enough frames, mark as settled
+        if (this.settleTimer >= this.settleFrames) {
+            this.settled = true;
+            this.vx = 0;
+            this.vy = 0;
+            
+            // Visual indication of settling (subtle)
+            if (this.element) {
+                this.element.style.filter = 'brightness(0.95) saturate(1.05)';
+            }
+            
+            console.log(`Ball ${this.transaction.id.substring(0, 8)} has settled`);
+        }
+    } else {
+        // Reset settle timer if ball moved
+        this.settleTimer = 0;
+        if (this.settled) {
+            this.unsettled();
+        }
+    }
+    
+    // Update last position
+    this.lastPosition.x = this.x;
+    this.lastPosition.y = this.y;
+}
+
+        unsettle() {
+    if (this.settled) {
+        this.settled = false;
+        this.settleTimer = 0;
+        
+        // Remove settled visual effect
+        if (this.element) {
+            this.element.style.filter = '';
+        }
+        
+        console.log(`Ball ${this.transaction.id.substring(0, 8)} unsettled`);
+    }
+}
+        resolveCollision(other) {
+    const config = ENHANCED_PHYSICS_CONFIG;
+    
+    const radius1 = this.size / 2;
+    const radius2 = other.size / 2;
+    
+    const dx = (this.x + radius1) - (other.x + radius2);
+    const dy = (this.y + radius1) - (other.y + radius2);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const minDistance = radius1 + radius2 + config.minSeparationDistance;
+    
+    if (distance < minDistance && distance > 0) {
+        // Wake up both balls if they collide
+        this.unsettle();
+        other.unsettle();
+        
+        // ... rest of collision code stays the same ...
+        const overlap = minDistance - distance;
+        const separateX = (dx / distance) * overlap * 0.5;
+        const separateY = (dy / distance) * overlap * 0.5;
+        
+        this.x += separateX;
+        this.y += separateY;
+        other.x -= separateX;
+        other.y -= separateY;
+        
+        const normalX = dx / distance;
+        const normalY = dy / distance;
+        
+        const relativeVelocityX = this.vx - other.vx;
+        const relativeVelocityY = this.vy - other.vy;
+        const speed = relativeVelocityX * normalX + relativeVelocityY * normalY;
+        
+        if (speed < 0) return;
+        
+        const impulse = speed * config.separationForce * 0.5;
+        
+        this.vx -= impulse * normalX;
+        this.vy -= impulse * normalY;
+        other.vx += impulse * normalX;
+        other.vy += impulse * normalY;
+    }
+}
+
+
         
         createElement() {
             const element = document.createElement('div');
@@ -249,8 +328,139 @@
         // Physics update is now handled by PhysicsEngine
         // This method is kept for legacy compatibility but does nothing
         update() {
-            // Physics engine handles all updates now
-        }
+            if (this.settled) return;
+    if (!physicsRunning) return;
+    
+    const config = ENHANCED_PHYSICS_CONFIG;
+    
+    // Apply gravity (much gentler)
+    this.vy += config.gravity;
+    
+    // Apply friction (more aggressive)
+    this.vx *= config.friction;
+    this.vy *= config.friction;
+    
+    // Cap maximum velocity to prevent crazy speeds
+    const maxVel = 8;
+    if (Math.abs(this.vx) > maxVel) this.vx = this.vx > 0 ? maxVel : -maxVel;
+    if (Math.abs(this.vy) > maxVel) this.vy = this.vy > 0 ? maxVel : -maxVel;
+    
+    // Update position
+    this.x += this.vx;
+    this.y += this.vy;
+    
+    // Handle boundary collisions
+    this.handleBoundaryCollisions();
+    
+    // Handle ball-to-ball collisions (optimized)
+    this.handleBallCollisions();
+    
+    // Update DOM position
+    this.updateDOMPosition();
+}
+
+    handleBoundaryCollisions() {
+    const config = ENHANCED_PHYSICS_CONFIG;
+    const containerWidth = physicsContainer.clientWidth;
+    const containerHeight = physicsContainer.clientHeight;
+    
+    // Left wall
+    if (this.x <= 0) {
+        this.x = 0;
+        this.vx = Math.abs(this.vx) * config.bounce;
+    }
+    
+    // Right wall
+    if (this.x >= containerWidth - this.size) {
+        this.x = containerWidth - this.size;
+        this.vx = -Math.abs(this.vx) * config.bounce;
+    }
+    
+    // Top wall
+    if (this.y <= 0) {
+        this.y = 0;
+        this.vy = Math.abs(this.vy) * config.bounce;
+    }
+    
+    // Bottom wall (with extra friction)
+    if (this.y >= containerHeight - this.size) {
+        this.y = containerHeight - this.size;
+        this.vy = -Math.abs(this.vy) * config.bounce;
+        // Extra friction when hitting bottom
+        this.vx *= 0.8;
+    }
+}
+
+handleBallCollisions() {
+    const config = ENHANCED_PHYSICS_CONFIG;
+    
+    // Only check nearby balls for performance
+    const nearbyBalls = balls.filter(other => {
+        if (other === this) return false;
+        
+        const dx = (this.x + this.size/2) - (other.x + other.size/2);
+        const dy = (this.y + this.size/2) - (other.y + other.size/2);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Only check if within reasonable collision range
+        return distance < (this.size/2 + other.size/2 + 30);
+    });
+    
+    // Process collisions with nearby balls only
+    nearbyBalls.forEach(other => {
+        this.resolveCollision(other);
+    });
+}
+
+resolveCollision(other) {
+    const config = ENHANCED_PHYSICS_CONFIG;
+    
+    const radius1 = this.size / 2;
+    const radius2 = other.size / 2;
+    
+    const dx = (this.x + radius1) - (other.x + radius2);
+    const dy = (this.y + radius1) - (other.y + radius2);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const minDistance = radius1 + radius2 + config.minSeparationDistance;
+    
+    if (distance < minDistance && distance > 0) {
+        // Calculate overlap
+        const overlap = minDistance - distance;
+        const separateX = (dx / distance) * overlap * 0.5;
+        const separateY = (dy / distance) * overlap * 0.5;
+        
+        // Gently separate balls
+        this.x += separateX;
+        this.y += separateY;
+        other.x -= separateX;
+        other.y -= separateY;
+        
+        // Very gentle velocity exchange
+        const normalX = dx / distance;
+        const normalY = dy / distance;
+        
+        const relativeVelocityX = this.vx - other.vx;
+        const relativeVelocityY = this.vy - other.vy;
+        const speed = relativeVelocityX * normalX + relativeVelocityY * normalY;
+        
+        if (speed < 0) return; // Objects separating
+        
+        // Gentle collision response (much less bouncy)
+        const impulse = speed * config.separationForce * 0.5; // Reduced impulse
+        
+        this.vx -= impulse * normalX;
+        this.vy -= impulse * normalY;
+        other.vx += impulse * normalX;
+        other.vy += impulse * normalY;
+    }
+}
+
+updateDOMPosition() {
+    if (this.element) {
+        this.element.style.left = this.x + 'px';
+        this.element.style.top = this.y + 'px';
+    }
+}
         
         applyClickBounce(clickX, clickY) {
             const ballCenterX = this.x + this.size / 2;
@@ -265,7 +475,7 @@
                 const normalY = dy / distance;
                 
                 // Enhanced click force
-                const clickForce = 12;
+                const clickForce = 10;
                 this.vx += normalX * clickForce;
                 this.vy += normalY * clickForce;
             } else {
@@ -329,12 +539,7 @@
             this.element.style.cursor = interactionMode === 'bounce' ? 'grab' : 'pointer';
         }
         
-        destroy() {
-            // Remove from physics engine
-            if (physicsEngine) {
-                physicsEngine.removeBall(this);
-            }
-            
+        destroy() {        
             if (this.element && this.element.parentNode) {
                 this.element.parentNode.removeChild(this.element);
             }
@@ -343,25 +548,32 @@
     
     // Enhanced Animation Loop with Physics Engine
     function animate(currentTime) {
-        if (currentTime - lastTime >= 1000 / ENHANCED_PHYSICS_CONFIG.targetFPS) {
-            // Use physics engine for all updates
-            if (physicsEngine && physicsRunning) {
-                physicsEngine.updatePhysics();
-            }
+    if (currentTime - lastTime >= 1000 / ENHANCED_PHYSICS_CONFIG.targetFPS) {
+        if (physicsRunning) {
+            // Only update non-settled balls for better performance
+            const activeBalls = balls.filter(ball => !ball.settled);
+            activeBalls.forEach(ball => ball.update());
             
-            updateEnhancedStats();
-            lastTime = currentTime;
+            // Log performance info occasionally
+            if (balls.length > 0 && Math.random() < 0.01) { // 1% chance per frame
+                const settledCount = balls.length - activeBalls.length;
+                console.log(`Performance: ${activeBalls.length} active, ${settledCount} settled of ${balls.length} total`);
+            }
         }
         
-        if (physicsRunning) {
-            animationId = requestAnimationFrame(animate);
-        }
+        updateEnhancedStats();
+        lastTime = currentTime;
     }
+    
+    if (physicsRunning) {
+        animationId = requestAnimationFrame(animate);
+    }
+}
     
     // Update stats with enhanced physics data
     function updateEnhancedStats() {
         const capacityStatus = checkCapacityStatus();
-        const physicsStats = physicsEngine ? physicsEngine.getStats() : {};
+        const physicsStats = {};
         
         packingStats = {
             blockCapacity: BLOCKCHAIN_CONFIG.maxBlockSizeBytes,
@@ -590,10 +802,6 @@
         balls.forEach(ball => ball.destroy());
         balls = [];
         
-        if (physicsEngine) {
-            physicsEngine.clear();
-        }
-        
         isBlockFull = false;
         capacityWarningShown = false;
         currentBlockSize = 0;
@@ -674,12 +882,12 @@
     }
     
     // Initialize with existing transactions (enhanced)
-    $: if ($transactions.length > 0 && physicsContainer && physicsEngine && !blockFlowManager) {
+    $: if ($transactions.length > 0 && physicsContainer && !blockFlowManager) {
         initializeBallsFromTransactions();
     }
     
     // Initialize block flow when container is ready
-    $: if (physicsContainer && physicsEngine && !blockFlowManager) {
+    $: if (physicsContainer && !blockFlowManager) {
         setTimeout(() => {
             console.log('🎬 Auto-initializing enhanced block flow...');
             blockFlowActive = true;
@@ -718,7 +926,6 @@
     
     onMount(() => {
         if (physicsContainer) {
-            initializePhysicsEngine();
             animate(performance.now());
             console.log('⚡ Enhanced Ball Physics Grid mounted');
         }
@@ -731,9 +938,7 @@
         if (blockFlowManager) {
             blockFlowManager.destroy();
         }
-        if (physicsEngine) {
-            physicsEngine.clear();
-        }
+
         clearBalls();
         console.log('🧹 Enhanced Ball Physics Grid destroyed');
     });
