@@ -276,31 +276,40 @@
         }
         
         handleClick(e) {
-            if (interactionMode === 'bounce') {
-                const rect = physicsContainer.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
-                
-                this.applyClickBounce(clickX, clickY);
-                
-                // Enhanced visual feedback - COMPLETELY FIXED VERSION
-                if (this.element) {
-                    // Use CSS classes instead of direct style manipulation
-                    this.element.classList.add('ball-click-effect');
-                    
-                    setTimeout(() => {
-                        if (this.element) {
-                            this.element.classList.remove('ball-click-effect');
-                        }
-                    }, 150);
+        if (interactionMode === 'bounce') {
+        const rect = physicsContainer.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+        
+        this.applyClickBounce(clickX, clickY);
+        
+        // FIXED: Safer element manipulation
+        if (this.element && this.element.classList) {
+            // Remove class first if it exists
+            this.element.classList.remove('ball-click-effect');
+            
+            // Force reflow to ensure the class removal takes effect
+            void this.element.offsetHeight;
+            
+            // Add the class
+            this.element.classList.add('ball-click-effect');
+            
+            // Use a more robust cleanup
+            const cleanup = () => {
+                if (this.element && this.element.classList && this.element.classList.contains('ball-click-effect')) {
+                    this.element.classList.remove('ball-click-effect');
                 }
-                
-            } else if (interactionMode === 'navigate') {
-                if (this.transaction.id) {
-                    window.open(`https://sigmaspace.io/en/transaction/${this.transaction.id}`, '_blank');
-                }
-            }
+            };
+            
+            setTimeout(cleanup, 150);
         }
+        
+    } else if (interactionMode === 'navigate') {
+        if (this.transaction.id) {
+            window.open(`https://sigmaspace.io/en/transaction/${this.transaction.id}`, '_blank');
+        }
+    }
+}
         
         showTooltip(e) {
             tooltipTransaction = this.transaction;
@@ -412,40 +421,49 @@
     }
     
     function showCapacityStatus(message, type = 'info') {
-        const existingStatus = document.querySelector('.capacity-status');
-        if (existingStatus) existingStatus.remove();
+    const existingStatus = document.querySelector('.capacity-status');
+    if (existingStatus) existingStatus.remove();
 
-        const statusDiv = document.createElement('div');
-        statusDiv.className = `capacity-status ${type}`;
-        statusDiv.textContent = message;
-        statusDiv.style.cssText = `
-            position: fixed;
-            top: 120px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            z-index: 10000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            max-width: 350px;
-            font-size: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            ${type === 'warning' ? 'background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);' : ''}
-            ${type === 'error' ? 'background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);' : ''}
-            ${type === 'success' ? 'background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);' : ''}
-            ${type === 'info' ? 'background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);' : ''}
-        `;
-        document.body.appendChild(statusDiv);
-        
-        setTimeout(() => statusDiv.style.transform = 'translateX(0)', 100);
-        
-        setTimeout(() => {
-            statusDiv.style.transform = 'translateX(100%)';
-            setTimeout(() => statusDiv.remove(), 300);
-        }, type === 'error' ? 6000 : 4000);
-    }
+    const statusDiv = document.createElement('div');
+    statusDiv.className = `capacity-status ${type}`;
+    statusDiv.textContent = message;
+    statusDiv.style.cssText = `
+        position: fixed;
+        top: 120px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 350px;
+        font-size: 14px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease;
+        ${type === 'warning' ? 'background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);' : ''}
+        ${type === 'error' ? 'background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);' : ''}
+        ${type === 'success' ? 'background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);' : ''}
+        ${type === 'info' ? 'background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);' : ''}
+    `;
+    
+    // FIXED: Add CSS class for initial hidden state instead of direct transform assignment
+    statusDiv.classList.add('capacity-status-hidden');
+    
+    document.body.appendChild(statusDiv);
+    
+    // FIXED: Use CSS classes instead of direct transform assignment
+    setTimeout(() => {
+        statusDiv.classList.remove('capacity-status-hidden');
+        statusDiv.classList.add('capacity-status-visible');
+    }, 100);
+    
+    // FIXED: Use CSS classes for hide animation
+    setTimeout(() => {
+        statusDiv.classList.remove('capacity-status-visible');
+        statusDiv.classList.add('capacity-status-hidden');
+        setTimeout(() => statusDiv.remove(), 300);
+    }, type === 'error' ? 6000 : 4000);
+}
     
     // ENHANCED TRANSACTION ADDING (uses physics engine)
     function addTransactionBall(transaction) {
@@ -501,14 +519,15 @@
     
     // FIXED: animateTransactionRemoval - This was causing the warning!
     function animateTransactionRemoval(ball) {
-        if (ball.element) {
-            // Use CSS class instead of direct style manipulation
-            ball.element.classList.add('ball-removal-animation');
-        }
-        
-        setTimeout(() => {
+    if (ball.element && ball.element.classList) {
+        ball.element.classList.add('ball-removal-animation');
+    }
+    
+    setTimeout(() => {
+        if (ball && typeof ball.destroy === 'function') {
             ball.destroy();
-        }, 800);
+        }
+    }, 800);
     }
     
     // ENHANCED CONTROL FUNCTIONS
@@ -975,6 +994,20 @@
         color: #e74c3c;
         animation: textPulse 1s ease-in-out infinite alternate;
     }
+    /* Capacity status animation classes */
+    :global(.capacity-status-hidden) {
+    transform: translateX(100%) !important;
+    }
+
+    :global(.capacity-status-visible) {
+    transform: translateX(0) !important;
+    }
+
+    /* Make sure the capacity-status base class has the transition */
+    :global(.capacity-status) {
+    transition: transform 0.3s ease !important;
+    }
+
     
     @keyframes capacityWarning {
         from { opacity: 0.8; }
@@ -1080,15 +1113,81 @@
     
     /* FIXED: CSS classes for animations instead of direct style manipulation */
     :global(.ball-click-effect) {
-        transform: scale(0.85) !important;
-        filter: brightness(1.3) !important;
-        transition: transform 0.15s ease, filter 0.15s ease !important;
+    transform: scale(0.85) !important;
+    filter: brightness(1.3) !important;
+    transition: transform 0.15s ease, filter 0.15s ease !important;
     }
     
     :global(.ball-removal-animation) {
-        transform: scale(0.1) !important;
-        opacity: 0 !important;
-        transition: all 0.8s ease-out !important;
+    transform: scale(0.1) !important;
+    opacity: 0 !important;
+    transition: all 0.8s ease-out !important;
+    }
+    /* Add these CSS classes to your BallPhysicsGrid.svelte <style> section */
+
+    /* FIXED: CSS classes to replace all direct style assignments */
+    :global(.ball-mining-fade) {
+    opacity: var(--mining-opacity, 1);
+    transform: scale(var(--mining-scale, 1));
+    transition: opacity 0.05s ease, transform 0.05s ease;
+    }
+
+    :global(.ball-entry-start) {
+    opacity: 0 !important;
+    transform: scale(0.5) !important;
+    filter: brightness(1.5) drop-shadow(0 0 10px rgba(39, 174, 96, 0.6)) !important;
+    transition: none !important;
+    }
+
+    :global(.ball-entry-end) {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+    filter: brightness(1) drop-shadow(0 0 0 transparent) !important;
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.8s ease !important;
+    }
+
+    :global(.ball-settling) {
+    filter: brightness(0.9);
+    transition: filter 0.5s ease;
+    }
+
+    /* Existing classes - make sure these are present */
+    :global(.ball-click-effect) {
+    transform: scale(0.85) !important;
+    filter: brightness(1.3) !important;
+    transition: transform 0.15s ease, filter 0.15s ease !important;
+    }
+
+    :global(.ball-removal-animation) {
+    transform: scale(0.1) !important;
+    opacity: 0 !important;
+    transition: all 0.8s ease-out !important;
+    }
+
+    /* Enhanced ball physics styling */
+    :global(.ball-physics.enhanced-physics) {
+    transition: filter 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease !important;
+    }
+
+    /* Block flow animation classes */
+    :global(.block-mining) {
+    z-index: 100 !important;
+    pointer-events: none;
+    filter: brightness(1.2);
+    }
+
+    :global(.transaction-entry) {
+    z-index: 50 !important;
+    filter: drop-shadow(0 0 10px rgba(39, 174, 96, 0.6));
+    }
+
+    :global(.transaction-removal) {
+    z-index: 75 !important;
+    pointer-events: none;
+    transform: scale(1.8) !important;
+    opacity: 0 !important;
+    filter: blur(4px) !important;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     }
     
     /* Enhanced ball physics styling */

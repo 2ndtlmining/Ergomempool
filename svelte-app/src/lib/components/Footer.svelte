@@ -56,19 +56,6 @@
             </svg>
             <span>v.0.0.4</span>
         </a>
-
-        <button 
-            class="presentation-link" 
-            title="View ErgoHack 10 Presentation"
-            on:click={handlePresentation}
-        >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h4l-2 3v1h8v-1l-2-3h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 13H5V5h14v11z"/>
-                <path d="M10 8.5l4 3-4 3z"/>
-            </svg>
-            <span>ErgoHack 10 Presentation</span>
-        </button>
-
         <button 
             class="donation-link" 
             class:wallet-required={!$walletConnector.isConnected}
@@ -84,7 +71,7 @@
 </footer>
 
 <style>
-    .presentation-link, .donation-link {
+    .donation-link {
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -100,7 +87,7 @@
         text-decoration: none;
     }
     
-    .presentation-link:hover, .donation-link:hover {
+    .donation-link:hover {
         color: white;
         background-color: rgba(230, 126, 34, 0.2);
         border-color: var(--primary-orange);

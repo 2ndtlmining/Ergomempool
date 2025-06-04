@@ -1,6 +1,8 @@
+<!-- FIXED: The key changes are in the handlePack function and conditional rendering -->
+
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { transactions, currentPrice, blockData, colorMode } from '$lib/stores.js'; // Added colorMode import
+    import { transactions, currentPrice, blockData, colorMode } from '$lib/stores.js';
     import { fetchTransactions, fetchBlocks, fetchPrice, addUsdValues } from '$lib/api.js';
     
     // Import components
@@ -10,7 +12,7 @@
     import Controls from '$lib/components/Controls.svelte';
     import MempoolGrid from '$lib/components/MempoolGrid.svelte';
     import ErgoPackingGrid from '$lib/components/ErgoPackingGrid.svelte';
-    import BallPhysicsGrid from '$lib/components/BallPhysicsGrid.svelte'; // Added BallPhysicsGrid import
+    import BallPhysicsGrid from '$lib/components/BallPhysicsGrid.svelte';
     import TransactionTable from '$lib/components/TransactionTable.svelte';
     import Footer from '$lib/components/Footer.svelte';
     
@@ -20,8 +22,8 @@
     let intervalIds = [];
     let packingMode = false;
     let ergoPackingRef;
-    let ballPhysicsRef; // Added ballPhysicsRef
-    let controlsRef; // Added controlsRef
+    let ballPhysicsRef;
+    let controlsRef;
     let currentPackingStats = {
         blockCapacity: 2000000,
         mempoolSize: 0,
@@ -38,20 +40,22 @@
         controlsRef.setBallPhysicsRef(ballPhysicsRef);
     }
     
-    // Keep console debug for development
+    // Enhanced debug logging
     $: {
-        console.log('🎯 Main page packingMode changed to:', packingMode);
-        console.log('🎨 Color mode changed to:', $colorMode);
+        console.log('🎯 Main page state changed:', {
+            packingMode,
+            colorMode: $colorMode,
+            willShow: packingMode ? 'Packing' : $colorMode === 'balls' ? 'BallPhysics' : 'Grid'
+        });
     }
     
     onMount(() => {
         console.log('🚀 Ergomempool SvelteKit app initialized');
         loadAllData();
         
-        // Set up auto-refresh intervals matching your Flask app
-        const transactionInterval = setInterval(loadTransactions, 30000); // 30 seconds
-        const priceInterval = setInterval(loadPrice, 300000); // 5 minutes
-        const blockInterval = setInterval(loadBlocks, 30000); // 30 seconds
+        const transactionInterval = setInterval(loadTransactions, 30000);
+        const priceInterval = setInterval(loadPrice, 300000);
+        const blockInterval = setInterval(loadBlocks, 30000);
         
         intervalIds = [transactionInterval, priceInterval, blockInterval];
         
@@ -59,7 +63,6 @@
     });
     
     onDestroy(() => {
-        // Clean up intervals on component destruction
         intervalIds.forEach(id => clearInterval(id));
         console.log('🧹 Cleaned up intervals');
     });
@@ -82,8 +85,6 @@
         try {
             const txData = await fetchTransactions();
             const priceData = await fetchPrice();
-            
-            // Add USD values to each transaction (matching Flask logic)
             const txWithUsd = addUsdValues(txData, priceData.price);
             
             transactions.set(txWithUsd);
@@ -117,7 +118,6 @@
         console.log('🔄 Manual refresh triggered');
         loadAllData();
         
-        // Visual feedback for user
         const refreshButton = document.querySelector('.control-button:last-child');
         if (refreshButton) {
             const originalText = refreshButton.textContent;
@@ -131,12 +131,19 @@
         }
     }
     
+    // FIXED: Handle pack toggle with proper mode switching
     function handlePack(isPacking) {
-        console.log('📦 Pack mode toggle:', isPacking);
+        console.log('📦 Pack mode toggle:', isPacking, 'Current color mode:', $colorMode);
         packingMode = isPacking;
         
         if (isPacking) {
             console.log('📦 Switching to ERGO packing visualization');
+            
+            // FIXED: If we're coming from ball physics mode, switch away from it
+            if ($colorMode === 'balls') {
+                console.log('🔄 Switching from Ball Physics to Packing mode - changing color mode to size');
+                colorMode.set('size');
+            }
             
             // Start packing animation after component loads
             setTimeout(() => {
@@ -146,7 +153,6 @@
                 } else {
                     console.log('⚠️ Packing component not ready yet, retrying...');
                     
-                    // Retry after a longer delay
                     setTimeout(() => {
                         if (ergoPackingRef && ergoPackingRef.startPackingAnimation) {
                             console.log('🎬 Starting packing animation (retry)');
@@ -157,8 +163,11 @@
                     }, 1000);
                 }
             }, 500);
+            
         } else {
-            console.log('📊 Switching to standard grid visualization');
+            console.log('📊 Switching away from packing mode');
+            // When turning off packing mode, we don't automatically switch to ball physics
+            // The user can manually click the Ball Physics button if they want
         }
     }
 </script>
@@ -170,35 +179,29 @@
 </svelte:head>
 
 <div class="container">
-    <!-- Header with wallet connection and test transaction -->
     <Header />
-    
-    <!-- Blocks section showing next block and last 4 blocks -->
     <BlocksSection />
     
-    <!-- Main visualization area -->
     <main class="visualizer" class:packing-mode={packingMode}>
         <h2>Mempool Visualizer</h2>
         
-        <!-- Stats display with ERGO packing information -->
         <StatsDisplay packingStats={currentPackingStats} />
         
-        <!-- Control buttons for color mode, packing, and refresh -->
         <Controls 
             bind:this={controlsRef}
             onRefresh={handleRefresh} 
             onPack={handlePack} 
         />
         
-        <!-- Conditional rendering: Ball Physics, Packing visualization, or standard grid -->
-        {#if $colorMode === 'balls'}
-            <BallPhysicsGrid 
-                bind:this={ballPhysicsRef}
-                packingStats={currentPackingStats} 
-            />
-        {:else if packingMode}
+        <!-- FIXED: Priority-based conditional rendering - Packing mode takes priority -->
+        {#if packingMode}
             <ErgoPackingGrid 
                 bind:this={ergoPackingRef}
+                packingStats={currentPackingStats} 
+            />
+        {:else if $colorMode === 'balls'}
+            <BallPhysicsGrid 
+                bind:this={ballPhysicsRef}
                 packingStats={currentPackingStats} 
             />
         {:else}
@@ -206,15 +209,11 @@
         {/if}
     </main>
     
-    <!-- Recent transactions table -->
     <TransactionTable />
-    
-    <!-- Footer with GitHub, presentation, and donation links -->
     <Footer />
 </div>
 
 <style>
-    /* Global container styles */
     .container {
         display: flex;
         flex-direction: column;
@@ -222,7 +221,6 @@
         background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
     }
     
-    /* Main visualizer area */
     .visualizer {
         flex: 1;
         background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
@@ -244,7 +242,6 @@
         text-align: center;
     }
     
-    /* Packing mode specific styling */
     .visualizer.packing-mode {
         min-height: 600px;
         background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
@@ -257,7 +254,6 @@
         margin-bottom: 20px;
     }
     
-    /* Responsive design for mobile */
     @media (max-width: 768px) {
         .visualizer {
             padding: 15px;

@@ -86,8 +86,6 @@
         const statusDiv = document.createElement('div');
         statusDiv.className = `flow-status ${type}`;
         statusDiv.textContent = message;
-        
-        // Set initial styles including transform
         statusDiv.style.cssText = `
             position: fixed;
             top: 160px;
@@ -97,33 +95,36 @@
             color: white;
             font-weight: 500;
             z-index: 10000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
             max-width: 300px;
             font-size: 13px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
             ${type === 'success' ? 'background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);' : ''}
             ${type === 'info' ? 'background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);' : ''}
             ${type === 'warning' ? 'background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);' : ''}
         `;
         
+        // FIXED: Use CSS classes instead of direct transform assignment
+        statusDiv.classList.add('flow-status-hidden');
         document.body.appendChild(statusDiv);
         
-        // Use requestAnimationFrame to ensure the element is rendered before changing transform
-        requestAnimationFrame(() => {
-            // Set the final transform value directly instead of assignment
-            statusDiv.style.setProperty('transform', 'translateX(0)');
-        });
-        
-        // Hide and remove with proper cleanup
         setTimeout(() => {
-            // Set the exit transform directly
-            statusDiv.style.setProperty('transform', 'translateX(100%)');
-            setTimeout(() => {
-                if (statusDiv.parentNode) {
-                    statusDiv.remove();
-                }
-            }, 300);
+            if (statusDiv.classList) {
+                statusDiv.classList.remove('flow-status-hidden');
+                statusDiv.classList.add('flow-status-visible');
+            }
+        }, 100);
+        
+        setTimeout(() => {
+            if (statusDiv.classList) {
+                statusDiv.classList.remove('flow-status-visible');
+                statusDiv.classList.add('flow-status-hidden');
+                setTimeout(() => {
+                    if (statusDiv.parentNode) {
+                        statusDiv.remove();
+                    }
+                }, 300);
+            }
         }, 3000);
     }
     
@@ -160,7 +161,7 @@
         </button>
     </div>
     
-    <!-- General Controls -->
+    <!-- FIXED: General Controls - Always show Pack button and Refresh -->
     <div class="control-group">
         <button 
             class="control-button" 
@@ -178,7 +179,7 @@
         </button>
     </div>
     
-    <!-- Ball Physics Specific Controls -->
+    <!-- Ball Physics Specific Controls - Only show when in ball mode -->
     {#if $colorMode === 'balls'}
         <div class="control-group ball-controls">
             <!-- Basic Ball Controls -->
@@ -372,6 +373,15 @@
         0% { transform: translateY(-2px) scale(1); }
         50% { transform: translateY(1px) scale(0.98); }
         100% { transform: translateY(-2px) scale(1); }
+    }
+    
+    /* FIXED: Add CSS classes for flow status animations */
+    :global(.flow-status-hidden) {
+        transform: translateX(100%) !important;
+    }
+    
+    :global(.flow-status-visible) {
+        transform: translateX(0) !important;
     }
     
     @media (max-width: 768px) {

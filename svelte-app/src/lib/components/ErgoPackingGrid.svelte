@@ -15,19 +15,18 @@
         statusClass: 'info'
     };
     
-    // ERGO packing configuration
     const ERGO_PACKING_CONFIG = {
-        maxBlockSizeBytes: 2097152, // 2MB
-        hexagonRadius: 140,
-        centerX: 175,
-        centerY: 175,
-        canvasWidth: 350,
-        canvasHeight: 350,
-        minSquareSize: 4,
-        maxSquareSize: 16,
-        squareSpacing: 2,
-        bytesToPixelRatio: 800,
-        packingAnimationSpeed: 100
+    maxBlockSizeBytes: 2097152, // 2MB
+    hexagonRadius: 180,         // Increased from 140 to 180 (+28% larger)
+    centerX: 200,              // Centered in 400px container
+    centerY: 200,              // Centered in 400px container
+    canvasWidth: 400,
+    canvasHeight: 400,
+    minSquareSize: 6,          // Increased from 4 to 6 (+50% larger minimum)
+    maxSquareSize: 20,         // Increased from 16 to 20 (+25% larger maximum)
+    squareSpacing: 2,          // Keep same for good density
+    bytesToPixelRatio: 600,    // Reduced from 800 to 600 (makes squares larger relative to transaction size)
+    packingAnimationSpeed: 100
     };
     
     let packingContainer;
@@ -143,7 +142,7 @@
     function isPointInsideHexagon(x, y) {
         const { centerX, centerY, hexagonRadius } = ERGO_PACKING_CONFIG;
         const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-        const effectiveRadius = hexagonRadius - 20;
+        const effectiveRadius = hexagonRadius - 25;
         return distance <= effectiveRadius;
     }
     
@@ -155,8 +154,8 @@
         const minSize = ERGO_PACKING_CONFIG.minSquareSize;
         
         // Create grid of available positions
-        for (let x = 50; x < ERGO_PACKING_CONFIG.canvasWidth - 50; x += minSize + spacing) {
-            for (let y = 50; y < ERGO_PACKING_CONFIG.canvasHeight - 50; y += minSize + spacing) {
+        for (let x = 40; x < ERGO_PACKING_CONFIG.canvasWidth - 40; x += minSize + spacing) {
+            for (let y = 40; y < ERGO_PACKING_CONFIG.canvasHeight - 40; y += minSize + spacing) {
                 if (isPointInsideHexagon(x, y)) {
                     availableSpaces.push({ x, y, occupied: false });
                 }
@@ -257,7 +256,9 @@
             cursor: pointer;
             transition: all 0.3s ease;
             z-index: 20;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            backdrop-filter: blur(1px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         `;
         
         // Color based on mode
@@ -504,11 +505,14 @@
     
     .ergo-packing-hexagon-container-centered {
         position: relative;
-        width: 350px;
-        height: 350px;
-        margin: 20px 0;
+        width: 400px;
+        height: 400px;
+        margin: 20px auto; 
         filter: drop-shadow(0 4px 20px rgba(232, 115, 31, 0.2));
+        display: flex;
+        align-items: center;
         transition: all 0.3s ease;
+        justify-content: center;
     }
     
     .ergo-packing-hexagon-container-centered:hover {
@@ -519,10 +523,10 @@
     .ergo-packing-area {
         position: absolute;
         top: 0;
-        left: 0;
+        left: 10%;
         width: 100%;
         height: 100%;
-        z-index: 10;
+        z-index: 2;
         overflow: hidden;
     }
     
@@ -534,6 +538,17 @@
         background: linear-gradient(135deg, rgba(232, 115, 31, 0.1) 0%, rgba(232, 115, 31, 0.05) 100%);
         margin-top: 20px;
         max-width: 600px;
+    }
+    /* Make sure SVG is centered within its container */
+    .ergo-packing-hexagon-container-centered svg {
+        position: absolute;
+        top: 0%;          /* Center vertically */
+        left: 10%;         /* Center horizontally */
+        width: 100%;
+        height: 100%;
+        z-index: 15;
+        pointer-events: none;
+        overflow: visible;
     }
     
     .ergo-packing-overflow h4 {
