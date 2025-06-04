@@ -748,6 +748,120 @@ button#connect-button.wallet-connected-hidden,
     height: 20px;
 }
 
+/* Warning status styling for wallet requirements */
+.wallet-status.warning { 
+    background: linear-gradient(135deg, 
+        #f39c12 0%, 
+        #e67e22 100%
+    );
+    color: white;
+    border-color: #d68910;
+    box-shadow: 
+        0 8px 32px rgba(243, 156, 18, 0.4),
+        0 4px 16px rgba(243, 156, 18, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.wallet-status.warning::after {
+    content: '⚠️';
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    font-size: 18px;
+}
+
+/* Wallet required button styling */
+.test-transaction-button.wallet-required {
+    opacity: 0.7;
+    position: relative;
+    cursor: help;
+}
+
+.test-transaction-button.wallet-required::after {
+    position: absolute;
+    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+    top: 2px;
+    right: 2px;
+    font-size: 12px;
+    color: var(--light-orange);
+    text-shadow: 0 0 3px rgba(243, 156, 18, 0.5);
+    z-index: 1;
+}
+
+.test-transaction-button.wallet-required:hover::before {
+    content: 'Connect wallet first';
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+    color: var(--text-light);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 450;
+    white-space: nowrap;
+    border: 1px solid var(--primary-orange);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    animation: fadeIn 0.1s ease;
+}
+
+/* Wallet required styling for footer donation button */
+.donation-link.wallet-required {
+    opacity: 0.7;
+    position: relative;
+}
+
+.donation-link.wallet-required::after {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 12px;
+    color: var(--primary-orange);
+    text-shadow: 0 0 3px rgba(230, 126, 34, 0.5);
+}
+.disconnect-icon-btn {
+    background: rgba(231, 76, 60, 0.9);
+    border: 1px solid #e74c3c;
+    border-radius: 4px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    
+    /* Position it in top right corner */
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 10;
+}
+
+.disconnect-icon-btn:hover {
+    background: #e74c3c;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.5);
+    border-color: #c0392b;
+}
+
+.disconnect-icon {
+    width: 14px;
+    height: 14px;
+    transition: all 0.2s ease;
+    filter: brightness(0) invert(1);
+}
+
+.disconnect-icon-btn:hover .disconnect-icon {
+    transform: scale(1.1);
+}
+
+
 /* ============================================ */
 /* TEST TRANSACTION BUTTON */
 /* ============================================ */
@@ -864,11 +978,12 @@ button#connect-button.wallet-connected-hidden,
 
 .blocks-grid {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     justify-content: center;
     align-items: flex-start;
     flex-wrap: nowrap;
     position: relative;
+    padding: 0 2px;
 }
 
 .section-title {
@@ -984,6 +1099,7 @@ button#connect-button.wallet-connected-hidden,
         0 4px 15px rgba(230, 126, 34, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.15);
     border-color: var(--primary-orange);
+    z-index: 100;
 }
 
 .dummy-block:hover .block-size {
@@ -1898,6 +2014,21 @@ td:last-child {
         padding: 14px 18px;
         transform: translateY(-120%);
     }
+    .wallet-status.warning {
+        left: 10px;
+        right: 10px;
+        top: 80px;
+        font-size: 13px;
+        padding: 14px 18px;
+    }
+    
+    .test-transaction-button.wallet-required::after,
+    .donation-link.wallet-required::after {
+        font-size: 10px;
+        top: 1px;
+        right: 1px;
+    }
+
     
     .wallet-status.show {
         transform: translateY(0);
@@ -2266,20 +2397,21 @@ td:last-child {
     }
     
     .separator {
-        width: 60%;
-        height: calc(100% + 8px);
-        min-height: 280px;
-        background: repeating-linear-gradient(
-            to bottom,
-            #7f8c8d 0px,
-            #7f8c8d 3px,
-            transparent 3px,
-            transparent 6px
-        );
-        margin-top: -4px;
-        flex-grow: 1;
-        position: relative;
-    }
+    width: 40%;  /* Reduced from 60% to 40% */
+    height: calc(100% + 8px);
+    min-height: 280px;
+    background: repeating-linear-gradient(
+        to bottom,
+        #7f8c8d 0px,
+        #7f8c8d 2px,  /* Reduced from 3px to 2px */
+        transparent 2px,  /* Reduced from 3px to 2px */
+        transparent 5px   /* Reduced from 6px to 5px */
+    );
+    margin-top: -4px;
+    flex-grow: 0;  /* Changed from 1 to 0 */
+    position: relative;
+    max-width: 80px;  /* Added max-width to prevent stretching */
+}
     
     .blocks-grid {
         flex-direction: column;
@@ -2490,6 +2622,16 @@ td:last-child {
         right: 10px;
         top: 50px;
         font-size: 11px;
+    }
+    .wallet-status.warning {
+        font-size: 12px;
+        padding: 12px 16px;
+    }
+    
+    .test-transaction-button.wallet-required:hover::before {
+        bottom: -30px;
+        font-size: 10px;
+        padding: 4px 8px;
     }
     
     .blocks-section {

@@ -3,8 +3,6 @@
     import { transactions } from '$lib/stores.js';
     import { onMount } from 'svelte';
     import { browser } from '$app/environment';
-    import { slide, fly } from 'svelte/transition';
-    import { quintOut } from 'svelte/easing';
     
     const minerNames = {
         "2TH22DBY": "2Miners",
@@ -32,6 +30,7 @@
     };
     
     let mounted = false;
+    let previousBlockHeight = null;
     
     function getMinerInfo(minerName) {
         if (!minerName) {
@@ -82,12 +81,10 @@
         if (!$transactions.length) return 0;
         
         let totalMempoolFees = 0;
-        let debugInfo = { calculatedFees: 0, precalculatedFees: 0, fallbackFees: 0 };
         
         for (const tx of $transactions) {
             if (tx.fee !== undefined && tx.fee > 0) {
                 totalMempoolFees += tx.fee;
-                debugInfo.precalculatedFees++;
             } else {
                 const totalInputs = tx.inputs?.reduce((sum, input) => sum + (input.value || 0), 0) || 0;
                 const totalOutputs = tx.outputs?.reduce((sum, output) => sum + (output.value || 0), 0) || 0;
@@ -95,16 +92,12 @@
                 
                 if (txFee > 0 && txFee < 1) {
                     totalMempoolFees += txFee;
-                    debugInfo.calculatedFees++;
                 } else {
                     totalMempoolFees += 0.001;
-                    debugInfo.fallbackFees++;
                 }
             }
         }
         
-        console.log(`💰 Estimated next block fees: ${totalMempoolFees.toFixed(6)} ERG from ${$transactions.length} transactions`);
-        console.log(`📊 Fee calculation breakdown:`, debugInfo);
         return totalMempoolFees;
     })();
     
@@ -114,13 +107,83 @@
     // Estimated total reward for next block
     $: estimatedTotalReward = baseMinerReward + estimatedFees;
     
+    // SIMPLE: Just detect new blocks and use the proven testBlockAnimation function
+    $: if (browser && mounted && $blockData.length > 0) {
+        const latestBlock = $blockData[0];
+        const currentHeight = latestBlock.height;
+        
+        if (previousBlockHeight === null) {
+            // First load, no animation
+            previousBlockHeight = currentHeight;
+            console.log(`📊 Initial block height: ${currentHeight}`);
+        } else if (currentHeight > previousBlockHeight) {
+            // New block detected - use the proven animation function
+            console.log(`🎉 New block detected! Height: ${currentHeight} (prev: ${previousBlockHeight})`);
+            
+            if (typeof window.testBlockAnimation === 'function') {
+                console.log('🚀 Triggering proven testBlockAnimation...');
+                window.testBlockAnimation();
+            } else {
+                console.log('⚠️ testBlockAnimation not available yet');
+            }
+            
+            previousBlockHeight = currentHeight;
+        }
+    }
+    
+    // SIMPLE: Reset function for tab visibility
+    function simpleResetStuckAnimations() {
+        console.log('🔄 Simple reset - clearing all animation styles...');
+        
+        // Find all containers using simple DOM queries
+        const containers = [
+            document.querySelector('.next-block-section .block-container'),
+            ...Array.from({length: 4}, (_, i) => {
+                const blockEl = document.querySelector(`[data-block-index="${i}"]`);
+                return blockEl ? blockEl.closest('.block-container') : null;
+            })
+        ].filter(el => el);
+        
+        containers.forEach((container, i) => {
+            if (container) {
+                // Reset all animation styles
+                container.style.transition = '';
+                container.style.transform = '';
+                container.style.opacity = '';
+                container.style.position = '';
+                container.style.zIndex = '';
+                console.log(`✅ Reset container ${i}`);
+            }
+        });
+        
+        console.log(`🔄 Reset ${containers.length} containers`);
+    }
+    
     onMount(() => {
         mounted = true;
+        
+        if (browser) {
+            console.log('🔧 Simple BlocksSection approach loaded');
+            
+            // Make reset function available globally
+            window.resetBlockAnimations = simpleResetStuckAnimations;
+            
+            // Handle tab visibility - ONLY reset when tab becomes active
+            const handleVisibilityChange = () => {
+                if (!document.hidden) {
+                    console.log('👁️ Tab became visible - running simple reset...');
+                    setTimeout(simpleResetStuckAnimations, 100);
+                }
+            };
+            
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            
+            // Cleanup
+            return () => {
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+            };
+        }
     });
-
-    // Production line animation settings
-    const ANIMATION_DURATION = 800;
-    const SLIDE_DISTANCE = 200; // pixels to slide
 </script>
 
 <div class="blocks-section">
@@ -148,26 +211,14 @@
         <div class="separator"></div>
     </div>
 
-    <!-- Last 4 Blocks Section - PRODUCTION LINE ANIMATION -->
+    <!-- Last 4 Blocks Section -->
     <div class="last-blocks-section">
         <h3 class="section-title">Last 4 Blocks</h3>
         <div class="blocks-grid">
             {#if $blockData.length > 0}
                 {#each $blockData.slice(0, 4) as block, i (block.id)}
                     {@const minerInfo = getMinerInfo(block.miner)}
-                    <div 
-                        class="block-container"
-                        in:fly="{{ 
-                            x: -SLIDE_DISTANCE, 
-                            duration: ANIMATION_DURATION, 
-                            easing: quintOut 
-                        }}"
-                        out:fly="{{ 
-                            x: SLIDE_DISTANCE, 
-                            duration: ANIMATION_DURATION, 
-                            easing: quintOut 
-                        }}"
-                    >
+                    <div class="block-container" data-block-index={i}>
                         <a 
                             href="https://sigmaspace.io/en/block/{block.id}" 
                             class="block-height-link" 
@@ -208,7 +259,7 @@
                 {/each}
             {:else}
                 {#each Array(4) as _, i}
-                    <div class="block-container loading-block">
+                    <div class="block-container" data-block-index={i}>
                         <div class="block-height">Loading...</div>
                         <div class="dummy-block">
                             <div class="block-size">Loading...</div>
@@ -227,6 +278,10 @@
 </div>
 
 <style>
+    .blocks-section {
+        overflow: hidden;
+    }
+    
     .block-container {
         position: relative;
     }
@@ -238,12 +293,6 @@
         align-items: flex-start;
         flex-wrap: nowrap;
         position: relative;
-        overflow: hidden; /* Hide blocks sliding off screen */
-    }
-    
-    .loading-block {
-        opacity: 0.7;
-        pointer-events: none;
     }
     
     .block-height-link {
@@ -266,12 +315,10 @@
         transition: transform 0.2s ease;
     }
     
-    /* Use :global() for nested selectors that Svelte might not detect */
     :global(.dummy-block:hover .miner-logo) {
         transform: scale(1.1);
     }
     
-    /* Reduce motion for users who prefer it */
     @media (prefers-reduced-motion: reduce) {
         .block-container {
             transition: none !important;

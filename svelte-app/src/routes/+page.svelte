@@ -1,6 +1,6 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { transactions, currentPrice, blockData } from '$lib/stores.js';
+    import { transactions, currentPrice, blockData, colorMode } from '$lib/stores.js'; // Added colorMode import
     import { fetchTransactions, fetchBlocks, fetchPrice, addUsdValues } from '$lib/api.js';
     
     // Import components
@@ -10,6 +10,7 @@
     import Controls from '$lib/components/Controls.svelte';
     import MempoolGrid from '$lib/components/MempoolGrid.svelte';
     import ErgoPackingGrid from '$lib/components/ErgoPackingGrid.svelte';
+    import BallPhysicsGrid from '$lib/components/BallPhysicsGrid.svelte'; // Added BallPhysicsGrid import
     import TransactionTable from '$lib/components/TransactionTable.svelte';
     import Footer from '$lib/components/Footer.svelte';
     
@@ -19,6 +20,8 @@
     let intervalIds = [];
     let packingMode = false;
     let ergoPackingRef;
+    let ballPhysicsRef; // Added ballPhysicsRef
+    let controlsRef; // Added controlsRef
     let currentPackingStats = {
         blockCapacity: 2000000,
         mempoolSize: 0,
@@ -30,9 +33,15 @@
         statusClass: 'info'
     };
     
+    // Connect controls to ball physics when both are ready
+    $: if (controlsRef && ballPhysicsRef) {
+        controlsRef.setBallPhysicsRef(ballPhysicsRef);
+    }
+    
     // Keep console debug for development
     $: {
         console.log('🎯 Main page packingMode changed to:', packingMode);
+        console.log('🎨 Color mode changed to:', $colorMode);
     }
     
     onMount(() => {
@@ -175,13 +184,22 @@
         <StatsDisplay packingStats={currentPackingStats} />
         
         <!-- Control buttons for color mode, packing, and refresh -->
-        <Controls onRefresh={handleRefresh} onPack={handlePack} />
+        <Controls 
+            bind:this={controlsRef}
+            onRefresh={handleRefresh} 
+            onPack={handlePack} 
+        />
         
-        <!-- Conditional rendering: Packing visualization or standard grid -->
-        {#if packingMode}
+        <!-- Conditional rendering: Ball Physics, Packing visualization, or standard grid -->
+        {#if $colorMode === 'balls'}
+            <BallPhysicsGrid 
+                bind:this={ballPhysicsRef}
+                packingStats={currentPackingStats} 
+            />
+        {:else if packingMode}
             <ErgoPackingGrid 
-                bind:this={ergoPackingRef} 
-                bind:packingStats={currentPackingStats} 
+                bind:this={ergoPackingRef}
+                packingStats={currentPackingStats} 
             />
         {:else}
             <MempoolGrid />

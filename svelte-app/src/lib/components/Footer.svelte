@@ -1,5 +1,13 @@
 <script>
+    import { walletConnector } from '$lib/stores.js';
+    
     function handleDonation() {
+        // Check wallet connection before triggering
+        if (!$walletConnector.isConnected) {
+            showWalletWarning('⚠️ Please connect your wallet first to make donations');
+            return;
+        }
+        
         // Trigger donation modal from Header component
         if (typeof window !== 'undefined' && window.triggerDonation) {
             window.triggerDonation();
@@ -19,6 +27,19 @@
             alert('Presentation URL not configured yet. Please add your ErgoHack 10 presentation link!');
         }
     }
+    
+    function showWalletWarning(message) {
+        // Create status notification matching the header style
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'wallet-status warning show';
+        statusDiv.textContent = message;
+        document.body.appendChild(statusDiv);
+        
+        setTimeout(() => {
+            statusDiv.classList.remove('show');
+            setTimeout(() => statusDiv.remove(), 300);
+        }, 4000);
+    }
 </script>
 
 <footer class="footer">
@@ -37,8 +58,21 @@
         </a>
 
         <button 
+            class="presentation-link" 
+            title="View ErgoHack 10 Presentation"
+            on:click={handlePresentation}
+        >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h4l-2 3v1h8v-1l-2-3h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 13H5V5h14v11z"/>
+                <path d="M10 8.5l4 3-4 3z"/>
+            </svg>
+            <span>ErgoHack 10 Presentation</span>
+        </button>
+
+        <button 
             class="donation-link" 
-            title="Support the project with a donation"
+            class:wallet-required={!$walletConnector.isConnected}
+            title={$walletConnector.isConnected ? "Support the project with a donation" : "Connect wallet to make donations"}
             on:click={handleDonation}
         >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -50,7 +84,7 @@
 </footer>
 
 <style>
-    .github-link, .donation-link {
+    .presentation-link, .donation-link {
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -66,11 +100,26 @@
         text-decoration: none;
     }
     
-    .donation-link:hover {
+    .presentation-link:hover, .donation-link:hover {
         color: white;
         background-color: rgba(230, 126, 34, 0.2);
         border-color: var(--primary-orange);
         transform: translateY(-2px);
+    }
+    
+    /* Wallet required styling */
+    .donation-link.wallet-required {
+        opacity: 0.7;
+        position: relative;
+    }
+    
+    .donation-link.wallet-required::after {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 12px;
+        color: var(--primary-orange);
+        text-shadow: 0 0 3px rgba(230, 126, 34, 0.5);
     }
     
     .donation-link:hover svg {
