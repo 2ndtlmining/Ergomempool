@@ -1,362 +1,318 @@
-// PackingAlgorithm.js - Enhanced gravity-based bin packing with bottom alignment
-
+// PackingAlgorithm.js - FIXED True Bottom-Up Gravity-Based Packing Algorithm
 export class GravityPackingAlgorithm {
-    constructor(containerWidth, containerHeight, maxCapacityBytes = 2 * 1024 * 1024) {
-        this.containerWidth = containerWidth - 40; // Account for padding/margins
-        this.containerHeight = containerHeight - 40; // Reduced to allow more packing space
-        this.maxCapacityBytes = maxCapacityBytes; // 2MB default
-        this.margin = 1; // Minimum gap between transactions (reduced for tighter packing)
-        
-        // Bottom-packing specific settings
-        this.groundLevel = this.containerHeight - 5; // Very bottom boundary
-        this.packingStartY = this.groundLevel; // Start packing from bottom
-        
-        console.log(`📦 Gravity Packing Algorithm initialized:`);
-        console.log(`   Container: ${this.containerWidth} × ${this.containerHeight} pixels`);
-        console.log(`   Capacity: ${(this.maxCapacityBytes / (1024 * 1024)).toFixed(1)}MB`);
-        console.log(`   Ground level: y=${this.groundLevel}`);
-        
-        this.reset();
-    }
-    
-    reset() {
-        // Track filled areas for collision detection
-        this.occupiedSpaces = [];
+    constructor(containerWidth, containerHeight, maxBlockSizeBytes) {
+        this.containerWidth = containerWidth;
+        this.containerHeight = containerHeight;
+        this.maxBlockSizeBytes = maxBlockSizeBytes;
         this.placedTransactions = [];
-        this.totalBytesPlaced = 0;
+        this.totalBytesUsed = 0;
+        
+        // Enhanced packing configuration for TRUE bottom-up packing
+        this.config = {
+            minSpacing: 2,              // Tighter spacing for better density
+            maxAttempts: 200,           // More attempts for better placement
+            fallbackSpacing: 4,
+            edgePadding: 8,             // Reduced padding for more space
+            bottomPadding: 8,           // Padding from absolute bottom
+            scanStep: 4                 // Step size for position scanning
+        };
+        
+        console.log(`🧠 TRUE Bottom-up packing algorithm initialized: ${containerWidth}x${containerHeight}, ${this.formatBytes(maxBlockSizeBytes)} capacity`);
     }
     
-    // Main packing function - returns array of positioned transactions
     packTransactions(transactions) {
-        console.log(`🔄 Starting BOTTOM-UP gravity packing for ${transactions.length} transactions...`);
+        console.log(`🔄 Starting TRUE bottom-up packing for ${transactions.length} transactions`);
         
-        this.reset();
+        // Reset state
+        this.placedTransactions = [];
+        this.totalBytesUsed = 0;
+        
+        // Filter valid transactions and sort by size (largest first for better packing efficiency)
+        const validTransactions = transactions.filter(tx => 
+            tx && tx.sizeBytes && tx.sizeBytes > 0
+        );
+        
+        const sortedTransactions = validTransactions.sort((a, b) => b.sizeBytes - a.sizeBytes);
+        
+        console.log(`📊 Processing ${sortedTransactions.length} valid transactions`);
+        
         const positions = [];
         
-        // Calculate max value for consistent color coding
-        const maxValue = Math.max(...transactions.map(tx => tx.value || 0), 1);
-        
-        // Update transaction colors with consistent max value
-        transactions.forEach(tx => {
-            tx.maxValue = maxValue;
-            tx.color = tx.getColorByValue();
-        });
-        
-        // STEP 1: Sort transactions by priority (largest first for bottom foundation)
-        const sortedTransactions = this.sortTransactionsByGravity(transactions);
-        
-        // STEP 2: Pack each transaction using BOTTOM-UP approach
-        for (const tx of sortedTransactions) {
-            // Check if adding this transaction would exceed capacity
-            if (this.totalBytesPlaced + tx.sizeBytes > this.maxCapacityBytes) {
-                console.log(`⚠️ Transaction ${tx.id.substring(0,8)} rejected - would exceed ${(this.maxCapacityBytes / (1024 * 1024)).toFixed(1)}MB capacity`);
+        for (const transaction of sortedTransactions) {
+            // Check capacity limit
+            if (this.totalBytesUsed + transaction.sizeBytes > this.maxBlockSizeBytes) {
+                console.log(`⚠️ Capacity limit reached. Skipping transaction ${transaction.id} (${this.formatBytes(transaction.sizeBytes)})`);
                 continue;
             }
             
-            const position = this.findBottomPosition(tx);
+            // Calculate visual size
+            const visualSize = this.calculateVisualSize(transaction.sizeBytes);
+            
+            // Find position using TRUE bottom-up gravity-based algorithm
+            const position = this.findTrueBottomUpPosition(visualSize);
             
             if (position) {
-                // Successfully placed
                 positions.push({
-                    transaction: tx,
+                    transaction,
                     x: position.x,
-                    y: position.y
+                    y: position.y,
+                    size: visualSize
                 });
                 
-                // Mark space as occupied
-                this.markSpaceOccupied(position.x, position.y, tx.width, tx.height);
-                this.placedTransactions.push(tx);
-                this.totalBytesPlaced += tx.sizeBytes;
+                // Track placed transaction
+                this.placedTransactions.push({
+                    id: transaction.id,
+                    x: position.x,
+                    y: position.y,
+                    width: visualSize,
+                    height: visualSize,
+                    sizeBytes: transaction.sizeBytes
+                });
                 
-                console.log(`✅ Placed TX ${tx.id.substring(0,8)} (${tx.sizeKB.toFixed(1)}KB, ${tx.value.toFixed(2)}ERG) at (${position.x}, ${position.y})`);
+                this.totalBytesUsed += transaction.sizeBytes;
+                
+                console.log(`✅ Placed ${transaction.id} at (${position.x}, ${position.y}) - ${this.formatBytes(transaction.sizeBytes)}`);
             } else {
-                console.log(`❌ Could not place transaction ${tx.id.substring(0,8)} (${tx.width}×${tx.height}px) - no space available`);
+                console.warn(`❌ Could not place transaction ${transaction.id} - no space found`);
             }
         }
         
-        console.log(`📦 BOTTOM PACKING complete: ${positions.length}/${transactions.length} transactions placed`);
-        console.log(`📊 Total capacity used: ${(this.totalBytesPlaced / 1024).toFixed(1)}KB / ${(this.maxCapacityBytes / 1024).toFixed(0)}KB (${((this.totalBytesPlaced / this.maxCapacityBytes) * 100).toFixed(1)}%)`);
+        console.log(`📦 TRUE Bottom-up packing complete: ${positions.length}/${transactions.length} transactions placed`);
+        console.log(`💾 Total capacity used: ${this.formatBytes(this.totalBytesUsed)} / ${this.formatBytes(this.maxBlockSizeBytes)} (${((this.totalBytesUsed / this.maxBlockSizeBytes) * 100).toFixed(1)}%)`);
         
         return positions;
     }
     
-    // Sort transactions with gravity preference (largest first for foundation)
-    sortTransactionsByGravity(transactions) {
-        return [...transactions].sort((a, b) => {
-            // Primary sort: by area (larger transactions form the foundation)
-            const areaA = a.getArea();
-            const areaB = b.getArea();
-            
-            if (areaB !== areaA) {
-                return areaB - areaA; // Larger first (foundation blocks)
-            }
-            
-            // Secondary sort: by width (wider transactions first for stability)
-            if (b.width !== a.width) {
-                return b.width - a.width;
-            }
-            
-            // Tertiary sort: by value (higher value transactions get priority)
-            return (b.value || 0) - (a.value || 0);
-        });
+    calculateVisualSize(sizeBytes) {
+        const minSize = 8;   // Smaller minimum for mobile compatibility
+        const maxSize = 50;  // Reasonable maximum for density
+        const normalizedSize = Math.min(sizeBytes / 20000, 1); // Normalize to 20KB max
+        return Math.round(minSize + (maxSize - minSize) * Math.sqrt(normalizedSize));
     }
     
-    // BOTTOM-UP POSITIONING: Find position starting from the bottom
-    findBottomPosition(transaction) {
-        const { width, height } = transaction;
+    // COMPLETELY REWRITTEN for TRUE bottom-up packing
+    findTrueBottomUpPosition(size) {
+        const margin = this.config.edgePadding;
+        const bottomPadding = this.config.bottomPadding;
+        const step = this.config.scanStep;
         
-        // STRICT BOTTOM-UP GRAVITY ALGORITHM
-        // Start from absolute ground level and work upward systematically
+        // Define the search area boundaries
+        const minX = margin;
+        const maxX = this.containerWidth - size - margin;
+        const minY = margin;
+        const maxY = this.containerHeight - size - bottomPadding;
         
-        const stepSize = 1; // Very small step for precise placement
-        const leftBoundary = 10;
-        const rightBoundary = this.containerWidth - width - 10;
+        console.log(`🔍 Finding bottom-up position for size ${size}px in area: X(${minX}-${maxX}) Y(${minY}-${maxY})`);
         
-        // For each height level (bottom to top) - start from ground
-        for (let y = this.groundLevel - height; y >= 10; y -= stepSize) {
-            
-            // Try left-to-right placement at this level
-            for (let x = leftBoundary; x <= rightBoundary; x += stepSize) {
-                if (this.canPlaceAt(x, y, width, height)) {
-                    
-                    // For ground level, accept immediately (perfect support)
-                    if (y + height >= this.groundLevel - 2) {
-                        return { 
-                            x: Math.round(x), 
-                            y: Math.round(y), 
-                            supportScore: 100
-                        };
-                    }
-                    
-                    // For higher levels, check support
-                    const supportScore = this.calculateSupportScore(x, y, width, height);
-                    
-                    // Accept position if it has good support
-                    if (supportScore >= 70) {
-                        return { 
-                            x: Math.round(x), 
-                            y: Math.round(y), 
-                            supportScore 
-                        };
-                    }
-                }
-            }
-            
-            // Also try right-to-left at this level for better packing
-            for (let x = rightBoundary; x >= leftBoundary; x -= stepSize) {
-                if (this.canPlaceAt(x, y, width, height)) {
-                    
-                    // Ground level priority
-                    if (y + height >= this.groundLevel - 2) {
-                        return { 
-                            x: Math.round(x), 
-                            y: Math.round(y), 
-                            supportScore: 100
-                        };
-                    }
-                    
-                    const supportScore = this.calculateSupportScore(x, y, width, height);
-                    
-                    if (supportScore >= 70) {
-                        return { 
-                            x: Math.round(x), 
-                            y: Math.round(y), 
-                            supportScore 
-                        };
-                    }
+        // Strategy 1: Start from bottom and scan upward, left to right within each row
+        for (let y = maxY; y >= minY; y -= step) {
+            for (let x = minX; x <= maxX; x += step) {
+                if (!this.hasCollision(x, y, size, size)) {
+                    console.log(`✅ Found bottom-up position at (${x}, ${y})`);
+                    return { x, y };
                 }
             }
         }
         
-        return null; // Cannot place transaction
+        // Strategy 2: More precise scanning with smaller steps if first attempt fails
+        console.log(`🔍 First scan failed, trying precise bottom-up scan...`);
+        for (let y = maxY; y >= minY; y -= 1) {
+            for (let x = minX; x <= maxX; x += 1) {
+                if (!this.hasCollision(x, y, size, size)) {
+                    console.log(`✅ Found precise bottom-up position at (${x}, ${y})`);
+                    return { x, y };
+                }
+            }
+        }
+        
+        console.warn(`❌ No bottom-up position found for size ${size}px`);
+        return null;
     }
     
-    // Check if a transaction can be placed at given position
-    canPlaceAt(x, y, width, height) {
-        // Check container bounds with minimal margins
-        if (x < 5 || y < 5 || 
-            x + width > this.containerWidth - 5 || 
-            y + height > this.containerHeight) {
+    hasCollision(x, y, width, height) {
+        const buffer = this.config.minSpacing;
+        
+        // Check boundaries first
+        if (x < this.config.edgePadding || 
+            y < this.config.edgePadding || 
+            x + width > this.containerWidth - this.config.edgePadding || 
+            y + height > this.containerHeight - this.config.bottomPadding) {
+            return true;
+        }
+        
+        // Check collisions with placed transactions
+        for (const placed of this.placedTransactions) {
+            if (x < placed.x + placed.width + buffer &&
+                x + width + buffer > placed.x &&
+                y < placed.y + placed.height + buffer &&
+                y + height + buffer > placed.y) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    // ENHANCED VALIDATION METHOD
+    validatePacking() {
+        console.log(`🔍 Validating TRUE bottom-up packing of ${this.placedTransactions.length} transactions`);
+        
+        let hasOverlaps = false;
+        let totalValidatedBytes = 0;
+        const issues = [];
+        
+        // Check for overlaps and bounds
+        for (let i = 0; i < this.placedTransactions.length; i++) {
+            const txA = this.placedTransactions[i];
+            totalValidatedBytes += txA.sizeBytes;
+            
+            // Check bounds
+            if (txA.x < 0 || txA.y < 0 || 
+                txA.x + txA.width > this.containerWidth || 
+                txA.y + txA.height > this.containerHeight) {
+                issues.push(`Transaction ${txA.id} is outside container bounds`);
+            }
+            
+            // Check overlaps with other transactions
+            for (let j = i + 1; j < this.placedTransactions.length; j++) {
+                const txB = this.placedTransactions[j];
+                
+                if (txA.x < txB.x + txB.width &&
+                    txA.x + txA.width > txB.x &&
+                    txA.y < txB.y + txB.height &&
+                    txA.y + txA.height > txB.y) {
+                    hasOverlaps = true;
+                    issues.push(`Overlap detected between ${txA.id} and ${txB.id}`);
+                }
+            }
+        }
+        
+        // Check capacity
+        if (totalValidatedBytes > this.maxBlockSizeBytes) {
+            issues.push(`Total bytes (${this.formatBytes(totalValidatedBytes)}) exceeds capacity (${this.formatBytes(this.maxBlockSizeBytes)})`);
+        }
+        
+        // Check if packing is truly bottom-heavy
+        const distribution = this.getPackingDistribution();
+        if (distribution.bottom < 50) {
+            console.warn(`⚠️ Packing not sufficiently bottom-heavy: ${distribution.bottom}% at bottom`);
+        }
+        
+        // Log results
+        if (issues.length === 0) {
+            console.log(`✅ Validation passed: No overlaps, ${this.formatBytes(totalValidatedBytes)} used, ${distribution.bottom}% bottom-heavy`);
+            return true;
+        } else {
+            console.warn(`❌ Validation failed: ${issues.length} issues found`);
+            issues.forEach(issue => console.warn(`  - ${issue}`));
             return false;
         }
-        
-        // Check collision with existing transactions
-        for (const occupied of this.occupiedSpaces) {
-            if (this.rectanglesOverlap(
-                x, y, width, height,
-                occupied.x, occupied.y, occupied.width, occupied.height,
-                this.margin
-            )) {
-                return false;
-            }
-        }
-        
-        return true;
     }
     
-    // Calculate support score (how well supported a position is)
-    calculateSupportScore(x, y, width, height) {
-        let supportScore = 0;
-        
-        // GROUND CONTACT: Maximum support if touching bottom
-        if (y + height >= this.groundLevel - 2) {
-            supportScore += 100;
-            return supportScore; // Ground contact is perfect support
-        }
-        
-        // TRANSACTION SUPPORT: Check for support from transactions below
-        let totalSupportWidth = 0;
-        
-        for (const occupied of this.occupiedSpaces) {
-            // Check if there's a transaction directly below this position
-            const verticalGap = occupied.y - (y + height);
-            
-            if (verticalGap >= -1 && verticalGap <= 2) { // Very close below
-                // Calculate horizontal overlap
-                const leftOverlap = Math.max(x, occupied.x);
-                const rightOverlap = Math.min(x + width, occupied.x + occupied.width);
-                const overlapWidth = Math.max(0, rightOverlap - leftOverlap);
-                
-                if (overlapWidth > 0) {
-                    totalSupportWidth += overlapWidth;
-                }
-            }
-        }
-        
-        // Calculate support percentage
-        const supportPercentage = totalSupportWidth / width;
-        supportScore += supportPercentage * 90; // Up to 90 points for full support
-        
-        // BONUS: Prefer positions that are well-supported
-        if (supportPercentage > 0.5) { // At least 50% supported
-            supportScore += 20;
-        }
-        
-        return supportScore;
-    }
-    
-    // Check if two rectangles overlap (with margin)
-    rectanglesOverlap(x1, y1, w1, h1, x2, y2, w2, h2, margin = 0) {
-        return !(
-            x1 + w1 + margin <= x2 || 
-            x2 + w2 + margin <= x1 || 
-            y1 + h1 + margin <= y2 || 
-            y2 + h2 + margin <= y1
-        );
-    }
-    
-    // Mark space as occupied for collision detection
-    markSpaceOccupied(x, y, width, height) {
-        this.occupiedSpaces.push({
-            x: x,
-            y: y,
-            width: width,
-            height: height
-        });
-    }
-    
-    // Get current packing statistics
     getPackingStats() {
-        const totalTransactions = this.placedTransactions.length;
-        const capacityUsed = (this.totalBytesPlaced / this.maxCapacityBytes) * 100;
+        const capacityUsed = (this.totalBytesUsed / this.maxBlockSizeBytes) * 100;
+        const avgSizeBytes = this.placedTransactions.length > 0 
+            ? this.totalBytesUsed / this.placedTransactions.length 
+            : 0;
         
-        // Calculate visual space utilization
-        const totalVisualArea = this.placedTransactions.reduce(
-            (sum, tx) => sum + tx.getArea(), 0
+        // Calculate visual utilization (how much of the visible area is used)
+        const totalVisualArea = this.placedTransactions.reduce((sum, tx) => 
+            sum + (tx.width * tx.height), 0
         );
         const containerArea = this.containerWidth * this.containerHeight;
         const visualUtilization = (totalVisualArea / containerArea) * 100;
         
-        // Calculate average transaction size
-        const avgSizeKB = totalTransactions > 0 ? 
-            (this.totalBytesPlaced / 1024) / totalTransactions : 0;
+        // Calculate TRUE bottom-heaviness - distance from bottom
+        const avgDistanceFromBottom = this.placedTransactions.length > 0
+            ? this.placedTransactions.reduce((sum, tx) => {
+                const distanceFromBottom = this.containerHeight - (tx.y + tx.height);
+                return sum + distanceFromBottom;
+            }, 0) / this.placedTransactions.length
+            : 0;
         
-        // Calculate packing efficiency (how well we're using space)
-        const theoreticalPixels = this.totalBytesPlaced * (containerArea / this.maxCapacityBytes);
-        const actualPixels = totalVisualArea;
-        const packingEfficiency = theoreticalPixels > 0 ? (actualPixels / theoreticalPixels) * 100 : 100;
+        const bottomHeaviness = Math.max(0, 100 - (avgDistanceFromBottom / this.containerHeight * 100));
         
+        const stats = {
+            totalTransactions: this.placedTransactions.length,
+            totalBytes: this.totalBytesUsed,
+            capacityUsed: capacityUsed,
+            efficiency: Math.min(capacityUsed, 100),
+            avgSizeKB: Math.round(avgSizeBytes / 1024 * 10) / 10,
+            visualUtilization: Math.round(visualUtilization * 10) / 10,
+            remainingCapacity: this.maxBlockSizeBytes - this.totalBytesUsed,
+            remainingCapacityPercent: Math.max(0, 100 - capacityUsed),
+            bottomHeaviness: Math.round(bottomHeaviness * 10) / 10,
+            avgDistanceFromBottom: Math.round(avgDistanceFromBottom)
+        };
+        
+        console.log('📊 TRUE Bottom-up packing stats calculated:', stats);
+        return stats;
+    }
+    
+    // ENHANCED CLEANUP METHOD
+    clearPacking() {
+        console.log(`🧹 Clearing TRUE bottom-up packing data for ${this.placedTransactions.length} transactions`);
+        
+        this.placedTransactions = [];
+        this.totalBytesUsed = 0;
+        
+        console.log('✅ Packing data cleared');
+    }
+    
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    // Get detailed placement information for debugging
+    getPlacementDetails() {
         return {
-            totalTransactions,
-            totalBytes: this.totalBytesPlaced,
-            totalKB: this.totalBytesPlaced / 1024,
-            capacityUsed,
-            visualUtilization,
-            avgSizeKB,
-            efficiency: Math.min(packingEfficiency, 100), // Cap at 100%
-            remainingCapacity: this.maxCapacityBytes - this.totalBytesPlaced,
-            // Additional metrics
-            avgTransactionArea: totalTransactions > 0 ? totalVisualArea / totalTransactions : 0,
-            packingDensity: (totalVisualArea / containerArea) * 100
+            placedCount: this.placedTransactions.length,
+            totalBytes: this.totalBytesUsed,
+            capacityPercent: (this.totalBytesUsed / this.maxBlockSizeBytes) * 100,
+            placements: this.placedTransactions.map(tx => ({
+                id: tx.id,
+                position: `(${tx.x}, ${tx.y})`,
+                size: `${tx.width}x${tx.height}`,
+                bytes: this.formatBytes(tx.sizeBytes),
+                distanceFromBottom: this.containerHeight - (tx.y + tx.height)
+            }))
         };
     }
     
-    // Advanced packing: Try to fill gaps with smaller transactions
-    optimizePacking(transactions) {
-        console.log('🔧 Running bottom-up packing optimization...');
+    // Enhanced method to analyze TRUE bottom-up packing distribution
+    getPackingDistribution() {
+        if (this.placedTransactions.length === 0) {
+            return { bottom: 0, middle: 0, top: 0 };
+        }
         
-        // Find unplaced small transactions that might fit in gaps
-        const unplacedTransactions = transactions.filter(tx => 
-            !this.placedTransactions.includes(tx) && 
-            tx.sizeBytes <= this.maxCapacityBytes - this.totalBytesPlaced
-        );
+        // Divide container into thirds for distribution analysis
+        const thirdHeight = this.containerHeight / 3;
+        let bottom = 0, middle = 0, top = 0;
         
-        // Sort small transactions by size (smallest first for gap filling)
-        const smallTransactions = unplacedTransactions
-            .filter(tx => tx.getArea() <= 600) // Small area threshold
-            .sort((a, b) => a.getArea() - b.getArea());
-        
-        const additionalPlacements = [];
-        
-        for (const tx of smallTransactions) {
-            if (this.totalBytesPlaced + tx.sizeBytes > this.maxCapacityBytes) {
-                continue;
-            }
+        this.placedTransactions.forEach(tx => {
+            // Use the center point of each transaction
+            const centerY = tx.y + tx.height / 2;
             
-            const position = this.findBottomPosition(tx);
-            if (position) {
-                additionalPlacements.push({
-                    transaction: tx,
-                    x: position.x,
-                    y: position.y
-                });
-                
-                this.markSpaceOccupied(position.x, position.y, tx.width, tx.height);
-                this.placedTransactions.push(tx);
-                this.totalBytesPlaced += tx.sizeBytes;
-                
-                console.log(`🔧 Optimized placement for TX ${tx.id.substring(0,8)}`);
+            if (centerY >= thirdHeight * 2) {
+                // Bottom third (closer to bottom = higher Y values)
+                bottom++;
+            } else if (centerY >= thirdHeight) {
+                // Middle third
+                middle++;
+            } else {
+                // Top third
+                top++;
             }
-        }
+        });
         
-        console.log(`🔧 Bottom-up optimization complete: ${additionalPlacements.length} additional transactions placed`);
-        return additionalPlacements;
-    }
-    
-    // Utility: Validate packing (check for overlaps)
-    validatePacking() {
-        const overlaps = [];
-        
-        for (let i = 0; i < this.occupiedSpaces.length; i++) {
-            for (let j = i + 1; j < this.occupiedSpaces.length; j++) {
-                const space1 = this.occupiedSpaces[i];
-                const space2 = this.occupiedSpaces[j];
-                
-                if (this.rectanglesOverlap(
-                    space1.x, space1.y, space1.width, space1.height,
-                    space2.x, space2.y, space2.width, space2.height
-                )) {
-                    overlaps.push({ space1, space2 });
-                }
-            }
-        }
-        
-        if (overlaps.length > 0) {
-            console.error(`❌ Packing validation failed: ${overlaps.length} overlaps detected`);
-            return false;
-        }
-        
-        console.log('✅ Bottom-up packing validation passed: no overlaps detected');
-        return true;
+        return {
+            bottom: Math.round((bottom / this.placedTransactions.length) * 100),
+            middle: Math.round((middle / this.placedTransactions.length) * 100),
+            top: Math.round((top / this.placedTransactions.length) * 100)
+        };
     }
 }

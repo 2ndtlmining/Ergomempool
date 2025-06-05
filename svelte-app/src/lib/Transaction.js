@@ -1,336 +1,380 @@
-// Transaction.js - Enhanced with value-based colors and proportional sizing
-import { isWalletTransaction } from './wallet.js';
-import { identifyTransactionType } from './transactionTypes.js';
-
-// Color palettes from stores.js for consistency
-const valueColors = [
-    '#3498db', '#2980b9', '#9b59b6', '#8e44ad', '#e74c3c', '#c0392b'
-];
-
+// Transaction.js - Enhanced with consistent colors and tooltips matching MempoolGrid
 export class Transaction {
-    constructor(transactionData, walletAddress = null, maxValue = 100) {
-        // Core transaction data
+    constructor(transactionData, walletAddress = null) {
         this.id = transactionData.id;
         this.sizeBytes = transactionData.size || 1000;
-        this.sizeKB = this.sizeBytes / 1024;
         this.value = transactionData.value || 0;
-        this.usd_value = transactionData.usd_value || 0;
+        this.usdValue = transactionData.usd_value || 0;
         this.inputs = transactionData.inputs || [];
         this.outputs = transactionData.outputs || [];
+        this.isDummy = transactionData.isDummy || false;
         
-        // Store maxValue for color calculation
-        this.maxValue = maxValue;
-        
-        // Visual properties - PROPORTIONAL to actual bytes for 2MB block
-        this.calculateProportionalDimensions();
-        this.color = this.getColorByValue(); // Changed to value-based
-        this.sizeCategory = this.getSizeCategory();
-        
-        // Position (will be set by packing algorithm)
-        this.x = 0;
-        this.y = 0;
-        this.placed = false;
-        
-        // Wallet and type detection
-        this.isWallet = walletAddress ? isWalletTransaction(transactionData, walletAddress) : false;
-        this.transactionType = identifyTransactionType(transactionData);
-        
-        // DOM element reference
+        // Visual properties
         this.element = null;
+        this.placed = false;
+        this.moving = false;
+        
+        // Wallet detection
+        this.isWallet = this.checkWalletTransaction(walletAddress);
+        
+        console.log(`📦 Created transaction: ${this.id} (${this.formatSize(this.sizeBytes)})`);
     }
     
-    calculateProportionalDimensions() {
-        // PROPORTIONAL SIZING FOR 2MB BLOCK
-        // Container: 800×600 = 480,000 pixels
-        // Block capacity: 2MB = 2,097,152 bytes
-        // Ratio: ~4.37 bytes per pixel
+    checkWalletTransaction(walletAddress) {
+        if (!walletAddress) return false;
         
-        const CONTAINER_AREA = 800 * 600; // Total container pixels
-        const BLOCK_CAPACITY_BYTES = 2 * 1024 * 1024; // 2MB in bytes
-        const USABLE_AREA = CONTAINER_AREA * 0.85; // Account for margins and UI elements
+        const inputMatch = this.inputs.some(input => input.address === walletAddress);
+        const outputMatch = this.outputs.some(output => output.address === walletAddress);
         
-        // Calculate pixels per byte
-        const pixelsPerByte = USABLE_AREA / BLOCK_CAPACITY_BYTES;
-        
-        // Calculate area this transaction should occupy
-        const transactionPixelArea = this.sizeBytes * pixelsPerByte;
-        
-        // Convert area to square dimensions (with some aspect ratio variation)
-        const aspectRatio = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2 aspect ratio
-        this.width = Math.sqrt(transactionPixelArea / aspectRatio);
-        this.height = Math.sqrt(transactionPixelArea * aspectRatio);
-        
-        // Apply minimum and maximum constraints for visibility
-        this.width = Math.max(6, Math.min(120, this.width));
-        this.height = Math.max(4, Math.min(90, this.height));
-        
-        // Round to avoid subpixel rendering
-        this.width = Math.round(this.width);
-        this.height = Math.round(this.height);
-        
-        console.log(`📏 TX ${this.id.substring(0,8)}: ${this.sizeBytes}B → ${this.width}×${this.height}px (${(this.width * this.height).toFixed(0)} pixels)`);
+        return inputMatch || outputMatch;
     }
     
-    getColorByValue() {
-        // VALUE-BASED COLOR CODING (consistent with grid view)
-        if (this.maxValue <= 0) {
-            return valueColors[0]; // Default to first color if no max value
+    createElement(container, maxValue = 100) {
+        if (this.element) {
+            console.warn(`⚠️ Element already exists for transaction ${this.id}`);
+            return this.element;
         }
         
-        const normalized = Math.min(this.value / this.maxValue, 1);
+        // Calculate visual size (square root scaling for better visual representation)
+        const minSize = 8;  // Slightly smaller minimum for mobile
+        const maxSize = 50; // Slightly smaller maximum for better density
+        const normalizedSize = Math.min(this.sizeBytes / 20000, 1); // Normalize to 20KB max
+        const visualSize = minSize + (maxSize - minSize) * Math.sqrt(normalizedSize);
+        
+        // Create DOM element
+        this.element = document.createElement('div');
+        this.element.className = 'transaction-square';
+        
+        // Get consistent color (same as MempoolGrid)
+        const color = this.getColorByValue(this.value, maxValue);
+        
+        // Set basic styling - NO TEXT CONTENT, CONSISTENT COLORS
+        this.element.style.cssText = `
+            position: absolute;
+            width: ${visualSize}px;
+            height: ${visualSize}px;
+            background-color: ${color};
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        `;
+        
+        // Add transaction type indicator (visual only, no text)
+        this.addTypeIndicator();
+        
+        // Add wallet highlighting
+        if (this.isWallet) {
+            this.element.classList.add('wallet-transaction');
+            this.element.style.border = '3px solid #f39c12';
+            this.element.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.9)';
+            this.element.style.zIndex = '10';
+        }
+        
+        // Add event listeners
+        this.addEventListeners();
+        
+        // Add to container
+        if (container) {
+            container.appendChild(this.element);
+        }
+        
+        console.log(`✨ Created DOM element for transaction ${this.id}`);
+        return this.element;
+    }
+    
+    // Consistent color function matching MempoolGrid
+    getColorByValue(value, maxValue) {
+        // Use the same valueColors as MempoolGrid
+        const valueColors = [
+            '#3498db', '#2980b9', '#9b59b6', '#8e44ad', '#e74c3c', '#c0392b'
+        ];
+        
+        const normalized = Math.min(value / maxValue, 1);
         const index = Math.floor(normalized * (valueColors.length - 1));
         return valueColors[index];
     }
     
-    getSizeCategory() {
-        if (this.sizeKB < 1) return 'tiny';
-        if (this.sizeKB < 3) return 'small';
-        if (this.sizeKB < 15) return 'medium';
-        return 'large';
-    }
-    
-    createElement(container) {
-        const element = document.createElement('div');
-        element.className = `transaction-square ${this.sizeCategory}`;
+    addTypeIndicator() {
+        // NO TEXT CONTENT - just visual styling based on type
         
-        // Apply wallet transaction styling
-        if (this.isWallet) {
-            element.classList.add('wallet-transaction');
+        // Add data attributes for special transaction types
+        if (this.isDummy) {
+            this.element.setAttribute('data-type', 'dummy');
+            this.element.style.border = '2px solid #e91e63';
+            this.element.style.background = 'linear-gradient(135deg, #e91e63 0%, #ad1457 100%)';
         }
         
-        // Apply transaction type styling
-        if (this.transactionType.color) {
-            if (this.transactionType.icon === '💖') {
-                element.setAttribute('data-type', 'donation');
-            } else if (this.transactionType.icon === '🧪') {
-                element.setAttribute('data-type', 'test');
+        // Check for special transaction patterns (you can extend this)
+        if (this.id && this.id.includes('test')) {
+            this.element.setAttribute('data-type', 'test');
+            this.element.style.border = '2px solid #f39c12';
+        }
+    }
+    
+    addEventListeners() {
+        if (!this.element) return;
+        
+        // Click to view transaction
+        this.element.addEventListener('click', () => {
+            if (this.id && !this.id.startsWith('dummy_')) {
+                window.open(`https://sigmaspace.io/en/transaction/${this.id}`, '_blank');
             }
-        }
-        
-        element.style.cssText = `
-            position: absolute;
-            width: ${this.width}px;
-            height: ${this.height}px;
-            background-color: ${this.color};
-            left: ${this.x}px;
-            top: ${this.y}px;
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 3px;
-            cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 
-                inset -2px -2px 4px rgba(0,0,0,0.4),
-                inset 2px 2px 4px rgba(255,255,255,0.1),
-                0 3px 6px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: ${this.getFontSize()}px;
-            font-weight: ${this.getFontWeight()};
-            color: rgba(255,255,255,0.9);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-            overflow: hidden;
-            opacity: 0;
-            transform: scale(0.3) translateY(-30px);
-        `;
-        
-        // No size labels - clean visual appearance
-        
-        // Add transaction type icon for special transactions
-        if (this.transactionType.icon && this.width > 15) {
-            const icon = document.createElement('span');
-            icon.style.cssText = `
-                position: absolute;
-                top: 2px;
-                right: 2px;
-                font-size: ${Math.min(this.width * 0.3, 12)}px;
-                z-index: 10;
-            `;
-            icon.textContent = this.transactionType.icon;
-            element.appendChild(icon);
-        }
-        
-        // Event handlers
-        element.addEventListener('click', () => this.handleClick());
-        element.addEventListener('mouseenter', (e) => this.handleMouseEnter(e));
-        element.addEventListener('mouseleave', () => this.handleMouseLeave());
-        
-        container.appendChild(element);
-        this.element = element;
-        
-        // Trigger entrance animation
-        setTimeout(() => {
-            element.style.opacity = '1';
-            element.style.transform = 'scale(1) translateY(0)';
-        }, 50);
-        
-        return element;
-    }
-    
-    getFontSize() {
-        if (this.width > 50) return 12;
-        if (this.width > 30) return 10;
-        if (this.width > 20) return 9;
-        return 8;
-    }
-    
-    getFontWeight() {
-        if (this.width > 40) return '900';
-        if (this.width > 25) return '700';
-        return '500';
-    }
-    
-    animateToPosition(x, y, delay = 0) {
-        this.x = x;
-        this.y = y;
-        
-        setTimeout(() => {
-            if (this.element) {
-                this.element.style.left = x + 'px';
-                this.element.style.top = y + 'px';
-                this.element.style.transform = 'scale(1) translateY(0)';
-                
-                // Add temporary moving class for visual feedback
-                this.element.classList.add('moving');
-                setTimeout(() => {
-                    if (this.element) {
-                        this.element.classList.remove('moving');
-                    }
-                }, 500);
-            }
-        }, delay);
-    }
-    
-    handleClick() {
-        // Navigate to transaction explorer
-        if (this.id) {
-            window.open(`https://sigmaspace.io/en/transaction/${this.id}`, '_blank');
-        }
-        
-        // Visual feedback
-        if (this.element) {
-            this.element.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                if (this.element) {
-                    this.element.style.transform = 'scale(1)';
-                }
-            }, 150);
-        }
-        
-        // Log transaction details
-        console.log(`Transaction ${this.id}:`, {
-            size: `${this.sizeBytes} bytes (${this.sizeKB.toFixed(2)}KB)`,
-            value: `${this.value.toFixed(4)} ERG`,
-            usd_value: `${this.usd_value.toFixed(2)}`,
-            isWallet: this.isWallet,
-            type: this.transactionType.icon || 'regular'
         });
+        
+        // Hover effects - CONSISTENT with MempoolGrid
+        this.element.addEventListener('mouseenter', (e) => {
+            if (!this.moving) {
+                this.element.style.transform = 'scale(1.15)';
+                this.element.style.zIndex = '100';
+                this.element.style.border = '2px solid var(--primary-orange)';
+                this.element.style.boxShadow = '0 4px 15px var(--glow-orange)';
+                
+                // Show tooltip on hover (CONSISTENT with MempoolGrid)
+                this.showTooltip(e);
+            }
+        });
+        
+        this.element.addEventListener('mouseleave', () => {
+            if (!this.moving) {
+                this.element.style.transform = 'scale(1)';
+                this.element.style.zIndex = this.isWallet ? '10' : '5';
+                
+                // Restore original border
+                if (this.isWallet) {
+                    this.element.style.border = '3px solid #f39c12';
+                    this.element.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.9)';
+                } else if (this.isDummy) {
+                    this.element.style.border = '2px solid #e91e63';
+                    this.element.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
+                } else {
+                    this.element.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                    this.element.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
+                }
+                
+                // Hide tooltip
+                this.hideTooltip();
+            }
+        });
+        
+        // Touch events for mobile
+        this.element.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.showTooltip(e.touches[0]);
+        }, { passive: false });
+        
+        this.element.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.hideTooltip();
+            // Trigger click after a short delay
+            setTimeout(() => {
+                if (this.id && !this.id.startsWith('dummy_')) {
+                    window.open(`https://sigmaspace.io/en/transaction/${this.id}`, '_blank');
+                }
+            }, 100);
+        }, { passive: false });
     }
     
-    handleMouseEnter(e) {
-        if (this.element) {
-            this.element.style.transform = 'scale(1.05)';
-            this.element.style.zIndex = '100';
-            this.element.style.borderColor = '#f39c12';
-            this.element.style.boxShadow = '0 6px 20px rgba(243, 156, 18, 0.5)';
-        }
-        
-        // Trigger tooltip
-        this.showTooltip(e);
-    }
-    
-    handleMouseLeave() {
-        if (this.element) {
-            this.element.style.transform = 'scale(1)';
-            this.element.style.zIndex = '5';
-            this.element.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-            this.element.style.boxShadow = `
-                inset -2px -2px 4px rgba(0,0,0,0.4),
-                inset 2px 2px 4px rgba(255,255,255,0.1),
-                0 3px 6px rgba(0,0,0,0.3)
-            `;
-        }
-        
+    // CONSISTENT tooltip matching MempoolGrid exactly
+    showTooltip(event) {
+        // Remove any existing tooltip
         this.hideTooltip();
-    }
-    
-    showTooltip(e) {
-        // Create tooltip element if it doesn't exist
-        if (!document.getElementById('transaction-tooltip')) {
-            const tooltip = document.createElement('div');
-            tooltip.id = 'transaction-tooltip';
-            tooltip.style.cssText = `
-                position: absolute;
-                background: linear-gradient(135deg, var(--darker-bg, #0f1419) 0%, var(--dark-bg, #1a2332) 100%);
-                border: 2px solid var(--primary-orange, #e67e22);
-                padding: 12px;
-                border-radius: 8px;
-                font-size: 12px;
-                color: var(--text-light, #ecf0f1);
-                pointer-events: none;
-                z-index: 1000;
-                white-space: nowrap;
-                display: none;
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-                backdrop-filter: blur(10px);
-                max-width: 300px;
-                white-space: normal;
-                line-height: 1.4;
-            `;
-            document.body.appendChild(tooltip);
+        
+        const tooltip = document.createElement('div');
+        tooltip.className = 'transaction-tooltip';  // Same class as MempoolGrid
+        
+        // Check for wallet transaction
+        const isWallet = this.isWallet;
+        
+        // Check for transaction type (matching MempoolGrid logic)
+        const isDonation = this.checkIfDonation();
+        const isTest = this.checkIfTest();
+        
+        // Build tooltip content exactly like MempoolGrid
+        let tooltipContent = '';
+        
+        if (isWallet) {
+            tooltipContent += '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🌟 Your Wallet Transaction</div>';
         }
         
-        const tooltip = document.getElementById('transaction-tooltip');
+        if (isDonation) {
+            tooltipContent += '<div style="color: #e74c3c; font-weight: bold; margin-bottom: 4px;">💖 Donation Transaction</div>';
+        } else if (isTest) {
+            tooltipContent += '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🧪 Test Transaction</div>';
+        }
         
-        tooltip.innerHTML = `
-            ${this.isWallet ? '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🌟 Your Wallet Transaction</div>' : ''}
-            ${this.transactionType.icon === '💖' ? '<div style="color: #e74c3c; font-weight: bold; margin-bottom: 4px;">💖 Donation Transaction</div>' : ''}
-            ${this.transactionType.icon === '🧪' ? '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🧪 Test Transaction</div>' : ''}
-            <strong>Transaction</strong><br>
-            ID: ${this.id.substring(0, 8)}...${this.id.substring(this.id.length - 8)}<br>
-            Size: ${this.sizeBytes} bytes (${this.sizeKB.toFixed(2)} KB)<br>
-            Value: ${this.value.toFixed(4)} ERG<br>
-            Value: ${this.usd_value.toFixed(2)} USD
+        tooltipContent += `<strong>Transaction</strong><br>`;
+        tooltipContent += `ID: ${this.shortenTransactionId(this.id)}<br>`;
+        tooltipContent += `Size: ${this.sizeBytes || 'N/A'} bytes<br>`;
+        tooltipContent += `Value: ${(this.value || 0).toFixed(4)} ERG<br>`;
+        tooltipContent += `Value: $${(this.usdValue || 0).toFixed(2)} USD`;
+        
+        tooltip.innerHTML = tooltipContent;
+        
+        // Style the tooltip exactly like MempoolGrid
+        tooltip.style.cssText = `
+            position: absolute;
+            background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+            border: 2px solid var(--primary-orange);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-light);
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
         `;
         
-        tooltip.style.left = (e.pageX + 10) + 'px';
-        tooltip.style.top = (e.pageY - 10) + 'px';
-        tooltip.style.display = 'block';
+        // Position the tooltip
+        const x = event.clientX || event.pageX;
+        const y = event.clientY || event.pageY;
+        
+        tooltip.style.left = (x + 10) + 'px';
+        tooltip.style.top = (y - 10) + 'px';
+        
+        document.body.appendChild(tooltip);
+        this.currentTooltip = tooltip;
     }
     
     hideTooltip() {
-        const tooltip = document.getElementById('transaction-tooltip');
-        if (tooltip) {
-            tooltip.style.display = 'none';
+        if (this.currentTooltip) {
+            this.currentTooltip.remove();
+            this.currentTooltip = null;
         }
     }
     
-    destroy() {
-        if (this.element && this.element.parentNode) {
-            // Animate out
-            this.element.style.opacity = '0';
-            this.element.style.transform = 'scale(0.3) translateY(-20px)';
+    checkIfDonation() {
+        // Check if any output goes to donation address
+        const donationAddresses = ['9hF8coEmr6Mnfh3gexuwnnU816kbW8qrVBoUraJC5Zb79T9DRnx'];
+        
+        if (this.outputs && this.outputs.length > 0) {
+            return this.outputs.some(output => 
+                output.address && donationAddresses.includes(output.address)
+            );
+        }
+        
+        return false;
+    }
+    
+    checkIfTest() {
+        return this.id && (this.id.includes('test') || this.id.startsWith('test_'));
+    }
+    
+    shortenTransactionId(id, startChars = 8, endChars = 8) {
+        if (!id || id.length <= startChars + endChars + 3) {
+            return id;
+        }
+        return `${id.substring(0, startChars)}...${id.substring(id.length - endChars)}`;
+    }
+    
+    animateToPosition(x, y, delay = 0) {
+        if (!this.element) {
+            console.warn(`⚠️ Cannot animate transaction ${this.id} - no element`);
+            return;
+        }
+        
+        this.moving = true;
+        
+        setTimeout(() => {
+            // Set initial position if not set (animate from top for bottom-up packing)
+            if (this.element.style.left === '' && this.element.style.top === '') {
+                this.element.style.left = x + 'px';
+                this.element.style.top = '-50px'; // Start above container
+                this.element.style.opacity = '0';
+                this.element.style.transform = 'scale(0.5) translateY(-20px)';
+            }
             
+            // Add moving class for visual feedback
+            this.element.classList.add('moving');
+            
+            // Animate to position with smooth easing
+            this.element.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            this.element.style.left = x + 'px';
+            this.element.style.top = y + 'px';
+            this.element.style.opacity = '1';
+            this.element.style.transform = 'scale(1) translateY(0)';
+            
+            // Remove moving class after animation
             setTimeout(() => {
-                if (this.element && this.element.parentNode) {
-                    this.element.parentNode.removeChild(this.element);
+                if (this.element) {
+                    this.element.classList.remove('moving');
+                    this.element.style.transition = 'all 0.3s ease';
+                    this.moving = false;
                 }
-            }, 500);
+            }, 800);
+            
+        }, delay);
+        
+        console.log(`🎬 Animating transaction ${this.id} to (${x}, ${y}) with ${delay}ms delay`);
+    }
+    
+    formatSize(bytes) {
+        if (bytes < 1024) return bytes + 'B';
+        if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + 'KB';
+        return Math.round(bytes / (1024 * 1024)) + 'MB';
+    }
+    
+    formatId(id) {
+        if (!id) return 'N/A';
+        if (id.length <= 16) return id;
+        return id.substring(0, 8) + '...' + id.substring(id.length - 8);
+    }
+    
+    // ENHANCED DESTROY METHOD
+    destroy() {
+        console.log(`🗑️ Destroying transaction: ${this.id}`);
+        
+        // Hide tooltip first
+        this.hideTooltip();
+        
+        // Remove DOM element with proper cleanup
+        if (this.element) {
+            // Remove event listeners to prevent memory leaks
+            this.element.replaceWith(this.element.cloneNode(false));
+            
+            // Remove from DOM if still attached
+            if (this.element.parentNode) {
+                this.element.parentNode.removeChild(this.element);
+                console.log(`📤 Removed DOM element for transaction ${this.id}`);
+            }
+            
+            // Clear element reference
+            this.element = null;
         }
+        
+        // Reset state
+        this.placed = false;
+        this.moving = false;
+        
+        console.log(`✅ Transaction ${this.id} destroyed successfully`);
     }
     
-    // Utility method to get area for sorting
-    getArea() {
-        return this.width * this.height;
+    // Utility method to check if element is still in DOM
+    isInDOM() {
+        return this.element && document.contains(this.element);
     }
     
-    // Method to check if transaction fits in given space
-    fitsIn(width, height) {
-        return this.width <= width && this.height <= height;
-    }
-    
-    // Static method to update max value for color calculation
-    static updateMaxValue(transactions) {
-        return Math.max(...transactions.map(tx => tx.value || 0), 1);
+    // Update wallet status (useful when wallet connects/disconnects)
+    updateWalletStatus(walletAddress) {
+        const wasWallet = this.isWallet;
+        this.isWallet = this.checkWalletTransaction(walletAddress);
+        
+        if (this.element && wasWallet !== this.isWallet) {
+            if (this.isWallet) {
+                this.element.classList.add('wallet-transaction');
+                this.element.style.border = '3px solid #f39c12';
+                this.element.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.9)';
+                this.element.style.zIndex = '10';
+            } else {
+                this.element.classList.remove('wallet-transaction');
+                this.element.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                this.element.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
+                this.element.style.zIndex = '5';
+            }
+        }
     }
 }

@@ -284,7 +284,7 @@
         // Add transaction type styling
         const transactionType = identifyTransactionType(transaction);
         if (transactionType.color) {
-            square.style.border = `2px solid ${transactionType.color}`;
+            square.style.border = `1px solid ${transactionType.color}`;
             square.style.boxShadow = `0 0 8px ${transactionType.color}40`;
             
             if (transactionType.icon === '💖') {

@@ -1,4 +1,4 @@
-<!-- Simplified TransactionPackingGrid.svelte -->
+<!-- Fixed TransactionPackingGrid.svelte -->
 <script>
     import { transactions, walletConnector, blockData } from '$lib/stores.js';
     import { onMount, onDestroy } from 'svelte';
@@ -88,12 +88,24 @@
     }
     
     function handleTransactionChanges() {
+        if (isPackingActive) {
+            console.log('⏳ Packing already active, skipping transaction change handling');
+            return;
+        }
+        
         // Detect new transactions
         const existingIds = new Set(transactionObjects.map(tx => tx.id));
         const newTransactions = $transactions.filter(txData => !existingIds.has(txData.id));
         
+        // Detect removed transactions
+        const currentIds = new Set($transactions.map(tx => tx.id));
+        const removedTransactions = transactionObjects.filter(tx => !currentIds.has(tx.id));
+        
+        let needsRepack = false;
+        
+        // Handle new transactions
         if (newTransactions.length > 0) {
-            console.log(`📥 Adding ${newTransactions.length} new transactions - auto-repacking`);
+            console.log(`📥 Adding ${newTransactions.length} new transactions`);
             
             // Create new transaction objects
             const newTxObjects = newTransactions.map(txData => 
@@ -101,20 +113,37 @@
             );
             
             transactionObjects = [...transactionObjects, ...newTxObjects];
-            runPackingAlgorithm(); // Auto-repack
+            needsRepack = true;
         }
         
-        // Detect removed transactions
-        const currentIds = new Set($transactions.map(tx => tx.id));
-        const removedTransactions = transactionObjects.filter(tx => !currentIds.has(tx.id));
-        
+        // Handle removed transactions (FIXED)
         if (removedTransactions.length > 0) {
-            console.log(`📤 Removing ${removedTransactions.length} transactions - auto-repacking`);
+            console.log(`📤 Removing ${removedTransactions.length} transactions`);
             
-            // Remove transaction objects
-            removedTransactions.forEach(tx => tx.destroy());
+            // First, properly destroy the removed transaction elements
+            removedTransactions.forEach(tx => {
+                console.log(`🗑️ Destroying transaction: ${tx.id}`);
+                if (tx.element && tx.element.parentNode) {
+                    tx.element.parentNode.removeChild(tx.element);
+                }
+                tx.destroy();
+            });
+            
+            // Remove from our transaction objects array
             transactionObjects = transactionObjects.filter(tx => currentIds.has(tx.id));
-            runPackingAlgorithm(); // Auto-repack
+            
+            console.log(`📊 Remaining transactions: ${transactionObjects.length}`);
+            needsRepack = true;
+        }
+        
+        // Trigger repack if needed
+        if (needsRepack) {
+            console.log('🔄 Changes detected - triggering auto-repack');
+            
+            // Add a small delay to ensure DOM cleanup is complete
+            setTimeout(() => {
+                runPackingAlgorithm();
+            }, 100);
         }
     }
     
@@ -167,6 +196,11 @@
     
     async function runPackingAlgorithm() {
         if (isPackingActive || !packingAlgorithm || !packingContainer) {
+            console.log('⚠️ Cannot run packing: ', {
+                isPackingActive,
+                hasAlgorithm: !!packingAlgorithm,
+                hasContainer: !!packingContainer
+            });
             return;
         }
         
@@ -174,17 +208,43 @@
         showPackingStatus(true);
         
         console.log(`🔄 Running packing algorithm for ${transactionObjects.length} transactions`);
+        console.log('🧹 Clearing container before repacking...');
+        
+        // Clear the container first to avoid leftover elements
+        if (packingContainer) {
+            // Remove any existing transaction elements that might be orphaned
+            const existingElements = packingContainer.querySelectorAll('.transaction-square');
+            existingElements.forEach(element => {
+                element.parentNode.removeChild(element);
+            });
+        }
+        
+        // Reset all transaction elements to ensure clean state
+        transactionObjects.forEach(tx => {
+            tx.element = null; // Force recreation
+            tx.placed = false;
+        });
+        
+        // Calculate max value for consistent coloring
+        const maxValue = Math.max(...transactionObjects.map(tx => tx.value || 0), 1);
         
         // Run the gravity-based packing algorithm
         const positions = packingAlgorithm.packTransactions(transactionObjects);
+        
+        console.log(`📍 Packing algorithm returned ${positions.length} positions`);
         
         // Animate transactions to their new positions
         let animationDelay = 0;
         
         for (const { transaction, x, y } of positions) {
-            // Create DOM element if it doesn't exist
+            // Create DOM element with consistent max value (will be recreated due to reset above)
             if (!transaction.element) {
-                transaction.createElement(packingContainer);
+                transaction.createElement(packingContainer, maxValue);
+                
+                // Ensure tooltip event listeners are attached
+                if (transaction.element) {
+                    console.log(`✅ Transaction element created with tooltip for ${transaction.id}`);
+                }
             }
             
             // Animate to position with staggered timing
@@ -198,18 +258,28 @@
         updateCapacityTracking();
         
         // Wait for animations to complete
+        const totalAnimationTime = animationDelay + 600;
+        console.log(`⏱️ Waiting ${totalAnimationTime}ms for animations to complete`);
+        
         setTimeout(() => {
             isPackingActive = false;
             showPackingStatus(false);
             updatePackingStats();
             
+            console.log('✅ Packing animation sequence completed');
+            
             // Validate packing for debugging
             if (packingAlgorithm.validatePacking()) {
-                console.log('✅ Packing completed successfully');
+                console.log('✅ Packing validation passed');
             } else {
                 console.warn('⚠️ Packing validation failed');
             }
-        }, animationDelay + 600);
+            
+            // Final DOM state check
+            const visibleElements = packingContainer?.querySelectorAll('.transaction-square') || [];
+            console.log(`🔍 Final DOM state: ${visibleElements.length} visible transaction elements`);
+            
+        }, totalAnimationTime);
     }
     
     function updateCapacityTracking() {
@@ -252,6 +322,8 @@
             visualUtilization: stats.visualUtilization,
             remainingCapacity: stats.remainingCapacity
         };
+        
+        console.log('📊 Updated packing stats:', packingStats);
     }
     
     function showCapacityStatus(message, type = 'info') {
@@ -284,6 +356,12 @@
         
         document.body.appendChild(statusDiv);
         
+        // Show animation
+        setTimeout(() => {
+            statusDiv.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Hide animation
         setTimeout(() => {
             statusDiv.style.transform = 'translateX(100%)';
             setTimeout(() => statusDiv.remove(), 300);
@@ -299,10 +377,25 @@
     
     // Internal clear function (doesn't affect store)
     function clearAllTransactionsInternal() {
-        transactionObjects.forEach(tx => tx.destroy());
+        console.log(`🧹 Clearing ${transactionObjects.length} transaction objects internally`);
+        
+        transactionObjects.forEach(tx => {
+            if (tx.element && tx.element.parentNode) {
+                tx.element.parentNode.removeChild(tx.element);
+            }
+            tx.destroy();
+        });
         transactionObjects = [];
         currentCapacityBytes = 0;
         isBlockFull = false;
+        
+        // Also clear any orphaned elements from the container
+        if (packingContainer) {
+            const orphanedElements = packingContainer.querySelectorAll('.transaction-square');
+            orphanedElements.forEach(element => {
+                element.parentNode.removeChild(element);
+            });
+        }
     }
     
     // Export functions for parent component controls
@@ -630,7 +723,7 @@
     
     :global(.transaction-square.moving) {
         z-index: 50 !important;
-        border-color: #3498db !important;
+        border-color: #f39c12 !important;
         filter: brightness(1.1);
     }
     
@@ -665,6 +758,26 @@
     @keyframes testGlow {
         0%, 100% { box-shadow: 0 0 8px #f39c1240; }
         50% { box-shadow: 0 0 12px #f39c1280; }
+    }
+    
+    /* Tooltip styling - same as MempoolGrid */
+    :global(.transaction-tooltip) {
+        position: absolute !important;
+        background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%) !important;
+        border: 2px solid #e67e22 !important;
+        padding: 12px !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        color: #ecf0f1 !important;
+        pointer-events: none !important;
+        z-index: 1000 !important;
+        white-space: nowrap !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        display: block !important;
+        max-width: 300px !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
     }
     
     /* Responsive adjustments */
