@@ -1,4 +1,4 @@
-// Transaction.js - Enhanced with consistent colors and tooltips matching MempoolGrid
+// Transaction.js - Enhanced with responsive sizing for mobile
 export class Transaction {
     constructor(transactionData, walletAddress = null) {
         this.id = transactionData.id;
@@ -29,17 +29,14 @@ export class Transaction {
         return inputMatch || outputMatch;
     }
     
-    createElement(container, maxValue = 100) {
+    createElement(container, maxValue = 100, containerWidth = 800) {
         if (this.element) {
             console.warn(`⚠️ Element already exists for transaction ${this.id}`);
             return this.element;
         }
         
-        // Calculate visual size (square root scaling for better visual representation)
-        const minSize = 8;  // Slightly smaller minimum for mobile
-        const maxSize = 50; // Slightly smaller maximum for better density
-        const normalizedSize = Math.min(this.sizeBytes / 20000, 1); // Normalize to 20KB max
-        const visualSize = minSize + (maxSize - minSize) * Math.sqrt(normalizedSize);
+        // Responsive size calculation based on container width
+        const visualSize = this.calculateResponsiveSize(containerWidth);
         
         // Create DOM element
         this.element = document.createElement('div');
@@ -81,8 +78,30 @@ export class Transaction {
             container.appendChild(this.element);
         }
         
-        console.log(`✨ Created DOM element for transaction ${this.id}`);
+        console.log(`✨ Created DOM element for transaction ${this.id} (${visualSize}px)`);
         return this.element;
+    }
+    
+    // Responsive size calculation based on container width
+    calculateResponsiveSize(containerWidth) {
+        let minSize, maxSize;
+        
+        if (containerWidth <= 480) {
+            // Mobile phones - smaller sizes
+            minSize = 6;
+            maxSize = 25;
+        } else if (containerWidth <= 768) {
+            // Tablets - medium sizes
+            minSize = 7;
+            maxSize = 35;
+        } else {
+            // Desktop - original sizes
+            minSize = 8;
+            maxSize = 50;
+        }
+        
+        const normalizedSize = Math.min(this.sizeBytes / 20000, 1);
+        return Math.round(minSize + (maxSize - minSize) * Math.sqrt(normalizedSize));
     }
     
     // Consistent color function matching MempoolGrid

@@ -1,4 +1,4 @@
-// PackingAlgorithm.js - FIXED True Bottom-Up Gravity-Based Packing Algorithm
+// PackingAlgorithm.js - FIXED True Bottom-Up Gravity-Based Packing Algorithm with Responsive Spacing
 export class GravityPackingAlgorithm {
     constructor(containerWidth, containerHeight, maxBlockSizeBytes) {
         this.containerWidth = containerWidth;
@@ -7,17 +7,41 @@ export class GravityPackingAlgorithm {
         this.placedTransactions = [];
         this.totalBytesUsed = 0;
         
-        // Enhanced packing configuration for TRUE bottom-up packing
+        // Calculate responsive spacing based on container density
+        const responsiveSpacing = this.getDensityBasedSpacing(containerWidth, containerHeight);
+        
+        // Enhanced packing configuration with responsive spacing
         this.config = {
-            minSpacing: 2,              // Tighter spacing for better density
-            maxAttempts: 200,           // More attempts for better placement
-            fallbackSpacing: 4,
-            edgePadding: 8,             // Reduced padding for more space
-            bottomPadding: 8,           // Padding from absolute bottom
-            scanStep: 4                 // Step size for position scanning
+            minSpacing: responsiveSpacing,  // Dynamic spacing based on container size
+            maxAttempts: 200,               // More attempts for better placement
+            fallbackSpacing: responsiveSpacing * 2, // Fallback is 2x responsive spacing
+            edgePadding: Math.max(4, Math.floor(responsiveSpacing * 4)), // Scale edge padding too
+            bottomPadding: Math.max(4, Math.floor(responsiveSpacing * 4)), // Scale bottom padding
+            scanStep: Math.max(2, Math.floor(responsiveSpacing * 2)) // Scale scan step
         };
         
         console.log(`🧠 TRUE Bottom-up packing algorithm initialized: ${containerWidth}x${containerHeight}, ${this.formatBytes(maxBlockSizeBytes)} capacity`);
+        console.log(`📏 Responsive spacing: ${responsiveSpacing.toFixed(1)}px (density-based)`);
+    }
+    
+    // DENSITY-BASED RESPONSIVE SPACING CALCULATION
+    getDensityBasedSpacing(containerWidth, containerHeight) {
+        // Higher density (less spacing) for smaller screens
+        const area = containerWidth * containerHeight;
+        const desktopArea = 800 * 600; // 480,000 (reference desktop size)
+        
+        const densityRatio = area / desktopArea;
+        const baseSpacing = 2; // Desktop reference spacing
+        
+        // Smaller screens get proportionally less spacing using square root for smooth scaling
+        const calculatedSpacing = baseSpacing * Math.sqrt(densityRatio);
+        
+        // Clamp between reasonable bounds
+        const spacing = Math.max(0.5, Math.min(3, calculatedSpacing));
+        
+        console.log(`📐 Container: ${containerWidth}x${containerHeight} (${area.toLocaleString()}px²), Density ratio: ${densityRatio.toFixed(2)}, Spacing: ${spacing.toFixed(1)}px`);
+        
+        return spacing;
     }
     
     packTransactions(transactions) {
@@ -192,15 +216,17 @@ export class GravityPackingAlgorithm {
             issues.push(`Total bytes (${this.formatBytes(totalValidatedBytes)}) exceeds capacity (${this.formatBytes(this.maxBlockSizeBytes)})`);
         }
         
-        // Check if packing is truly bottom-heavy
-        const distribution = this.getPackingDistribution();
-        if (distribution.bottom < 50) {
-            console.warn(`⚠️ Packing not sufficiently bottom-heavy: ${distribution.bottom}% at bottom`);
+        // Check if packing is truly bottom-heavy (only warn if we have transactions)
+        if (this.placedTransactions.length > 0) {
+            const distribution = this.getPackingDistribution();
+            if (distribution.bottom < 50) {
+                console.warn(`⚠️ Packing not sufficiently bottom-heavy: ${distribution.bottom}% at bottom`);
+            }
         }
         
         // Log results
         if (issues.length === 0) {
-            console.log(`✅ Validation passed: No overlaps, ${this.formatBytes(totalValidatedBytes)} used, ${distribution.bottom}% bottom-heavy`);
+            console.log(`✅ Validation passed: No overlaps, ${this.formatBytes(totalValidatedBytes)} used`);
             return true;
         } else {
             console.warn(`❌ Validation failed: ${issues.length} issues found`);
@@ -242,7 +268,9 @@ export class GravityPackingAlgorithm {
             remainingCapacity: this.maxBlockSizeBytes - this.totalBytesUsed,
             remainingCapacityPercent: Math.max(0, 100 - capacityUsed),
             bottomHeaviness: Math.round(bottomHeaviness * 10) / 10,
-            avgDistanceFromBottom: Math.round(avgDistanceFromBottom)
+            avgDistanceFromBottom: Math.round(avgDistanceFromBottom),
+            // Add spacing info to stats
+            currentSpacing: this.config.minSpacing
         };
         
         console.log('📊 TRUE Bottom-up packing stats calculated:', stats);
@@ -273,6 +301,7 @@ export class GravityPackingAlgorithm {
             placedCount: this.placedTransactions.length,
             totalBytes: this.totalBytesUsed,
             capacityPercent: (this.totalBytesUsed / this.maxBlockSizeBytes) * 100,
+            spacingUsed: this.config.minSpacing,
             placements: this.placedTransactions.map(tx => ({
                 id: tx.id,
                 position: `(${tx.x}, ${tx.y})`,

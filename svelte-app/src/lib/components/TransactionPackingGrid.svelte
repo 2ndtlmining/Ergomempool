@@ -1,4 +1,4 @@
-<!-- Fixed TransactionPackingGrid.svelte -->
+<!-- Complete Responsive TransactionPackingGrid.svelte -->
 <script>
     import { transactions, walletConnector, blockData } from '$lib/stores.js';
     import { onMount, onDestroy } from 'svelte';
@@ -9,10 +9,11 @@
     // BLOCKCHAIN CONFIGURATION
     const BLOCKCHAIN_CONFIG = {
         maxBlockSizeBytes: 2 * 1024 * 1024, // 2MB block capacity
-        containerWidth: 800,
-        containerHeight: 600,
         animationDelay: 60 // ms between transaction animations
     };
+    
+    // Responsive container dimensions
+    let containerDimensions = { width: 800, height: 600 };
     
     // Component state
     let packingContainer;
@@ -39,12 +40,49 @@
         statusClass: 'info'
     };
     
+    // Responsive container size calculation
+    function updateContainerSize() {
+        const screenWidth = window.innerWidth;
+        
+        if (screenWidth <= 480) {
+            // Mobile phones
+            containerDimensions = { width: screenWidth - 20, height: 350 };
+        } else if (screenWidth <= 768) {
+            // Tablets
+            containerDimensions = { width: screenWidth - 40, height: 450 };
+        } else {
+            // Desktop
+            containerDimensions = { width: 800, height: 600 };
+        }
+        
+        console.log(`📱 Container size updated: ${containerDimensions.width}x${containerDimensions.height}`);
+        
+        // Reinitialize algorithm with new dimensions if it exists
+        if (packingAlgorithm) {
+            packingAlgorithm = new GravityPackingAlgorithm(
+                containerDimensions.width,
+                containerDimensions.height,
+                BLOCKCHAIN_CONFIG.maxBlockSizeBytes
+            );
+            
+            // Re-run packing if we have transactions
+            if (transactionObjects.length > 0) {
+                setTimeout(() => {
+                    runPackingAlgorithm();
+                }, 100);
+            }
+        }
+    }
+    
     // Initialize packing algorithm
     onMount(() => {
+        updateContainerSize();
+        window.addEventListener('resize', updateContainerSize);
+        
         if (packingContainer) {
             packingAlgorithm = new GravityPackingAlgorithm(
-                BLOCKCHAIN_CONFIG.containerWidth,
-                BLOCKCHAIN_CONFIG.containerHeight,
+                containerDimensions.width,
+                containerDimensions.height,
                 BLOCKCHAIN_CONFIG.maxBlockSizeBytes
             );
             
@@ -55,6 +93,23 @@
                 initializeFromExistingTransactions();
             }
         }
+    });
+    
+    // Cleanup resize listener
+    onDestroy(() => {
+        window.removeEventListener('resize', updateContainerSize);
+        
+        console.log('🧹 Cleaning up Transaction Packing Grid');
+        
+        clearAllTransactionsInternal();
+        
+        if (blockFlowManager) {
+            blockFlowManager.destroy();
+        }
+        
+        // Remove any remaining status notifications
+        const statusElements = document.querySelectorAll('.capacity-status');
+        statusElements.forEach(el => el.remove());
     });
     
     // Watch for transaction changes and auto-repack
@@ -237,9 +292,9 @@
         let animationDelay = 0;
         
         for (const { transaction, x, y } of positions) {
-            // Create DOM element with consistent max value (will be recreated due to reset above)
+            // Create DOM element with consistent max value and responsive sizing
             if (!transaction.element) {
-                transaction.createElement(packingContainer, maxValue);
+                transaction.createElement(packingContainer, maxValue, containerDimensions.width);
                 
                 // Ensure tooltip event listeners are attached
                 if (transaction.element) {
@@ -496,21 +551,6 @@
             addDummyTransactions();
         }
     }
-    
-    // Cleanup on component destroy
-    onDestroy(() => {
-        console.log('🧹 Cleaning up Transaction Packing Grid');
-        
-        clearAllTransactionsInternal();
-        
-        if (blockFlowManager) {
-            blockFlowManager.destroy();
-        }
-        
-        // Remove any remaining status notifications
-        const statusElements = document.querySelectorAll('.capacity-status');
-        statusElements.forEach(el => el.remove());
-    });
 </script>
 
 <div class="transaction-packing-container">
@@ -518,6 +558,7 @@
         class="transaction-packing-area" 
         class:block-full={isBlockFull}
         class:block-flow-active={blockFlowActive}
+        style="width: {containerDimensions.width}px; height: {containerDimensions.height}px;"
         bind:this={packingContainer}
     >
         <!-- Block Label -->
@@ -564,8 +605,6 @@
     
     .transaction-packing-area {
         position: relative;
-        width: 800px;
-        height: 600px;
         margin: 0 auto;
         border: 3px solid var(--primary-orange);
         border-radius: 12px;
@@ -781,18 +820,7 @@
     }
     
     /* Responsive adjustments */
-    @media (max-width: 900px) {
-        .transaction-packing-area {
-            width: 100%;
-            height: 500px;
-        }
-    }
-    
-    @media (max-width: 600px) {
-        .transaction-packing-area {
-            height: 400px;
-        }
-        
+    @media (max-width: 768px) {
         .block-label {
             font-size: 12px;
             padding: 6px 12px;
@@ -801,6 +829,31 @@
         .capacity-indicator {
             padding: 8px;
             min-width: 80px;
+        }
+        
+        .capacity-bar {
+            width: 60px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .block-label {
+            font-size: 11px;
+            padding: 4px 8px;
+        }
+        
+        .capacity-indicator {
+            padding: 6px;
+            min-width: 70px;
+        }
+        
+        .capacity-bar {
+            width: 50px;
+            height: 4px;
+        }
+        
+        .capacity-text {
+            font-size: 10px;
         }
     }
 </style>
