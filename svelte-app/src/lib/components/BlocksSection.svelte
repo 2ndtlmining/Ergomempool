@@ -31,6 +31,7 @@
     
     let mounted = false;
     let previousBlockHeight = null;
+    let animating = false;
     
     function getMinerInfo(minerName) {
         if (!minerName) {
@@ -107,7 +108,132 @@
     // Estimated total reward for next block
     $: estimatedTotalReward = baseMinerReward + estimatedFees;
     
-    // SIMPLE: Just detect new blocks and use the proven testBlockAnimation function
+    // Block animation function with simultaneous movement (train/production line effect)
+    async function animateNewBlock() {
+        if (animating) {
+            console.log('⚠️ Animation already in progress, skipping...');
+            return;
+        }
+        
+        animating = true;
+        console.log('🚀 Starting synchronized block animation (train effect)...');
+        
+        try {
+            // Get all block containers
+            const nextBlockContainer = document.querySelector('.next-block-section .block-container');
+            const lastBlocksContainers = Array.from(document.querySelectorAll('.last-blocks-section .block-container'));
+            
+            if (!nextBlockContainer || lastBlocksContainers.length === 0) {
+                console.warn('⚠️ Block containers not found');
+                return;
+            }
+            
+            // PHASE 1: Calculate all movements first
+            console.log('🧮 Calculating movement paths for all blocks...');
+            
+            // Calculate where the next block needs to move
+            const firstBlockContainer = lastBlocksContainers[0];
+            const nextBlockRect = nextBlockContainer.getBoundingClientRect();
+            const firstBlockRect = firstBlockContainer.getBoundingClientRect();
+            
+            const nextBlockDeltaX = firstBlockRect.left - nextBlockRect.left;
+            const nextBlockDeltaY = firstBlockRect.top - nextBlockRect.top;
+            
+            // Calculate movements for existing blocks
+            const blockMovements = lastBlocksContainers.map((container, index) => {
+                if (index === lastBlocksContainers.length - 1) {
+                    // Last block exits to the right
+                    return {
+                        container,
+                        transform: 'translateX(150px) scale(0.8)',
+                        opacity: '0',
+                        isExiting: true
+                    };
+                } else {
+                    // Other blocks shift to next position
+                    const nextContainer = lastBlocksContainers[index + 1];
+                    if (nextContainer) {
+                        const currentRect = container.getBoundingClientRect();
+                        const nextRect = nextContainer.getBoundingClientRect();
+                        const shiftDistance = nextRect.left - currentRect.left;
+                        return {
+                            container,
+                            transform: `translateX(${shiftDistance}px)`,
+                            opacity: '1',
+                            isExiting: false
+                        };
+                    }
+                }
+                return null;
+            }).filter(Boolean);
+            
+            // PHASE 2: Setup all blocks for simultaneous animation
+            console.log('🎬 Setting up simultaneous animation for all blocks...');
+            
+            const animationDuration = '1.0s';
+            const animationEasing = 'cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // Prepare next block
+            nextBlockContainer.style.position = 'relative';
+            nextBlockContainer.style.zIndex = '100';
+            nextBlockContainer.style.transition = `transform ${animationDuration} ${animationEasing}`;
+            
+            // Prepare existing blocks
+            blockMovements.forEach(({ container }, index) => {
+                container.style.position = 'relative';
+                container.style.zIndex = '50';
+                container.style.transition = `transform ${animationDuration} ${animationEasing}, opacity ${animationDuration} ease`;
+            });
+            
+            // PHASE 3: Start ALL movements simultaneously (TRAIN EFFECT!)
+            console.log('🚂 Starting synchronized train movement...');
+            
+            // Start next block movement
+            requestAnimationFrame(() => {
+                nextBlockContainer.style.transform = `translate(${nextBlockDeltaX}px, ${nextBlockDeltaY}px) scale(0.98)`;
+            });
+            
+            // Start all existing block movements at the same time
+            requestAnimationFrame(() => {
+                blockMovements.forEach(({ container, transform, opacity }) => {
+                    container.style.transform = transform;
+                    container.style.opacity = opacity;
+                });
+            });
+            
+            // Wait for animation to complete
+            await new Promise(resolve => {
+                setTimeout(resolve, 1000); // Match animation duration
+            });
+            
+            // PHASE 4: Clean reset
+            console.log('🧹 Cleaning up animation styles...');
+            
+            // Reset next block
+            nextBlockContainer.style.position = '';
+            nextBlockContainer.style.zIndex = '';
+            nextBlockContainer.style.transition = '';
+            nextBlockContainer.style.transform = '';
+            
+            // Reset all existing blocks
+            lastBlocksContainers.forEach(container => {
+                container.style.position = '';
+                container.style.transition = '';
+                container.style.transform = '';
+                container.style.opacity = '';
+                container.style.zIndex = '';
+            });
+            
+            console.log('✅ Synchronized block animation completed!');
+            
+        } catch (error) {
+            console.error('❌ Block animation error:', error);
+        } finally {
+            animating = false;
+        }
+    }
+    
+    // Watch for new blocks and trigger animation
     $: if (browser && mounted && $blockData.length > 0) {
         const latestBlock = $blockData[0];
         const currentHeight = latestBlock.height;
@@ -117,62 +243,65 @@
             previousBlockHeight = currentHeight;
             console.log(`📊 Initial block height: ${currentHeight}`);
         } else if (currentHeight > previousBlockHeight) {
-            // New block detected - use the proven animation function
+            // New block detected - trigger animation
             console.log(`🎉 New block detected! Height: ${currentHeight} (prev: ${previousBlockHeight})`);
             
-            if (typeof window.testBlockAnimation === 'function') {
-                console.log('🚀 Triggering proven testBlockAnimation...');
-                window.testBlockAnimation();
-            } else {
-                console.log('⚠️ testBlockAnimation not available yet');
-            }
+            // Small delay to ensure DOM is updated
+            setTimeout(() => {
+                animateNewBlock();
+            }, 100);
             
             previousBlockHeight = currentHeight;
         }
     }
     
-    // SIMPLE: Reset function for tab visibility
-    function simpleResetStuckAnimations() {
-        console.log('🔄 Simple reset - clearing all animation styles...');
+    // Reset function for stuck animations
+    function resetAnimations() {
+        console.log('🔄 Resetting block animations...');
+        animating = false;
         
-        // Find all containers using simple DOM queries
-        const containers = [
+        const allContainers = [
             document.querySelector('.next-block-section .block-container'),
-            ...Array.from({length: 4}, (_, i) => {
-                const blockEl = document.querySelector(`[data-block-index="${i}"]`);
-                return blockEl ? blockEl.closest('.block-container') : null;
-            })
+            ...Array.from(document.querySelectorAll('.last-blocks-section .block-container'))
         ].filter(el => el);
         
-        containers.forEach((container, i) => {
+        allContainers.forEach((container, i) => {
             if (container) {
-                // Reset all animation styles
+                container.style.position = '';
                 container.style.transition = '';
                 container.style.transform = '';
                 container.style.opacity = '';
-                container.style.position = '';
                 container.style.zIndex = '';
                 console.log(`✅ Reset container ${i}`);
             }
         });
         
-        console.log(`🔄 Reset ${containers.length} containers`);
+        console.log(`🔄 Reset ${allContainers.length} containers`);
+    }
+    
+    // Export the animation function globally for testing
+    function makeAnimationGloballyAvailable() {
+        if (typeof window !== 'undefined') {
+            window.testBlockAnimation = animateNewBlock;
+            window.resetBlockAnimations = resetAnimations;
+            console.log('🌍 Block animation functions available globally');
+        }
     }
     
     onMount(() => {
         mounted = true;
         
         if (browser) {
-            console.log('🔧 Simple BlocksSection approach loaded');
+            console.log('🔧 BlocksSection mounted with animation support');
             
-            // Make reset function available globally
-            window.resetBlockAnimations = simpleResetStuckAnimations;
+            // Make animation functions available globally
+            makeAnimationGloballyAvailable();
             
-            // Handle tab visibility - ONLY reset when tab becomes active
+            // Handle tab visibility changes
             const handleVisibilityChange = () => {
                 if (!document.hidden) {
-                    console.log('👁️ Tab became visible - running simple reset...');
-                    setTimeout(simpleResetStuckAnimations, 100);
+                    console.log('👁️ Tab became visible - checking for stuck animations...');
+                    setTimeout(resetAnimations, 100);
                 }
             };
             
@@ -181,6 +310,10 @@
             // Cleanup
             return () => {
                 document.removeEventListener('visibilitychange', handleVisibilityChange);
+                if (typeof window !== 'undefined') {
+                    delete window.testBlockAnimation;
+                    delete window.resetBlockAnimations;
+                }
             };
         }
     });
@@ -280,10 +413,12 @@
 <style>
     .blocks-section {
         overflow: hidden;
+        position: relative;
     }
     
     .block-container {
         position: relative;
+        transform-origin: center center;
     }
     
     .blocks-grid {
@@ -322,6 +457,22 @@
     @media (prefers-reduced-motion: reduce) {
         .block-container {
             transition: none !important;
+        }
+        
+        .block-container[style*="transform"] {
+            transform: none !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .blocks-grid {
+            gap: 15px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .blocks-grid {
+            gap: 10px;
         }
     }
 </style>
