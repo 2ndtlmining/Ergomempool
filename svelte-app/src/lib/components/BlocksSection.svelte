@@ -17,7 +17,7 @@
     };
     
     const minerLogos = {
-        "2TH22DBY": "/logos/2miners.png",
+        "2TH22DBY": "logos/2miners.png",
         "jndPhqGm": "logos/dxpool.png",
         "yi5CLS9V": "logos/herominers.png",
         "hBMbdspA": "logos/k1.png",
@@ -411,68 +411,85 @@
 </div>
 
 <style>
+    /* SIMPLE HORIZONTAL SCROLL FIX */
+    
+    /* 1. Keep original desktop height on all screens */
     .blocks-section {
-        overflow: hidden;
-        position: relative;
+        min-height: 180px !important;
+        max-height: 180px !important;
+        overflow: hidden !important;
     }
     
-    .block-container {
-        position: relative;
-        transform-origin: center center;
-    }
-    
+    /* 2. Horizontal scroll for blocks grid */
     .blocks-grid {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        align-items: flex-start;
-        flex-wrap: nowrap;
-        position: relative;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
     }
     
-    .block-height-link {
-        transition: all 0.2s ease;
-        text-decoration: none;
-        color: inherit;
+    /* 3. Hide scrollbar for Chrome/Safari */
+    .blocks-grid::-webkit-scrollbar {
+        display: none;
     }
     
-    .block-height-link:hover {
-        transform: scale(1.05);
+    /* 4. Prevent blocks from shrinking */
+    .block-container {
+        flex-shrink: 0;
     }
     
-    .block-height-link:focus {
-        outline: 2px solid var(--primary-orange);
-        outline-offset: 2px;
-        border-radius: 4px;
-    }
-    
-    .miner-logo {
-        transition: transform 0.2s ease;
-    }
-    
-    :global(.dummy-block:hover .miner-logo) {
-        transform: scale(1.1);
-    }
-    
-    @media (prefers-reduced-motion: reduce) {
-        .block-container {
-            transition: none !important;
+    /* 5. Force horizontal layout on all screen sizes */
+    @media (max-width: 768px) {
+        .blocks-section {
+            flex-direction: row !important; /* Keep horizontal */
+            min-height: 180px !important;
+            max-height: 180px !important;
+            padding: 8px 20px 12px 20px !important; /* Keep original padding */
         }
         
-        .block-container[style*="transform"] {
-            transform: none !important;
+        .separator-container {
+            flex-direction: column !important; /* Keep vertical separator */
+            min-height: 180px !important;
         }
-    }
-    
-    @media (max-width: 768px) {
-        .blocks-grid {
-            gap: 15px;
+        
+        .separator {
+            width: 2px !important; /* Keep vertical */
+            height: 120px !important; /* Adjust for smaller height */
+            background: linear-gradient(
+                to bottom,
+                var(--primary-orange) 0px,
+                var(--primary-orange) 8px,
+                transparent 8px,
+                transparent 16px
+            ) !important;
+            background-size: 2px 16px !important;
         }
     }
     
     @media (max-width: 480px) {
-        .blocks-grid {
-            gap: 10px;
+        .blocks-section {
+            flex-direction: row !important; /* Keep horizontal */
+            min-height: 180px !important;
+            max-height: 180px !important;
+            padding: 8px 15px 12px 15px !important;
+        }
+        
+        .separator-container {
+            flex-direction: column !important; /* Keep vertical separator */
+            min-height: 180px !important;
+        }
+        
+        .separator {
+            width: 2px !important; /* Keep vertical */
+            height: 100px !important; /* Smaller for mobile */
+            background: linear-gradient(
+                to bottom,
+                var(--primary-orange) 0px,
+                var(--primary-orange) 8px,
+                transparent 8px,
+                transparent 16px
+            ) !important;
+            background-size: 2px 16px !important;
         }
     }
 </style>
