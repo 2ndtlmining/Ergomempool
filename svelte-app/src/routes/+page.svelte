@@ -1,8 +1,8 @@
-<!-- FIXED: The key changes are in the handlePack function and conditional rendering -->
+<!-- Updated +page.svelte with simplified mode handling -->
 
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { transactions, currentPrice, blockData, colorMode } from '$lib/stores.js';
+    import { transactions, currentPrice, blockData } from '$lib/stores.js';
     import { fetchTransactions, fetchBlocks, fetchPrice, addUsdValues } from '$lib/api.js';
     
     // Import components
@@ -13,6 +13,7 @@
     import MempoolGrid from '$lib/components/MempoolGrid.svelte';
     import ErgoPackingGrid from '$lib/components/ErgoPackingGrid.svelte';
     import BallPhysicsGrid from '$lib/components/BallPhysicsGrid.svelte';
+    import TransactionPackingGrid from '$lib/components/TransactionPackingGrid.svelte';
     import TransactionTable from '$lib/components/TransactionTable.svelte';
     import Footer from '$lib/components/Footer.svelte';
     
@@ -20,9 +21,10 @@
     import '../app.css';
     
     let intervalIds = [];
-    let packingMode = false;
+    let currentMode = 'grid'; // Default mode: 'grid', 'hex', 'pack', 'ball'
     let ergoPackingRef;
     let ballPhysicsRef;
+    let transactionPackingRef;
     let controlsRef;
     let currentPackingStats = {
         blockCapacity: 2000000,
@@ -35,18 +37,35 @@
         statusClass: 'info'
     };
     
-    // Connect controls to ball physics when both are ready
+    // Connect controls to components when ready
     $: if (controlsRef && ballPhysicsRef) {
         controlsRef.setBallPhysicsRef(ballPhysicsRef);
+    }
+    
+    $: if (controlsRef && ergoPackingRef) {
+        controlsRef.setErgoPackingRef(ergoPackingRef);
+    }
+    
+    $: if (controlsRef && transactionPackingRef) {
+        controlsRef.setTransactionPackingRef(transactionPackingRef);
     }
     
     // Enhanced debug logging
     $: {
         console.log('🎯 Main page state changed:', {
-            packingMode,
-            colorMode: $colorMode,
-            willShow: packingMode ? 'Packing' : $colorMode === 'balls' ? 'BallPhysics' : 'Grid'
+            currentMode,
+            willShow: getDisplayModeName(currentMode)
         });
+    }
+    
+    function getDisplayModeName(mode) {
+        switch(mode) {
+            case 'grid': return 'Grid View';
+            case 'hex': return 'Hexagon Packing';
+            case 'pack': return 'Transaction Packing';
+            case 'ball': return 'Ball Physics';
+            default: return 'Unknown';
+        }
     }
     
     onMount(() => {
@@ -118,7 +137,7 @@
         console.log('🔄 Manual refresh triggered');
         loadAllData();
         
-        const refreshButton = document.querySelector('.control-button:last-child');
+        const refreshButton = document.querySelector('.control-button.refresh-button');
         if (refreshButton) {
             const originalText = refreshButton.textContent;
             refreshButton.textContent = 'Refreshing...';
@@ -131,45 +150,68 @@
         }
     }
     
-    // FIXED: Handle pack toggle with proper mode switching
-    function handlePack(isPacking) {
-        console.log('📦 Pack mode toggle:', isPacking, 'Current color mode:', $colorMode);
-        packingMode = isPacking;
+    // Handle mode changes from Controls component
+    function handlePack(isHexPacking) {
+        console.log('📦 Handle pack called with:', isHexPacking);
         
-        if (isPacking) {
-            console.log('📦 Switching to ERGO packing visualization');
-            
-            // FIXED: If we're coming from ball physics mode, switch away from it
-            if ($colorMode === 'balls') {
-                console.log('🔄 Switching from Ball Physics to Packing mode - changing color mode to size');
-                colorMode.set('size');
-            }
+        if (isHexPacking) {
+            // Switch to hex packing mode
+            currentMode = 'hex';
+            console.log('📦 Switching to Hexagon packing mode');
             
             // Start packing animation after component loads
             setTimeout(() => {
                 if (ergoPackingRef && ergoPackingRef.startPackingAnimation) {
-                    console.log('🎬 Starting packing animation');
+                    console.log('🎬 Starting hexagon packing animation');
                     ergoPackingRef.startPackingAnimation();
                 } else {
-                    console.log('⚠️ Packing component not ready yet, retrying...');
+                    console.log('⚠️ Hexagon packing component not ready yet, retrying...');
                     
                     setTimeout(() => {
                         if (ergoPackingRef && ergoPackingRef.startPackingAnimation) {
-                            console.log('🎬 Starting packing animation (retry)');
+                            console.log('🎬 Starting hexagon packing animation (retry)');
                             ergoPackingRef.startPackingAnimation();
                         } else {
-                            console.log('❌ Failed to start packing animation');
+                            console.log('❌ Failed to start hexagon packing animation');
                         }
                     }, 1000);
                 }
             }, 500);
-            
         } else {
-            console.log('📊 Switching away from packing mode');
-            // When turning off packing mode, we don't automatically switch to ball physics
-            // The user can manually click the Ball Physics button if they want
+            // If not hex packing, get current mode from Controls
+            if (controlsRef && controlsRef.getCurrentMode) {
+                currentMode = controlsRef.getCurrentMode();
+                console.log('🎯 Updated mode from Controls:', currentMode);
+            } else {
+                // Fallback to grid mode
+                currentMode = 'grid';
+                console.log('📊 Fallback to grid mode');
+            }
         }
     }
+    
+    // Watch for mode changes from Controls component
+    function handleModeChange() {
+        if (controlsRef && controlsRef.getCurrentMode) {
+            const newMode = controlsRef.getCurrentMode();
+            if (newMode !== currentMode) {
+                console.log(`🔄 Mode change detected: ${currentMode} → ${newMode}`);
+                currentMode = newMode;
+            }
+        }
+    }
+    
+    // Poll for mode changes (since we don't have direct communication)
+    let modeCheckInterval;
+    onMount(() => {
+        modeCheckInterval = setInterval(handleModeChange, 500);
+    });
+    
+    onDestroy(() => {
+        if (modeCheckInterval) {
+            clearInterval(modeCheckInterval);
+        }
+    });
 </script>
 
 <svelte:head>
@@ -182,7 +224,11 @@
     <Header />
     <BlocksSection />
     
-    <main class="visualizer" class:packing-mode={packingMode}>
+    <main class="visualizer" 
+          class:hex-mode={currentMode === 'hex'} 
+          class:pack-mode={currentMode === 'pack'} 
+          class:ball-mode={currentMode === 'ball'}
+          class:grid-mode={currentMode === 'grid'}>
         <h2>Mempool Visualizer</h2>
         
         <StatsDisplay packingStats={currentPackingStats} />
@@ -193,18 +239,27 @@
             onPack={handlePack} 
         />
         
-        <!-- FIXED: Priority-based conditional rendering - Packing mode takes priority -->
-        {#if packingMode}
+        <!-- Priority-based conditional rendering -->
+        {#if currentMode === 'hex'}
+            <!-- Hexagon Packing Mode -->
             <ErgoPackingGrid 
                 bind:this={ergoPackingRef}
                 packingStats={currentPackingStats} 
             />
-        {:else if $colorMode === 'balls'}
+        {:else if currentMode === 'ball'}
+            <!-- Ball Physics Mode -->
             <BallPhysicsGrid 
                 bind:this={ballPhysicsRef}
                 packingStats={currentPackingStats} 
             />
+        {:else if currentMode === 'pack'}
+            <!-- Transaction Packing Mode -->
+            <TransactionPackingGrid 
+                bind:this={transactionPackingRef}
+                bind:packingStats={currentPackingStats}
+            />
         {:else}
+            <!-- Default Grid Mode -->
             <MempoolGrid />
         {/if}
     </main>
@@ -231,6 +286,7 @@
         align-items: center;
         min-height: 400px;
         border-top: 1px solid var(--border-color);
+        transition: all 0.3s ease;
     }
     
     .visualizer h2 {
@@ -240,18 +296,57 @@
         font-size: 28px;
         text-shadow: 0 2px 4px rgba(230, 126, 34, 0.3);
         text-align: center;
+        transition: all 0.3s ease;
     }
     
-    .visualizer.packing-mode {
-        min-height: 600px;
+    /* Grid mode (default) */
+    .visualizer.grid-mode {
         background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
     }
     
-    .visualizer.packing-mode h2 {
+    .visualizer.grid-mode h2 {
+        color: var(--primary-orange);
+    }
+    
+    /* Hexagon Packing mode */
+    .visualizer.hex-mode {
+        min-height: 600px;
+        background: linear-gradient(135deg, rgba(230, 126, 34, 0.05) 0%, var(--dark-bg) 100%);
+    }
+    
+    .visualizer.hex-mode h2 {
         color: var(--primary-orange);
         font-size: 28px;
         text-align: center;
         margin-bottom: 20px;
+    }
+    
+    /* Transaction Packing mode */
+    .visualizer.pack-mode {
+        min-height: 700px;
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, var(--dark-bg) 100%);
+    }
+    
+    .visualizer.pack-mode h2 {
+        color: #3498db;
+        font-size: 28px;
+        text-align: center;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    }
+    
+    /* Ball Physics mode */
+    .visualizer.ball-mode {
+        min-height: 700px;
+        background: linear-gradient(135deg, rgba(212, 101, 27, 0.05) 0%, var(--dark-bg) 100%);
+    }
+    
+    .visualizer.ball-mode h2 {
+        color: #d4651b;
+        font-size: 28px;
+        text-align: center;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 4px rgba(212, 101, 27, 0.3);
     }
     
     @media (max-width: 768px) {
@@ -264,7 +359,9 @@
             margin-bottom: 20px;
         }
         
-        .visualizer.packing-mode {
+        .visualizer.hex-mode,
+        .visualizer.pack-mode,
+        .visualizer.ball-mode {
             min-height: 500px;
         }
     }
@@ -279,7 +376,9 @@
             margin-bottom: 15px;
         }
         
-        .visualizer.packing-mode {
+        .visualizer.hex-mode,
+        .visualizer.pack-mode,
+        .visualizer.ball-mode {
             min-height: 450px;
         }
     }

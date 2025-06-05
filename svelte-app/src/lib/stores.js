@@ -1,9 +1,9 @@
 import { writable, derived } from 'svelte/store';
 
-// Core data stores (replacing your global variables)
+// Core data stores
 export const transactions = writable([]);
 export const currentPrice = writable(0);
-export const colorMode = writable('size');
+// Removed colorMode - Grid mode always uses value-based coloring and size-based squares
 
 // Wallet state
 export const walletConnector = writable({

@@ -1,6 +1,5 @@
 <script>
-    import { transactions, colorMode, walletConnector } from '$lib/stores.js';
-    import { sizeColors, valueColors } from '$lib/stores.js';
+    import { transactions, walletConnector, valueColors } from '$lib/stores.js';
     import { isWalletTransaction } from '$lib/wallet.js';
     import { identifyTransactionType } from '$lib/transactionTypes.js';
     
@@ -16,17 +15,17 @@
     };
     
     const ERGO_PACKING_CONFIG = {
-    maxBlockSizeBytes: 2097152, // 2MB
-    hexagonRadius: 180,         // Increased from 140 to 180 (+28% larger)
-    centerX: 200,              // Centered in 400px container
-    centerY: 200,              // Centered in 400px container
-    canvasWidth: 400,
-    canvasHeight: 400,
-    minSquareSize: 6,          // Increased from 4 to 6 (+50% larger minimum)
-    maxSquareSize: 20,         // Increased from 16 to 20 (+25% larger maximum)
-    squareSpacing: 2,          // Keep same for good density
-    bytesToPixelRatio: 600,    // Reduced from 800 to 600 (makes squares larger relative to transaction size)
-    packingAnimationSpeed: 100
+        maxBlockSizeBytes: 2097152, // 2MB
+        hexagonRadius: 180,         // Increased from 140 to 180 (+28% larger)
+        centerX: 200,              // Centered in 400px container
+        centerY: 200,              // Centered in 400px container
+        canvasWidth: 400,
+        canvasHeight: 400,
+        minSquareSize: 6,          // Increased from 4 to 6 (+50% larger minimum)
+        maxSquareSize: 20,         // Increased from 16 to 20 (+25% larger maximum)
+        squareSpacing: 2,          // Keep same for good density
+        bytesToPixelRatio: 600,    // Reduced from 800 to 600 (makes squares larger relative to transaction size)
+        packingAnimationSpeed: 100
     };
     
     let packingContainer;
@@ -261,15 +260,8 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         `;
         
-        // Color based on mode
-        const maxSize = Math.max(...$transactions.map(tx => tx.size || 0));
+        // Default to value-based coloring (since colorMode was removed)
         const maxValue = Math.max(...$transactions.map(tx => tx.value || 0));
-        
-        const getColorBySize = (size, maxSize) => {
-            const normalized = Math.min(size / maxSize, 1);
-            const index = Math.floor(normalized * (sizeColors.length - 1));
-            return sizeColors[index];
-        };
         
         const getColorByValue = (value, maxValue) => {
             const normalized = Math.min(value / maxValue, 1);
@@ -277,10 +269,7 @@
             return valueColors[index];
         };
         
-        const color = $colorMode === 'size' 
-            ? getColorBySize(transaction.size || 0, maxSize)
-            : getColorByValue(transaction.value || 0, maxValue);
-        
+        const color = getColorByValue(transaction.value || 0, maxValue);
         square.style.backgroundColor = color;
         
         // Wallet highlighting
@@ -539,6 +528,7 @@
         margin-top: 20px;
         max-width: 600px;
     }
+    
     /* Make sure SVG is centered within its container */
     .ergo-packing-hexagon-container-centered svg {
         position: absolute;

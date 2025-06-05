@@ -1,6 +1,6 @@
 <script>
-    import { transactions, colorMode, walletConnector } from '$lib/stores.js';
-    import { sizeColors, valueColors } from '$lib/stores.js';
+    import { transactions, walletConnector } from '$lib/stores.js';
+    import { valueColors } from '$lib/stores.js'; // Only need valueColors now
     import { isWalletTransaction } from '$lib/wallet.js';
     import { identifyTransactionType } from '$lib/transactionTypes.js';
     
@@ -10,21 +10,16 @@
     let tooltipY = 0;
     let tooltipTransaction = null;
     
-    // Color and size calculation functions
-    function getColorBySize(size, maxSize) {
-        const normalized = Math.min(size / maxSize, 1);
-        const index = Math.floor(normalized * (sizeColors.length - 1));
-        return sizeColors[index];
-    }
-    
+    // Simplified color function - always use value-based coloring
     function getColorByValue(value, maxValue) {
         const normalized = Math.min(value / maxValue, 1);
         const index = Math.floor(normalized * (valueColors.length - 1));
         return valueColors[index];
     }
     
-    function getSquareSize(value, maxValue, minSize = 8, maxSizePixels = 24) {
-        const normalized = Math.min(value / maxValue, 1);
+    // Size calculation based on transaction size in bytes
+    function getSquareSizeByBytes(sizeBytes, maxSizeBytes, minSize = 8, maxSizePixels = 24) {
+        const normalized = Math.min(sizeBytes / maxSizeBytes, 1);
         return Math.max(minSize, Math.floor(minSize + (maxSizePixels - minSize) * normalized));
     }
     
@@ -67,8 +62,8 @@
     
     // Reactive calculations
     $: displayTransactions = $transactions.slice(0, 500);
-    $: maxSize = Math.max(...$transactions.map(tx => tx.size || 0));
     $: maxValue = Math.max(...$transactions.map(tx => tx.value || 0));
+    $: maxSizeBytes = Math.max(...$transactions.map(tx => tx.size || 0));
 </script>
 
 <div class="mempool-grid">
@@ -76,8 +71,8 @@
         <div class="loading">Loading transactions...</div>
     {:else}
         {#each displayTransactions as tx}
-            {@const size = getSquareSize($colorMode === 'size' ? tx.size : tx.value, $colorMode === 'size' ? maxSize : maxValue)}
-            {@const color = $colorMode === 'size' ? getColorBySize(tx.size || 0, maxSize) : getColorByValue(tx.value || 0, maxValue)}
+            {@const size = getSquareSizeByBytes(tx.size || 0, maxSizeBytes)}
+            {@const color = getColorByValue(tx.value || 0, maxValue)}
             {@const isWallet = isWalletTx(tx)}
             {@const transactionType = identifyTransactionType(tx)}
             
@@ -144,7 +139,7 @@
         ID: {shortenTransactionId(tooltipTransaction.id)}<br>
         Size: {tooltipTransaction.size || 'N/A'} bytes<br>
         Value: {(tooltipTransaction.value || 0).toFixed(4)} ERG<br>
-        Value: ${(tooltipTransaction.usd_value || 0).toFixed(2)} USD
+        Value: ${(tooltipTransaction.usd_value || 0).toFixed(2)} USD<br>
     </div>
 {/if}
 
@@ -206,5 +201,20 @@
     @keyframes iconPulse {
         0%, 100% { transform: scale(1); opacity: 0.9; }
         50% { transform: scale(1.1); opacity: 1; }
+    }
+    
+    .transaction-tooltip {
+        position: absolute;
+        background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+        border: 2px solid var(--primary-orange);
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        color: var(--text-light);
+        pointer-events: none;
+        z-index: 1000;
+        white-space: nowrap;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
     }
 </style>

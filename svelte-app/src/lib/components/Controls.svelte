@@ -1,28 +1,36 @@
 <script>
-    import { colorMode } from '$lib/stores.js';
-    
+    // Remove colorMode import since we're handling modes directly
     export let onRefresh;
     export let onPack;
     
-    let packingMode = false;
-    let ballPhysicsRef; // Reference to ball physics component
+    // Current view mode
+    let currentMode = 'grid'; // 'grid', 'hex', 'pack', 'ball'
+    
+    // References to different visualization components
+    let ballPhysicsRef;
+    let ergoPackingRef; // ErgoPackingGrid.svelte reference
+    let transactionPackingRef; // TransactionPackingGrid.svelte reference
+    
+    // Ball physics state
     let ballInteractionMode = 'bounce';
     let ballPhysicsRunning = true;
-    let blockFlowActive = false; // Phase 2: Block flow status
+    let blockFlowActive = false;
     
-    function setColorMode(mode) {
-        colorMode.set(mode);
+    function setMode(mode) {
+        console.log(`🎯 Setting mode to: ${mode}`);
+        currentMode = mode;
+        
+        // Notify parent component about mode change
+        if (mode === 'hex') {
+            onPack(true); // Enable hexagon packing mode
+        } else {
+            onPack(false); // Disable hexagon packing mode
+        }
     }
     
     function handleRefresh() {
         console.log('🔄 Refresh clicked');
         onRefresh();
-    }
-    
-    function handlePack() {
-        packingMode = !packingMode;
-        console.log('📦 Pack clicked! New mode:', packingMode);
-        onPack(packingMode);
     }
     
     // Ball Physics Controls
@@ -39,7 +47,7 @@
     }
     
     function addBallDummies() {
-        console.log('🎭 Add Dummies button clicked');
+        console.log('🎭 Add Ball Dummies button clicked');
         if (ballPhysicsRef) {
             console.log('✅ BallPhysicsRef found, calling addDummyTransactions');
             ballPhysicsRef.addDummyTransactions();
@@ -49,7 +57,7 @@
     }
     
     function clearBalls() {
-        console.log('🗑️ Clear button clicked');
+        console.log('🗑️ Clear Balls button clicked');
         if (ballPhysicsRef) {
             console.log('✅ BallPhysicsRef found, calling clearBalls');
             ballPhysicsRef.clearBalls();
@@ -58,27 +66,90 @@
         }
     }
     
-    // PHASE 2: Block Flow Controls
-    function toggleBlockFlow() {
+    function toggleBallBlockFlow() {
         if (ballPhysicsRef) {
             blockFlowActive = ballPhysicsRef.toggleBlockFlow();
         }
     }
     
-    function triggerTestBlockMining() {
+    function triggerBallTestBlockMining() {
         if (ballPhysicsRef) {
             ballPhysicsRef.triggerTestBlockMining();
-            showFlowStatus('🎬 Test block mining triggered!', 'success');
+            showFlowStatus('🎬 Ball physics: Test block mining triggered!', 'success');
         }
     }
     
-    function triggerTestTransactionEntry() {
+    function triggerBallTestTransactionEntry() {
         if (ballPhysicsRef) {
             ballPhysicsRef.triggerTestTransactionEntry();
-            showFlowStatus('📥 Test transaction entry triggered!', 'info');
+            showFlowStatus('📥 Ball physics: Test transaction entry triggered!', 'info');
         }
     }
     
+    // Ergo Packing (Hex) Controls
+    function startErgoPacking() {
+        console.log('📦 Start Ergo Packing (Hex) clicked');
+        if (ergoPackingRef) {
+            ergoPackingRef.startPackingAnimation();
+            showFlowStatus('📦 Hexagon packing animation started!', 'success');
+        } else {
+            console.error('❌ ergoPackingRef is null/undefined');
+        }
+    }
+    
+    // Transaction Packing Controls
+    function addPackingDummies() {
+        console.log('🎭 Add Packing Dummies button clicked');
+        if (transactionPackingRef) {
+            transactionPackingRef.addDummyTransactions();
+            showFlowStatus('✅ Added dummy transactions to packing grid', 'success');
+        } else {
+            console.error('❌ transactionPackingRef is null/undefined');
+        }
+    }
+    
+    function clearPackingTransactions() {
+        console.log('🗑️ Clear Packing Transactions button clicked');
+        if (transactionPackingRef) {
+            transactionPackingRef.clearAllTransactions();
+            showFlowStatus('🗑️ Cleared all transactions from packing grid', 'info');
+        } else {
+            console.error('❌ transactionPackingRef is null/undefined');
+        }
+    }
+    
+    function repackTransactions() {
+        console.log('🔄 Repack Transactions button clicked');
+        if (transactionPackingRef) {
+            transactionPackingRef.repackTransactions();
+            showFlowStatus('🔄 Repacking transactions with gravity algorithm', 'info');
+        } else {
+            console.error('❌ transactionPackingRef is null/undefined');
+        }
+    }
+    
+    function togglePackingBlockFlow() {
+        if (transactionPackingRef) {
+            const isActive = transactionPackingRef.toggleBlockFlow();
+            showFlowStatus(`🎬 Packing block flow: ${isActive ? 'Active' : 'Paused'}`, isActive ? 'success' : 'warning');
+        }
+    }
+    
+    function triggerPackingTestBlockMining() {
+        if (transactionPackingRef) {
+            transactionPackingRef.triggerTestBlockMining();
+            showFlowStatus('⛏️ Packing: Test block mining triggered!', 'success');
+        }
+    }
+    
+    function triggerPackingTestTransactionEntry() {
+        if (transactionPackingRef) {
+            transactionPackingRef.triggerTestTransactionEntry();
+            showFlowStatus('📥 Packing: Test transaction entry triggered!', 'info');
+        }
+    }
+    
+    // Enhanced showFlowStatus function
     function showFlowStatus(message, type = 'info') {
         const existingStatus = document.querySelector('.flow-status');
         if (existingStatus) existingStatus.remove();
@@ -102,9 +173,9 @@
             ${type === 'success' ? 'background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);' : ''}
             ${type === 'info' ? 'background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);' : ''}
             ${type === 'warning' ? 'background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);' : ''}
+            ${type === 'error' ? 'background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);' : ''}
         `;
         
-        // FIXED: Use CSS classes instead of direct transform assignment
         statusDiv.classList.add('flow-status-hidden');
         document.body.appendChild(statusDiv);
         
@@ -128,59 +199,138 @@
         }, 3000);
     }
     
-    // Export function to set ball physics reference
+    // Export functions to set component references
     export function setBallPhysicsRef(ref) {
         ballPhysicsRef = ref;
-        console.log('🏀 Ball physics reference set:', ref);
+        console.log('🏀 Ball physics reference set:', !!ref);
+    }
+    
+    export function setErgoPackingRef(ref) {
+        ergoPackingRef = ref;
+        console.log('📦 Ergo packing (hex) reference set:', !!ref);
+    }
+    
+    export function setTransactionPackingRef(ref) {
+        transactionPackingRef = ref;
+        console.log('📊 Transaction packing reference set:', !!ref);
+    }
+    
+    // Export current mode for parent component
+    export function getCurrentMode() {
+        return currentMode;
     }
 </script>
 
 <div class="controls">
-    <!-- Visualization Mode Controls -->
-    <div class="control-group">
+    <!-- Main 5 Buttons -->
+    <div class="control-group main-buttons">
         <button 
             class="control-button"
-            class:active={$colorMode === 'size'}
-            on:click={() => setColorMode('size')}
+            class:active={currentMode === 'grid'}
+            on:click={() => setMode('grid')}
         >
-            Color by Size
+            📊 Grid
         </button>
+        
         <button 
             class="control-button"
-            class:active={$colorMode === 'value'}
-            on:click={() => setColorMode('value')}
+            class:active={currentMode === 'hex'}
+            on:click={() => setMode('hex')}
         >
-            Color by Value
+            📦 Hex
         </button>
+        
         <button 
             class="control-button"
-            class:active={$colorMode === 'balls'}
-            on:click={() => setColorMode('balls')}
+            class:active={currentMode === 'pack'}
+            on:click={() => setMode('pack')}
         >
-            🏀 Ball Physics
+            🧠 Pack
         </button>
-    </div>
-    
-    <!-- FIXED: General Controls - Always show Pack button and Refresh -->
-    <div class="control-group">
+        
         <button 
-            class="control-button" 
-            class:packing-active={packingMode}
-            id="pack-button"
-            on:click={handlePack}
+            class="control-button"
+            class:active={currentMode === 'ball'}
+            on:click={() => setMode('ball')}
         >
-            {packingMode ? '📊 Grid View' : '📦 Pack'}
+            🏀 Ball
         </button>
+        
         <button 
-            class="control-button" 
+            class="control-button refresh-button" 
             on:click={handleRefresh}
         >
             🔄 Refresh Data
         </button>
     </div>
     
-    <!-- Ball Physics Specific Controls - Only show when in ball mode -->
-    {#if $colorMode === 'balls'}
+    <!-- Hex Mode Specific Controls -->
+    {#if currentMode === 'hex'}
+        <div class="control-group hex-controls">
+            <div class="control-label">📦 Hexagon Packing Controls</div>
+            <button 
+                class="control-button hex-control"
+                on:click={startErgoPacking}
+            >
+                🚀 Start Packing Animation
+            </button>
+        </div>
+    {/if}
+    
+    <!-- Pack Mode Specific Controls -->
+    {#if currentMode === 'pack'}
+        <div class="control-group packing-controls">
+            <div class="control-label">🧠 Transaction Packing Controls</div>
+            
+            <!-- Basic Packing Controls -->
+            <button 
+                class="control-button packing-control"
+                on:click={addPackingDummies}
+            >
+                🎭 Add Test Transactions
+            </button>
+            <button 
+                class="control-button packing-control"
+                on:click={clearPackingTransactions}
+            >
+                🗑️ Clear All
+            </button>
+            <button 
+                class="control-button packing-control"
+                on:click={repackTransactions}
+            >
+                🔄 Re-pack
+            </button>
+        </div>
+        
+        <!-- Packing Block Flow Controls -->
+        <div class="control-group packing-flow-controls">
+            <div class="flow-label">🎬 Packing Block Flow</div>
+            <button 
+                class="control-button flow-control"
+                on:click={togglePackingBlockFlow}
+            >
+                🎬 Toggle Flow
+            </button>
+            <button 
+                class="control-button flow-control test-control"
+                on:click={triggerPackingTestBlockMining}
+                title="Simulate block mining - remove transactions!"
+            >
+                ⛏️ Test Block Mining
+            </button>
+            <button 
+                class="control-button flow-control test-control"
+                on:click={triggerPackingTestTransactionEntry}
+                title="Simulate new transactions arriving!"
+            >
+                📥 Test New Transactions
+            </button>
+        </div>
+    {/if}
+    
+    <!-- Ball Mode Specific Controls -->
+    {#if currentMode === 'ball'}
         <div class="control-group ball-controls">
             <!-- Basic Ball Controls -->
             <button 
@@ -210,26 +360,26 @@
             </button>
         </div>
         
-        <!-- PHASE 2: Block Flow Controls -->
+        <!-- Ball Physics Block Flow Controls -->
         <div class="control-group flow-controls">
-            <div class="flow-label">🎬 Block Flow Animation</div>
+            <div class="flow-label">🎬 Ball Physics Block Flow</div>
             <button 
                 class="control-button flow-control"
                 class:active={blockFlowActive}
-                on:click={toggleBlockFlow}
+                on:click={toggleBallBlockFlow}
             >
                 {blockFlowActive ? '🎬 Flow Active' : '⏸️ Flow Paused'}
             </button>
             <button 
                 class="control-button flow-control test-control"
-                on:click={triggerTestBlockMining}
+                on:click={triggerBallTestBlockMining}
                 title="Simulate a block being mined - balls will fly away!"
             >
                 ⛏️ Test Block Mining
             </button>
             <button 
                 class="control-button flow-control test-control"
-                on:click={triggerTestTransactionEntry}
+                on:click={triggerBallTestTransactionEntry}
                 title="Simulate a new transaction arriving - ball drops from top!"
             >
                 📥 Test New Transaction
@@ -255,6 +405,115 @@
         justify-content: center;
     }
     
+    .main-buttons {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 15px 25px;
+        border-radius: 15px;
+        border: 2px solid rgba(230, 126, 34, 0.3);
+        box-shadow: 0 4px 20px rgba(230, 126, 34, 0.1);
+    }
+    
+    .control-label, .flow-label {
+        font-size: 14px;
+        font-weight: 600;
+        margin-right: 10px;
+        padding: 6px 12px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-light);
+    }
+    
+    /* General control button styling */
+    .control-button {
+        padding: 10px 18px;
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+        color: white;
+        border: 2px solid var(--accent-blue);
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .control-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .control-button:hover::before {
+        left: 100%;
+    }
+    
+    .control-button:hover {
+        background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--accent-blue) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--glow-blue);
+    }
+    
+    .control-button.active {
+        background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+        border-color: var(--light-orange);
+    }
+    
+    .control-button.active:hover {
+        background: linear-gradient(135deg, var(--secondary-orange) 0%, var(--light-orange) 100%);
+        box-shadow: 0 6px 20px var(--glow-orange);
+    }
+    
+    /* Refresh button specific styling */
+    .refresh-button {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        border-color: #2ecc71;
+    }
+    
+    .refresh-button:hover {
+        background: linear-gradient(135deg, #2ecc71 0%, #58d68d 100%);
+        box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+    }
+    
+    /* Hex Controls Styling */
+    .hex-controls {
+        padding: 15px;
+        background: rgba(230, 126, 34, 0.1);
+        border-radius: 12px;
+        border: 2px solid rgba(230, 126, 34, 0.3);
+        animation: hexControlsGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes hexControlsGlow {
+        from { 
+            border-color: rgba(230, 126, 34, 0.3);
+            box-shadow: 0 0 0 rgba(230, 126, 34, 0);
+        }
+        to { 
+            border-color: rgba(230, 126, 34, 0.6);
+            box-shadow: 0 0 20px rgba(230, 126, 34, 0.2);
+        }
+    }
+    
+    .hex-control {
+        background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+        border-color: var(--light-orange);
+        color: white;
+    }
+    
+    .hex-control:hover {
+        background: linear-gradient(135deg, var(--secondary-orange) 0%, var(--light-orange) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--glow-orange);
+    }
+    
+    /* Ball Controls Styling */
     .ball-controls {
         padding: 15px;
         background: rgba(212, 101, 27, 0.1);
@@ -263,42 +522,9 @@
         animation: ballControlsGlow 3s ease-in-out infinite alternate;
     }
     
-    /* PHASE 2: Flow Controls Styling */
-    .flow-controls {
-        padding: 15px;
-        background: rgba(39, 174, 96, 0.1);
-        border-radius: 12px;
-        border: 2px solid rgba(39, 174, 96, 0.3);
-        animation: flowControlsGlow 4s ease-in-out infinite alternate;
-        position: relative;
-        margin-top: 10px;
-    }
-    
-    .flow-label {
-        font-size: 14px;
-        font-weight: 600;
-        color: #27ae60;
-        margin-right: 10px;
-        padding: 6px 12px;
-        background: rgba(39, 174, 96, 0.2);
-        border-radius: 15px;
-        border: 1px solid rgba(39, 174, 96, 0.4);
-    }
-    
     @keyframes ballControlsGlow {
         from { border-color: rgba(212, 101, 27, 0.3); }
         to { border-color: rgba(212, 101, 27, 0.6); }
-    }
-    
-    @keyframes flowControlsGlow {
-        from { 
-            border-color: rgba(39, 174, 96, 0.3);
-            box-shadow: 0 0 0 rgba(39, 174, 96, 0);
-        }
-        to { 
-            border-color: rgba(39, 174, 96, 0.6);
-            box-shadow: 0 0 20px rgba(39, 174, 96, 0.2);
-        }
     }
     
     .ball-control {
@@ -318,7 +544,60 @@
         border-color: #ffb347;
     }
     
-    /* Flow Control Button Styling */
+    /* Packing Controls Styling */
+    .packing-controls {
+        padding: 15px;
+        background: rgba(52, 152, 219, 0.1);
+        border-radius: 12px;
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        animation: packingControlsGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes packingControlsGlow {
+        from { 
+            border-color: rgba(52, 152, 219, 0.3);
+            box-shadow: 0 0 0 rgba(52, 152, 219, 0);
+        }
+        to { 
+            border-color: rgba(52, 152, 219, 0.6);
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.2);
+        }
+    }
+    
+    .packing-control {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        border-color: #5dade2;
+        color: white;
+    }
+    
+    .packing-control:hover {
+        background: linear-gradient(135deg, #5dade2 0%, #85c1e9 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+    
+    /* Flow Controls Styling (shared between pack and ball) */
+    .flow-controls, .packing-flow-controls {
+        padding: 15px;
+        background: rgba(39, 174, 96, 0.1);
+        border-radius: 12px;
+        border: 2px solid rgba(39, 174, 96, 0.3);
+        animation: flowControlsGlow 4s ease-in-out infinite alternate;
+        position: relative;
+        margin-top: 10px;
+    }
+    
+    @keyframes flowControlsGlow {
+        from { 
+            border-color: rgba(39, 174, 96, 0.3);
+            box-shadow: 0 0 0 rgba(39, 174, 96, 0);
+        }
+        to { 
+            border-color: rgba(39, 174, 96, 0.6);
+            box-shadow: 0 0 20px rgba(39, 174, 96, 0.2);
+        }
+    }
+    
     .flow-control {
         background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
         border-color: #2ecc71;
@@ -362,10 +641,6 @@
     .test-control:active {
         transform: translateY(0);
         box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
-    }
-    
-    /* Button press animation for test controls */
-    .test-control:active {
         animation: buttonPress 0.15s ease;
     }
     
@@ -375,7 +650,7 @@
         100% { transform: translateY(-2px) scale(1); }
     }
     
-    /* FIXED: Add CSS classes for flow status animations */
+    /* CSS classes for flow status animations */
     :global(.flow-status-hidden) {
         transform: translateX(100%) !important;
     }
@@ -384,6 +659,7 @@
         transform: translateX(0) !important;
     }
     
+    /* Responsive design */
     @media (max-width: 768px) {
         .controls {
             gap: 10px;
@@ -393,11 +669,15 @@
             gap: 8px;
         }
         
-        .ball-controls, .flow-controls {
+        .main-buttons {
+            padding: 12px 20px;
+        }
+        
+        .ball-controls, .packing-controls, .hex-controls, .flow-controls, .packing-flow-controls {
             padding: 10px;
         }
         
-        .flow-label {
+        .control-label, .flow-label {
             font-size: 12px;
             padding: 4px 8px;
             margin-right: 6px;
@@ -409,13 +689,23 @@
     }
     
     @media (max-width: 600px) {
-        .flow-controls {
+        .main-buttons {
             flex-direction: column;
             align-items: center;
             gap: 8px;
         }
         
-        .flow-label {
+        .main-buttons .control-button {
+            width: 200px;
+        }
+        
+        .flow-controls, .packing-flow-controls {
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-label, .flow-label {
             margin-right: 0;
             margin-bottom: 5px;
         }
