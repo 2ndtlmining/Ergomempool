@@ -203,3 +203,170 @@
 <!-- Modals -->
 <DonationModal bind:showModal={showDonationModal} />
 <TestTransactionModal bind:showModal={showTestModal} />
+
+<style>
+    /* MOBILE-ONLY CSS - Desktop styles remain unchanged in app.css */
+    
+    /* Ensure consistent button scaling across ALL screen sizes */
+    .test-transaction-button,
+    .connect-button {
+        min-width: 120px !important;
+        max-width: 180px !important;
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+    }
+    
+    @media (max-width: 768px) {
+        /* Force header to be horizontal flexbox */
+        .header {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 8px 12px !important;
+            gap: 0 !important;
+            min-height: auto !important;
+        }
+        
+        /* Logo - fixed width, stays on left */
+        .logo {
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        .logo-image {
+            height: 32px !important;
+        }
+        
+        /* Wallet section - force horizontal layout for its children */
+        .wallet-section {
+            flex: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 6px !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+        }
+        
+        /* Medium tablet sizing */
+        .test-transaction-button,
+        .connect-button {
+            min-width: 100px !important;
+            max-width: 140px !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+        }
+        
+        /* Test Transaction Button - fixed size */
+        .test-transaction-button {
+            flex-shrink: 0 !important;
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+            margin-right: 0 !important;
+            white-space: nowrap !important;
+            min-width: fit-content !important;
+            max-width: 140px !important;
+        }
+        
+        /* Connect Button - fixed size, don't let it grow */
+        .connect-button {
+            flex-shrink: 0 !important;
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+            white-space: nowrap !important;
+            min-width: fit-content !important;
+            max-width: 140px !important;
+        }
+        
+        /* Wallet Info - compact but not too small */
+        .wallet-info-display {
+            flex-shrink: 0 !important;
+            padding: 6px 8px !important;
+            font-size: 10px !important;
+            min-width: 120px !important;
+            max-width: 160px !important;
+        }
+        
+        .wallet-info-display .address {
+            display: none !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .header {
+            padding: 6px 8px !important;
+            gap: 6px !important;
+        }
+        
+        .logo-image {
+            height: 32px !important;
+        }
+        
+        /* More compact buttons */
+        .test-transaction-button {
+            padding: 6px 8px !important;
+            font-size: 11px !important;
+            max-width: 120px !important;
+        }
+        
+        .connect-button {
+            padding: 6px 8px !important;
+            font-size: 11px !important;
+            max-width: 120px !important;
+        }
+        
+        /* Even more compact wallet display */
+        .wallet-info-display {
+            padding: 4px 6px !important;
+            font-size: 9px !important;
+            min-width: 100px !important;
+            max-width: 130px !important;
+        }
+        
+        .disconnect-icon-btn {
+            width: 20px !important;
+            height: 20px !important;
+        }
+        
+        .disconnect-icon {
+            width: 10px !important;
+            height: 10px !important;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .header {
+            padding: 4px 6px !important;
+            gap: 4px !important;
+        }
+        
+        .logo-image {
+            height: 28px !important;
+        }
+        
+        /* Very compact for tiny screens */
+        .test-transaction-button {
+            padding: 4px 6px !important;
+            font-size: 10px !important;
+            max-width: 100px !important;
+        }
+        
+        .connect-button {
+            padding: 4px 6px !important;
+            font-size: 10px !important;
+            max-width: 100px !important;
+        }
+        
+        .wallet-info-display {
+            padding: 3px 4px !important;
+            font-size: 8px !important;
+            min-width: 80px !important;
+            max-width: 110px !important;
+        }
+    }
+</style>
