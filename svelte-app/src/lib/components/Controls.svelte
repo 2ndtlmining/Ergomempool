@@ -37,19 +37,7 @@
         onRefresh();
     }
     
-    // Ball Physics Controls
-    function toggleBallInteraction() {
-        if (ballPhysicsRef) {
-            ballInteractionMode = ballPhysicsRef.toggleInteractionMode();
-        }
-    }
-    
-    function toggleBallPhysics() {
-        if (ballPhysicsRef) {
-            ballPhysicsRunning = ballPhysicsRef.togglePhysics();
-        }
-    }
-    
+    // Simplified Ball Physics Controls (only add dummies and clear)
     function addBallDummies() {
         console.log('🎭 Add Ball Dummies button clicked');
         if (ballPhysicsRef) {
@@ -67,26 +55,6 @@
             ballPhysicsRef.clearBalls();
         } else {
             console.error('❌ ballPhysicsRef is null/undefined');
-        }
-    }
-    
-    function toggleBallBlockFlow() {
-        if (ballPhysicsRef) {
-            blockFlowActive = ballPhysicsRef.toggleBlockFlow();
-        }
-    }
-    
-    function triggerBallTestBlockMining() {
-        if (ballPhysicsRef) {
-            ballPhysicsRef.triggerTestBlockMining();
-            showFlowStatus('🎬 Ball physics: Test block mining triggered!', 'success');
-        }
-    }
-    
-    function triggerBallTestTransactionEntry() {
-        if (ballPhysicsRef) {
-            ballPhysicsRef.triggerTestTransactionEntry();
-            showFlowStatus('📥 Ball physics: Test transaction entry triggered!', 'info');
         }
     }
     
@@ -281,7 +249,7 @@
         </div>
     {/if}
     
-    <!-- Pack Mode Specific Controls (SHOWN BY DEFAULT NOW) -->
+    <!-- Pack Mode Specific Controls -->
     {#if currentMode === 'pack'}
         <div class="control-group packing-controls">
             <div class="control-label">🧠 Transaction Packing Controls</div>
@@ -333,63 +301,6 @@
         </div>
     {/if}
     
-    <!-- Ball Mode Specific Controls -->
-    {#if currentMode === 'ball'}
-        <div class="control-group ball-controls">
-            <!-- Basic Ball Controls -->
-            <button 
-                class="control-button ball-control"
-                class:active={ballInteractionMode === 'navigate'}
-                on:click={toggleBallInteraction}
-            >
-                {ballInteractionMode === 'bounce' ? '🔗 Navigate Mode' : '🏀 Bounce Mode'}
-            </button>
-            <button 
-                class="control-button ball-control"
-                on:click={toggleBallPhysics}
-            >
-                {ballPhysicsRunning ? '⏸️ Pause' : '▶️ Play'}
-            </button>
-            <button 
-                class="control-button ball-control"
-                on:click={addBallDummies}
-            >
-                🎭 Add Dummies
-            </button>
-            <button 
-                class="control-button ball-control"
-                on:click={clearBalls}
-            >
-                🗑️ Clear
-            </button>
-        </div>
-        
-        <!-- Ball Physics Block Flow Controls -->
-        <div class="control-group flow-controls">
-            <div class="flow-label">🎬 Ball Physics Block Flow</div>
-            <button 
-                class="control-button flow-control"
-                class:active={blockFlowActive}
-                on:click={toggleBallBlockFlow}
-            >
-                {blockFlowActive ? '🎬 Flow Active' : '⏸️ Flow Paused'}
-            </button>
-            <button 
-                class="control-button flow-control test-control"
-                on:click={triggerBallTestBlockMining}
-                title="Simulate a block being mined - balls will fly away!"
-            >
-                ⛏️ Test Block Mining
-            </button>
-            <button 
-                class="control-button flow-control test-control"
-                on:click={triggerBallTestTransactionEntry}
-                title="Simulate a new transaction arriving - ball drops from top!"
-            >
-                📥 Test New Transaction
-            </button>
-        </div>
-    {/if}
 </div>
 
 <style>
@@ -514,34 +425,23 @@
         box-shadow: 0 6px 20px var(--glow-orange);
     }
     
-    .ball-controls {
-        padding: 15px;
-        background: rgba(212, 101, 27, 0.1);
-        border-radius: 12px;
-        border: 2px solid rgba(212, 101, 27, 0.3);
-        animation: ballControlsGlow 3s ease-in-out infinite alternate;
-    }
     
     @keyframes ballControlsGlow {
         from { border-color: rgba(212, 101, 27, 0.3); }
         to { border-color: rgba(212, 101, 27, 0.6); }
     }
     
-    .ball-control {
-        background: linear-gradient(135deg, #d4651b 0%, #e8730f 100%);
-        border-color: #f2892a;
-        color: white;
-    }
+
     
-    .ball-control:hover {
-        background: linear-gradient(135deg, #e8730f 0%, #f2892a 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(212, 101, 27, 0.4);
-    }
-    
-    .ball-control.active {
-        background: linear-gradient(135deg, #f2892a 0%, #ffb347 100%);
-        border-color: #ffb347;
+    @keyframes ballModeGlow {
+        from { 
+            border-color: rgba(212, 101, 27, 0.3);
+            box-shadow: 0 4px 20px rgba(212, 101, 27, 0.1);
+        }
+        to { 
+            border-color: rgba(212, 101, 27, 0.5);
+            box-shadow: 0 6px 25px rgba(212, 101, 27, 0.2);
+        }
     }
     
     .packing-controls {
@@ -576,7 +476,7 @@
         box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
     }
     
-    .flow-controls, .packing-flow-controls {
+    .packing-flow-controls {
         padding: 15px;
         background: rgba(39, 174, 96, 0.1);
         border-radius: 12px;
@@ -608,21 +508,6 @@
         background: linear-gradient(135deg, #2ecc71 0%, #58d68d 100%);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-    }
-    
-    .flow-control.active {
-        background: linear-gradient(135deg, #58d68d 0%, #7dcea0 100%);
-        border-color: #7dcea0;
-        animation: activeFlowPulse 2s ease-in-out infinite alternate;
-    }
-    
-    @keyframes activeFlowPulse {
-        from { 
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-        }
-        to { 
-            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.6);
-        }
     }
     
     .test-control {
@@ -669,7 +554,7 @@
             padding: 12px 20px;
         }
         
-        .ball-controls, .packing-controls, .hex-controls, .flow-controls, .packing-flow-controls {
+        .packing-controls, .hex-controls, .packing-flow-controls {
             padding: 10px;
         }
         
@@ -682,6 +567,10 @@
         .test-control {
             font-size: 12px;
         }
+        
+
+        
+
     }
     
     @media (max-width: 600px) {
@@ -695,7 +584,7 @@
             width: 200px;
         }
         
-        .flow-controls, .packing-flow-controls {
+        .packing-flow-controls {
             flex-direction: column;
             align-items: center;
             gap: 8px;
@@ -705,5 +594,8 @@
             margin-right: 0;
             margin-bottom: 5px;
         }
+    
+        
+
     }
 </style>
