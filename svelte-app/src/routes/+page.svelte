@@ -1,4 +1,4 @@
-<!-- Updated +page.svelte with simplified mode handling -->
+<!-- Updated +page.svelte with TransactionPackingGrid as default -->
 
 <script>
     import { onMount, onDestroy } from 'svelte';
@@ -21,7 +21,7 @@
     import '../app.css';
     
     let intervalIds = [];
-    let currentMode = 'grid'; // Default mode: 'grid', 'hex', 'pack', 'ball'
+    let currentMode = 'pack'; // CHANGED: Default to TransactionPackingGrid
     let ergoPackingRef;
     let ballPhysicsRef;
     let transactionPackingRef;
@@ -37,6 +37,10 @@
         statusClass: 'info'
     };
     
+    // State to track if initial data has been loaded
+    let dataLoaded = false;
+    let componentsReady = false;
+    
     // Connect controls to components when ready
     $: if (controlsRef && ballPhysicsRef) {
         controlsRef.setBallPhysicsRef(ballPhysicsRef);
@@ -48,12 +52,15 @@
     
     $: if (controlsRef && transactionPackingRef) {
         controlsRef.setTransactionPackingRef(transactionPackingRef);
+        componentsReady = true;
     }
     
     // Enhanced debug logging
     $: {
         console.log('🎯 Main page state changed:', {
             currentMode,
+            dataLoaded,
+            componentsReady,
             willShow: getDisplayModeName(currentMode)
         });
     }
@@ -68,10 +75,14 @@
         }
     }
     
-    onMount(() => {
-        console.log('🚀 Ergomempool SvelteKit app initialized');
-        loadAllData();
+    onMount(async () => {
+        console.log('🚀 Ergomempool SvelteKit app initialized with TransactionPackingGrid as default');
         
+        // Load initial data first
+        await loadAllData();
+        dataLoaded = true;
+        
+        // Set up auto-refresh intervals
         const transactionInterval = setInterval(loadTransactions, 30000);
         const priceInterval = setInterval(loadPrice, 300000);
         const blockInterval = setInterval(loadBlocks, 30000);
@@ -79,6 +90,14 @@
         intervalIds = [transactionInterval, priceInterval, blockInterval];
         
         console.log('⏰ Auto-refresh intervals set up');
+        
+        // Initialize Controls component with default mode
+        setTimeout(() => {
+            if (controlsRef && controlsRef.setMode) {
+                controlsRef.setMode('pack');
+                console.log('🎯 Set initial mode to pack in Controls component');
+            }
+        }, 100);
     });
     
     onDestroy(() => {
@@ -89,14 +108,18 @@
     async function loadAllData() {
         console.log('📡 Loading all data...');
         try {
-            await Promise.all([
-                loadTransactions(),
-                loadPrice(),
-                loadBlocks()
-            ]);
+            // Load data sequentially to ensure dependencies are met
+            await loadPrice();
+            await loadBlocks();
+            await loadTransactions(); // Load transactions last since they depend on price
+            
             console.log('✅ All data loaded successfully');
         } catch (error) {
             console.error('❌ Error loading data:', error);
+            // Set fallback data to prevent crashes
+            transactions.set([]);
+            currentPrice.set(1.0);
+            blockData.set([]);
         }
     }
     
@@ -110,6 +133,8 @@
             console.log(`📊 Loaded ${txWithUsd.length} transactions`);
         } catch (error) {
             console.error('❌ Error loading transactions:', error);
+            // Set empty array as fallback
+            transactions.set([]);
         }
     }
     
@@ -120,6 +145,8 @@
             console.log(`💰 Current ERG price: $${priceData.price}`);
         } catch (error) {
             console.error('❌ Error loading price:', error);
+            // Set fallback price
+            currentPrice.set(1.0);
         }
     }
     
@@ -130,6 +157,8 @@
             console.log(`🧱 Loaded ${blocks.length} blocks`);
         } catch (error) {
             console.error('❌ Error loading blocks:', error);
+            // Set empty array as fallback
+            blockData.set([]);
         }
     }
     
@@ -183,9 +212,9 @@
                 currentMode = controlsRef.getCurrentMode();
                 console.log('🎯 Updated mode from Controls:', currentMode);
             } else {
-                // Fallback to grid mode
-                currentMode = 'grid';
-                console.log('📊 Fallback to grid mode');
+                // Fallback to pack mode (our new default)
+                currentMode = 'pack';
+                console.log('📊 Fallback to pack mode');
             }
         }
     }
@@ -239,28 +268,37 @@
             onPack={handlePack} 
         />
         
-        <!-- Priority-based conditional rendering -->
-        {#if currentMode === 'hex'}
-            <!-- Hexagon Packing Mode -->
-            <ErgoPackingGrid 
-                bind:this={ergoPackingRef}
-                packingStats={currentPackingStats} 
-            />
-        {:else if currentMode === 'ball'}
-            <!-- Ball Physics Mode -->
-            <BallPhysicsGrid 
-                bind:this={ballPhysicsRef}
-                packingStats={currentPackingStats} 
-            />
-        {:else if currentMode === 'pack'}
-            <!-- Transaction Packing Mode -->
-            <TransactionPackingGrid 
-                bind:this={transactionPackingRef}
-                bind:packingStats={currentPackingStats}
-            />
+        <!-- Only render visualization components after data is loaded -->
+        {#if dataLoaded}
+            <!-- Priority-based conditional rendering -->
+            {#if currentMode === 'hex'}
+                <!-- Hexagon Packing Mode -->
+                <ErgoPackingGrid 
+                    bind:this={ergoPackingRef}
+                    packingStats={currentPackingStats} 
+                />
+            {:else if currentMode === 'ball'}
+                <!-- Ball Physics Mode -->
+                <BallPhysicsGrid 
+                    bind:this={ballPhysicsRef}
+                    packingStats={currentPackingStats} 
+                />
+            {:else if currentMode === 'pack'}
+                <!-- Transaction Packing Mode (NEW DEFAULT) -->
+                <TransactionPackingGrid 
+                    bind:this={transactionPackingRef}
+                    bind:packingStats={currentPackingStats}
+                />
+            {:else}
+                <!-- Fallback Grid Mode -->
+                <MempoolGrid />
+            {/if}
         {:else}
-            <!-- Default Grid Mode -->
-            <MempoolGrid />
+            <!-- Loading state while data loads -->
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading transaction data...</div>
+            </div>
         {/if}
     </main>
     
@@ -299,7 +337,7 @@
         transition: all 0.3s ease;
     }
     
-    /* Grid mode (default) */
+    /* Grid mode */
     .visualizer.grid-mode {
         background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
     }
@@ -321,7 +359,7 @@
         margin-bottom: 20px;
     }
     
-    /* Transaction Packing mode */
+    /* Transaction Packing mode (NEW DEFAULT) */
     .visualizer.pack-mode {
         min-height: 700px;
         background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, var(--dark-bg) 100%);
@@ -349,6 +387,38 @@
         text-shadow: 0 2px 4px rgba(212, 101, 27, 0.3);
     }
     
+    /* Loading state styling */
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        gap: 20px;
+    }
+    
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(52, 152, 219, 0.2);
+        border-left: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+        color: var(--text-light);
+        font-size: 16px;
+        font-weight: 500;
+        text-align: center;
+        opacity: 0.8;
+    }
+    
     @media (max-width: 768px) {
         .visualizer {
             padding: 15px;
@@ -363,6 +433,19 @@
         .visualizer.pack-mode,
         .visualizer.ball-mode {
             min-height: 500px;
+        }
+        
+        .loading-container {
+            min-height: 200px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .loading-text {
+            font-size: 14px;
         }
     }
     

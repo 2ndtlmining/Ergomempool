@@ -3,8 +3,8 @@
     export let onRefresh;
     export let onPack;
     
-    // Current view mode
-    let currentMode = 'grid'; // 'grid', 'hex', 'pack', 'ball'
+    // Current view mode - CHANGED TO PACK AS DEFAULT
+    let currentMode = 'pack'; // 'grid', 'hex', 'pack', 'ball'
     
     // References to different visualization components
     let ballPhysicsRef;
@@ -16,6 +16,7 @@
     let ballPhysicsRunning = true;
     let blockFlowActive = false;
     
+    // Combined internal and external setMode function
     function setMode(mode) {
         console.log(`🎯 Setting mode to: ${mode}`);
         currentMode = mode;
@@ -27,6 +28,9 @@
             onPack(false); // Disable hexagon packing mode
         }
     }
+    
+    // Export setMode function for external access
+    export { setMode };
     
     function handleRefresh() {
         console.log('🔄 Refresh clicked');
@@ -277,7 +281,7 @@
         </div>
     {/if}
     
-    <!-- Pack Mode Specific Controls -->
+    <!-- Pack Mode Specific Controls (SHOWN BY DEFAULT NOW) -->
     {#if currentMode === 'pack'}
         <div class="control-group packing-controls">
             <div class="control-label">🧠 Transaction Packing Controls</div>
@@ -409,8 +413,8 @@
         background: rgba(255, 255, 255, 0.02);
         padding: 15px 25px;
         border-radius: 15px;
-        border: 2px solid rgba(230, 126, 34, 0.3);
-        box-shadow: 0 4px 20px rgba(230, 126, 34, 0.1);
+        border: 2px solid rgba(52, 152, 219, 0.3);
+        box-shadow: 0 4px 20px rgba(52, 152, 219, 0.1);
     }
     
     .control-label, .flow-label {
@@ -424,7 +428,6 @@
         color: var(--text-light);
     }
     
-    /* General control button styling */
     .control-button {
         padding: 10px 18px;
         background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
@@ -470,7 +473,6 @@
         box-shadow: 0 6px 20px var(--glow-orange);
     }
     
-    /* Refresh button specific styling */
     .refresh-button {
         background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
         border-color: #2ecc71;
@@ -481,7 +483,6 @@
         box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
     }
     
-    /* Hex Controls Styling */
     .hex-controls {
         padding: 15px;
         background: rgba(230, 126, 34, 0.1);
@@ -513,7 +514,6 @@
         box-shadow: 0 6px 20px var(--glow-orange);
     }
     
-    /* Ball Controls Styling */
     .ball-controls {
         padding: 15px;
         background: rgba(212, 101, 27, 0.1);
@@ -544,23 +544,23 @@
         border-color: #ffb347;
     }
     
-    /* Packing Controls Styling */
     .packing-controls {
         padding: 15px;
-        background: rgba(52, 152, 219, 0.1);
+        background: rgba(52, 152, 219, 0.15);
         border-radius: 12px;
-        border: 2px solid rgba(52, 152, 219, 0.3);
+        border: 2px solid rgba(52, 152, 219, 0.4);
         animation: packingControlsGlow 3s ease-in-out infinite alternate;
+        box-shadow: 0 4px 20px rgba(52, 152, 219, 0.1);
     }
     
     @keyframes packingControlsGlow {
         from { 
-            border-color: rgba(52, 152, 219, 0.3);
-            box-shadow: 0 0 0 rgba(52, 152, 219, 0);
+            border-color: rgba(52, 152, 219, 0.4);
+            box-shadow: 0 4px 20px rgba(52, 152, 219, 0.1);
         }
         to { 
-            border-color: rgba(52, 152, 219, 0.6);
-            box-shadow: 0 0 20px rgba(52, 152, 219, 0.2);
+            border-color: rgba(52, 152, 219, 0.7);
+            box-shadow: 0 6px 25px rgba(52, 152, 219, 0.2);
         }
     }
     
@@ -576,7 +576,6 @@
         box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
     }
     
-    /* Flow Controls Styling (shared between pack and ball) */
     .flow-controls, .packing-flow-controls {
         padding: 15px;
         background: rgba(39, 174, 96, 0.1);
@@ -626,7 +625,6 @@
         }
     }
     
-    /* Test Control Specific Styling */
     .test-control {
         background: linear-gradient(135deg, #3498db 0%, #5dade2 100%);
         border-color: #5dade2;
@@ -650,7 +648,6 @@
         100% { transform: translateY(-2px) scale(1); }
     }
     
-    /* CSS classes for flow status animations */
     :global(.flow-status-hidden) {
         transform: translateX(100%) !important;
     }
@@ -659,7 +656,6 @@
         transform: translateX(0) !important;
     }
     
-    /* Responsive design */
     @media (max-width: 768px) {
         .controls {
             gap: 10px;

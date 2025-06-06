@@ -1,4 +1,4 @@
-<!-- Complete Responsive TransactionPackingGrid.svelte -->
+<!-- Enhanced TransactionPackingGrid.svelte - preserving all functionality + new animations -->
 <script>
     import { transactions, walletConnector, blockData } from '$lib/stores.js';
     import { onMount, onDestroy } from 'svelte';
@@ -6,29 +6,36 @@
     import { GravityPackingAlgorithm } from '$lib/PackingAlgorithm.js';
     import { BlockFlowManager } from '$lib/BlockFlowManager.js';
     
-    // BLOCKCHAIN CONFIGURATION
+    // UNCHANGED - blockchain configuration
     const BLOCKCHAIN_CONFIG = {
         maxBlockSizeBytes: 2 * 1024 * 1024, // 2MB block capacity
-        animationDelay: 60 // ms between transaction animations
+        animationDelay: 80, // ms between transaction animations
+        repackDelay: 500,   // NEW: debounce delay for repacking
+        sweepSpeed: 120     // NEW: ms between sweep confirmations
     };
     
-    // Responsive container dimensions
+    // UNCHANGED - responsive container dimensions
     let containerDimensions = { width: 800, height: 600 };
     
-    // Component state
+    // UNCHANGED - component state
     let packingContainer;
     let transactionObjects = [];
     let packingAlgorithm;
     let isPackingActive = false;
     let blockFlowManager;
     let blockFlowActive = false;
-    let lastBlockHeight = 0; // Track last known block height
+    let lastBlockHeight = 0;
     
-    // Capacity tracking
+    // UNCHANGED - capacity tracking
     let currentCapacityBytes = 0;
     let isBlockFull = false;
     
-    // Export stats for parent component
+    // NEW - animation state
+    let repackTimeout = null;
+    let isMining = false;
+    let sweepLine = null;
+    
+    // UNCHANGED - export stats for parent component
     export let packingStats = {
         blockCapacity: BLOCKCHAIN_CONFIG.maxBlockSizeBytes,
         mempoolSize: 0,
@@ -40,24 +47,20 @@
         statusClass: 'info'
     };
     
-    // Responsive container size calculation
+    // UNCHANGED - responsive container size calculation
     function updateContainerSize() {
         const screenWidth = window.innerWidth;
         
         if (screenWidth <= 480) {
-            // Mobile phones
             containerDimensions = { width: screenWidth - 20, height: 350 };
         } else if (screenWidth <= 768) {
-            // Tablets
             containerDimensions = { width: screenWidth - 40, height: 450 };
         } else {
-            // Desktop
             containerDimensions = { width: 800, height: 600 };
         }
         
         console.log(`📱 Container size updated: ${containerDimensions.width}x${containerDimensions.height}`);
         
-        // Reinitialize algorithm with new dimensions if it exists
         if (packingAlgorithm) {
             packingAlgorithm = new GravityPackingAlgorithm(
                 containerDimensions.width,
@@ -65,16 +68,15 @@
                 BLOCKCHAIN_CONFIG.maxBlockSizeBytes
             );
             
-            // Re-run packing if we have transactions
             if (transactionObjects.length > 0) {
                 setTimeout(() => {
-                    runPackingAlgorithm();
+                    scheduleRepack('container resize');
                 }, 100);
             }
         }
     }
     
-    // Initialize packing algorithm
+    // UNCHANGED - mount logic
     onMount(() => {
         updateContainerSize();
         window.addEventListener('resize', updateContainerSize);
@@ -86,18 +88,24 @@
                 BLOCKCHAIN_CONFIG.maxBlockSizeBytes
             );
             
+            // Create sweep line element
+            createSweepLine();
+            
             console.log('📦 Transaction Packing Grid initialized');
             
-            // Initialize with existing transactions if any
             if ($transactions.length > 0) {
                 initializeFromExistingTransactions();
             }
         }
     });
     
-    // Cleanup resize listener
+    // UNCHANGED - cleanup
     onDestroy(() => {
         window.removeEventListener('resize', updateContainerSize);
+        
+        if (repackTimeout) {
+            clearTimeout(repackTimeout);
+        }
         
         console.log('🧹 Cleaning up Transaction Packing Grid');
         
@@ -107,128 +115,160 @@
             blockFlowManager.destroy();
         }
         
-        // Remove any remaining status notifications
         const statusElements = document.querySelectorAll('.capacity-status');
         statusElements.forEach(el => el.remove());
     });
     
-    // Watch for transaction changes and auto-repack
+    // UNCHANGED - reactive watchers (but now with debounced repacking)
     $: if ($transactions.length >= 0 && packingAlgorithm) {
         handleTransactionChanges();
     }
     
-    // Watch for new blocks and auto-repack
     $: if ($blockData.length > 0 && packingAlgorithm && transactionObjects.length > 0) {
         handleNewBlock();
     }
     
-    // Watch for wallet changes to update highlighting
     $: if ($walletConnector.connectedAddress && transactionObjects.length > 0) {
         updateWalletHighlighting();
     }
     
+    // UNCHANGED - initialization
     function initializeFromExistingTransactions() {
         console.log(`📥 Loading ${$transactions.length} existing transactions`);
         
-        // Clear existing transaction objects
         clearAllTransactionsInternal();
         
-        // Create transaction objects from store data
         transactionObjects = $transactions.map(txData => 
             new Transaction(txData, $walletConnector.connectedAddress)
         );
         
-        // Run packing algorithm
-        runPackingAlgorithm();
+        scheduleRepack('initial load');
     }
     
+    // ENHANCED - transaction change handling with new/removal detection
     function handleTransactionChanges() {
-        if (isPackingActive) {
-            console.log('⏳ Packing already active, skipping transaction change handling');
+        if (isPackingActive || isMining) {
+            console.log('⏳ Packing/mining active, skipping transaction change handling');
             return;
         }
         
-        // Detect new transactions
         const existingIds = new Set(transactionObjects.map(tx => tx.id));
+        const currentIds = new Set($transactions.map(tx => tx.id));
+        
+        // Detect new transactions
         const newTransactions = $transactions.filter(txData => !existingIds.has(txData.id));
         
         // Detect removed transactions
-        const currentIds = new Set($transactions.map(tx => tx.id));
         const removedTransactions = transactionObjects.filter(tx => !currentIds.has(tx.id));
         
         let needsRepack = false;
         
-        // Handle new transactions
+        // Handle new transactions with arrival animation
         if (newTransactions.length > 0) {
-            console.log(`📥 Adding ${newTransactions.length} new transactions`);
+            console.log(`📥 Adding ${newTransactions.length} new transactions with arrival animation`);
             
-            // Create new transaction objects
-            const newTxObjects = newTransactions.map(txData => 
-                new Transaction(txData, $walletConnector.connectedAddress)
-            );
-            
-            transactionObjects = [...transactionObjects, ...newTxObjects];
+            handleNewTransactionArrivals(newTransactions);
             needsRepack = true;
         }
         
-        // Handle removed transactions (FIXED)
+        // Handle removed transactions (instant disappear)
         if (removedTransactions.length > 0) {
-            console.log(`📤 Removing ${removedTransactions.length} transactions`);
+            console.log(`📤 Removing ${removedTransactions.length} transactions instantly`);
             
-            // First, properly destroy the removed transaction elements
-            removedTransactions.forEach(tx => {
-                console.log(`🗑️ Destroying transaction: ${tx.id}`);
-                if (tx.element && tx.element.parentNode) {
-                    tx.element.parentNode.removeChild(tx.element);
-                }
-                tx.destroy();
-            });
-            
-            // Remove from our transaction objects array
-            transactionObjects = transactionObjects.filter(tx => currentIds.has(tx.id));
-            
-            console.log(`📊 Remaining transactions: ${transactionObjects.length}`);
+            handleTransactionRemovals(removedTransactions);
             needsRepack = true;
         }
         
-        // Trigger repack if needed
+        // Schedule repack if needed
         if (needsRepack) {
-            console.log('🔄 Changes detected - triggering auto-repack');
-            
-            // Add a small delay to ensure DOM cleanup is complete
-            setTimeout(() => {
-                runPackingAlgorithm();
-            }, 100);
+            scheduleRepack('transaction changes');
         }
     }
     
-    function handleNewBlock() {
-        // Check if we have block data and if there's a new block
+    // NEW - handle new transaction arrivals with animation
+    async function handleNewTransactionArrivals(newTransactions) {
+        for (const txData of newTransactions) {
+            const txObj = new Transaction(txData, $walletConnector.connectedAddress);
+            
+            // Create element immediately but positioned off-screen
+            const maxValue = Math.max(...$transactions.map(tx => tx.value || 0), 1);
+            txObj.createElement(packingContainer, maxValue, containerDimensions.width);
+            
+            // Add to our array
+            transactionObjects.push(txObj);
+            
+            // Start arrival animation (will resolve when complete)
+            txObj.animateArrival(0, 0, containerDimensions.width, 0);
+        }
+        
+        showCapacityStatus(`${newTransactions.length} new transaction${newTransactions.length > 1 ? 's' : ''} arrived`, 'info');
+    }
+    
+    // NEW - handle transaction removals with instant disappear
+    async function handleTransactionRemovals(removedTransactions) {
+        // Animate removal first
+        const removalPromises = removedTransactions.map(tx => tx.animateInstantRemoval());
+        
+        // Wait for all removals to complete
+        await Promise.all(removalPromises);
+        
+        // Clean up
+        removedTransactions.forEach(tx => {
+            if (tx.element && tx.element.parentNode) {
+                tx.element.parentNode.removeChild(tx.element);
+            }
+            tx.destroy();
+        });
+        
+        // Remove from our array
+        const currentIds = new Set($transactions.map(tx => tx.id));
+        transactionObjects = transactionObjects.filter(tx => currentIds.has(tx.id));
+        
+        console.log(`📊 Remaining transactions: ${transactionObjects.length}`);
+        showCapacityStatus(`${removedTransactions.length} transaction${removedTransactions.length > 1 ? 's' : ''} removed`, 'info');
+    }
+    
+    // NEW - debounced repack scheduling
+    function scheduleRepack(reason) {
+        if (repackTimeout) {
+            clearTimeout(repackTimeout);
+        }
+        
+        console.log(`⏰ Scheduling repack in ${BLOCKCHAIN_CONFIG.repackDelay}ms (reason: ${reason})`);
+        
+        repackTimeout = setTimeout(() => {
+            runPackingAlgorithm();
+            repackTimeout = null;
+        }, BLOCKCHAIN_CONFIG.repackDelay);
+    }
+    
+    // UNCHANGED - new block handling (but now with sweep animation)
+    async function handleNewBlock() {
         if ($blockData.length === 0) return;
         
         const latestBlock = $blockData[0];
         const currentBlockHeight = latestBlock.height;
         
-        // If this is a new block (height increased)
         if (lastBlockHeight > 0 && currentBlockHeight > lastBlockHeight) {
-            console.log(`🎉 New block mined: ${lastBlockHeight} → ${currentBlockHeight} - auto-repacking transactions`);
+            console.log(`🎉 Real block mined: ${lastBlockHeight} → ${currentBlockHeight}`);
             
-            // Show notification about block mining
-            showCapacityStatus(`🎉 Block ${currentBlockHeight} mined! Repacking remaining transactions...`, 'success');
+            if (transactionObjects.length > 0) {
+                await performBlockMiningSweep(Math.min(5, transactionObjects.length));
+            }
             
-            // Auto-repack after a short delay to allow transaction data to update
+            showCapacityStatus(`🎉 Block ${currentBlockHeight} mined!`, 'success');
+            
             setTimeout(() => {
                 if (transactionObjects.length > 0) {
-                    console.log(`🔄 Auto-repacking ${transactionObjects.length} remaining transactions after block mining`);
-                    runPackingAlgorithm();
+                    scheduleRepack('block mined');
                 }
-            }, 1000); // 1 second delay to allow mempool to update
+            }, 500);
         }
         
-        // Update last known block height
         lastBlockHeight = currentBlockHeight;
     }
     
+    // UNCHANGED - wallet highlighting
     function updateWalletHighlighting() {
         transactionObjects.forEach(tx => {
             tx.isWallet = tx.isWallet || (
@@ -237,7 +277,6 @@
                  tx.outputs?.some(output => output.address === $walletConnector.connectedAddress))
             );
             
-            // Update visual styling if element exists
             if (tx.element) {
                 if (tx.isWallet) {
                     tx.element.classList.add('wallet-transaction');
@@ -249,12 +288,127 @@
         });
     }
     
+    // NEW - create sweep line element
+    function createSweepLine() {
+        if (!packingContainer) return;
+        
+        sweepLine = document.createElement('div');
+        sweepLine.className = 'mining-sweep-line';
+        sweepLine.style.cssText = `
+            position: absolute;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, #27ae60, transparent);
+            left: -10px;
+            top: 0;
+            opacity: 0;
+            box-shadow: 0 0 15px #27ae60, 0 0 30px #27ae60;
+            z-index: 100;
+            transition: left 0.1s linear;
+        `;
+        
+        packingContainer.appendChild(sweepLine);
+    }
+    
+    // NEW - block mining sweep animation
+    async function performBlockMiningSweep(transactionsToMine) {
+        if (isMining || !sweepLine) return;
+        
+        isMining = true;
+        console.log(`⛏️ Starting mining sweep for ${transactionsToMine} transactions`);
+        
+        // Sort transactions by x position for left-to-right sweep
+        const sortedTransactions = [...transactionObjects]
+            .filter(tx => tx.element && tx.placed)
+            .sort((a, b) => parseInt(a.element.style.left) - parseInt(b.element.style.left))
+            .slice(0, transactionsToMine);
+        
+        if (sortedTransactions.length === 0) {
+            isMining = false;
+            return;
+        }
+        
+        // Show sweep line
+        sweepLine.style.opacity = '1';
+        sweepLine.style.left = '-10px';
+        
+        // Animate sweep line across container
+        const sweepDuration = sortedTransactions.length * BLOCKCHAIN_CONFIG.sweepSpeed;
+        sweepLine.style.transition = `left ${sweepDuration}ms linear`;
+        sweepLine.style.left = containerDimensions.width + 'px';
+        
+        // Confirm transactions as sweep passes them
+        for (let i = 0; i < sortedTransactions.length; i++) {
+            const tx = sortedTransactions[i];
+            const delay = i * BLOCKCHAIN_CONFIG.sweepSpeed;
+            
+            setTimeout(async () => {
+                await tx.animateMiningConfirmation();
+            }, delay);
+        }
+        
+        // Wait for sweep to complete, then animate departures
+        setTimeout(async () => {
+            const departurePromises = sortedTransactions.map((tx, index) => {
+                return new Promise(resolve => {
+                    setTimeout(async () => {
+                        await tx.animateMiningDeparture();
+                        
+                        // Remove from DOM and arrays
+                        if (tx.element && tx.element.parentNode) {
+                            tx.element.parentNode.removeChild(tx.element);
+                        }
+                        tx.destroy();
+                        
+                        resolve();
+                    }, index * 100);
+                });
+            });
+            
+            // Wait for all departures
+            await Promise.all(departurePromises);
+            
+            // Update transaction arrays
+            const minedIds = sortedTransactions.map(tx => tx.id);
+            transactionObjects = transactionObjects.filter(tx => !minedIds.includes(tx.id));
+            $transactions = $transactions.filter(storeTx => !minedIds.includes(storeTx.id));
+            
+            // Hide sweep line
+            sweepLine.style.opacity = '0';
+            sweepLine.style.transition = 'opacity 0.5s ease';
+            
+            // Animate settling of remaining transactions
+            await animateSettlingEffect();
+            
+            isMining = false;
+            
+            console.log(`✅ Mining sweep complete: ${minedIds.length} transactions mined`);
+        }, sweepDuration + 200);
+    }
+    
+    // NEW - settling animation for remaining transactions
+    async function animateSettlingEffect() {
+        console.log('💫 Animating settling effect for remaining transactions');
+        
+        const settlingPromises = transactionObjects.map((tx, index) => {
+            if (tx.element && tx.placed && !tx.moving) {
+                return tx.animateSettling(index * 50);
+            }
+            return Promise.resolve();
+        });
+        
+        await Promise.all(settlingPromises);
+        console.log('💫 Settling effect complete');
+    }
+    
+    // ENHANCED - packing algorithm with new animation system
     async function runPackingAlgorithm() {
-        if (isPackingActive || !packingAlgorithm || !packingContainer) {
+        if (isPackingActive || !packingAlgorithm || !packingContainer || isMining) {
             console.log('⚠️ Cannot run packing: ', {
                 isPackingActive,
                 hasAlgorithm: !!packingAlgorithm,
-                hasContainer: !!packingContainer
+                hasContainer: !!packingContainer,
+                isMining
             });
             return;
         }
@@ -263,80 +417,65 @@
         showPackingStatus(true);
         
         console.log(`🔄 Running packing algorithm for ${transactionObjects.length} transactions`);
-        console.log('🧹 Clearing container before repacking...');
         
-        // Clear the container first to avoid leftover elements
+        // Clear any orphaned elements
         if (packingContainer) {
-            // Remove any existing transaction elements that might be orphaned
             const existingElements = packingContainer.querySelectorAll('.transaction-square');
             existingElements.forEach(element => {
-                element.parentNode.removeChild(element);
+                const hasMatchingTransaction = transactionObjects.some(tx => tx.element === element);
+                if (!hasMatchingTransaction) {
+                    element.parentNode.removeChild(element);
+                }
             });
         }
-        
-        // Reset all transaction elements to ensure clean state
-        transactionObjects.forEach(tx => {
-            tx.element = null; // Force recreation
-            tx.placed = false;
-        });
         
         // Calculate max value for consistent coloring
         const maxValue = Math.max(...transactionObjects.map(tx => tx.value || 0), 1);
         
-        // Run the gravity-based packing algorithm
+        // Run the packing algorithm
         const positions = packingAlgorithm.packTransactions(transactionObjects);
         
         console.log(`📍 Packing algorithm returned ${positions.length} positions`);
         
         // Animate transactions to their new positions
-        let animationDelay = 0;
+        const animationPromises = [];
         
         for (const { transaction, x, y } of positions) {
-            // Create DOM element with consistent max value and responsive sizing
+            // Ensure element exists
             if (!transaction.element) {
                 transaction.createElement(packingContainer, maxValue, containerDimensions.width);
-                
-                // Ensure tooltip event listeners are attached
-                if (transaction.element) {
-                    console.log(`✅ Transaction element created with tooltip for ${transaction.id}`);
-                }
             }
             
-            // Animate to position with staggered timing
-            transaction.animateToPosition(x, y, animationDelay);
-            transaction.placed = true;
-            
-            animationDelay += BLOCKCHAIN_CONFIG.animationDelay;
+            // Animate to position (returns promise)
+            const animationPromise = transaction.animateToPosition(x, y, 0);
+            animationPromises.push(animationPromise);
         }
+        
+        // Wait for all animations to complete
+        await Promise.all(animationPromises);
         
         // Update capacity tracking
         updateCapacityTracking();
+        updatePackingStats();
         
-        // Wait for animations to complete
-        const totalAnimationTime = animationDelay + 600;
-        console.log(`⏱️ Waiting ${totalAnimationTime}ms for animations to complete`);
+        isPackingActive = false;
+        showPackingStatus(false);
         
-        setTimeout(() => {
-            isPackingActive = false;
-            showPackingStatus(false);
-            updatePackingStats();
-            
-            console.log('✅ Packing animation sequence completed');
-            
-            // Validate packing for debugging
-            if (packingAlgorithm.validatePacking()) {
-                console.log('✅ Packing validation passed');
-            } else {
-                console.warn('⚠️ Packing validation failed');
-            }
-            
-            // Final DOM state check
-            const visibleElements = packingContainer?.querySelectorAll('.transaction-square') || [];
-            console.log(`🔍 Final DOM state: ${visibleElements.length} visible transaction elements`);
-            
-        }, totalAnimationTime);
+        console.log('✅ Packing animation sequence completed');
+        
+        // Validate packing
+        if (packingAlgorithm.validatePacking()) {
+            console.log('✅ Packing validation passed');
+        } else {
+            console.warn('⚠️ Packing validation failed');
+        }
+        
+        // Final DOM state check
+        const visibleElements = packingContainer?.querySelectorAll('.transaction-square') || [];
+        console.log(`🔍 Final DOM state: ${visibleElements.length} visible transaction elements`);
     }
     
+    // UNCHANGED - capacity tracking
     function updateCapacityTracking() {
         currentCapacityBytes = transactionObjects
             .filter(tx => tx.placed)
@@ -344,9 +483,8 @@
         
         const utilizationPercent = (currentCapacityBytes / BLOCKCHAIN_CONFIG.maxBlockSizeBytes) * 100;
         const wasBlockFull = isBlockFull;
-        isBlockFull = utilizationPercent >= 95; // Consider full at 95%
+        isBlockFull = utilizationPercent >= 95;
         
-        // Show capacity warnings
         if (utilizationPercent >= 80 && !wasBlockFull) {
             showCapacityStatus(`Block ${utilizationPercent.toFixed(1)}% full`, 'warning');
         }
@@ -360,6 +498,7 @@
         }
     }
     
+    // UNCHANGED - stats update
     function updatePackingStats() {
         const stats = packingAlgorithm.getPackingStats();
         
@@ -372,7 +511,6 @@
             efficiency: stats.efficiency,
             status: `${stats.totalTransactions} transactions packed (${stats.capacityUsed.toFixed(1)}% full)`,
             statusClass: stats.capacityUsed > 90 ? 'error' : stats.capacityUsed > 70 ? 'warning' : 'info',
-            // Additional stats for display
             avgSizeKB: stats.avgSizeKB,
             visualUtilization: stats.visualUtilization,
             remainingCapacity: stats.remainingCapacity
@@ -381,8 +519,8 @@
         console.log('📊 Updated packing stats:', packingStats);
     }
     
+    // UNCHANGED - status functions
     function showCapacityStatus(message, type = 'info') {
-        // Remove existing status
         const existingStatus = document.querySelector('.capacity-status');
         if (existingStatus) existingStatus.remove();
         
@@ -411,12 +549,10 @@
         
         document.body.appendChild(statusDiv);
         
-        // Show animation
         setTimeout(() => {
             statusDiv.style.transform = 'translateX(0)';
         }, 100);
         
-        // Hide animation
         setTimeout(() => {
             statusDiv.style.transform = 'translateX(100%)';
             setTimeout(() => statusDiv.remove(), 300);
@@ -430,7 +566,7 @@
         }
     }
     
-    // Internal clear function (doesn't affect store)
+    // UNCHANGED - internal clear function
     function clearAllTransactionsInternal() {
         console.log(`🧹 Clearing ${transactionObjects.length} transaction objects internally`);
         
@@ -444,7 +580,6 @@
         currentCapacityBytes = 0;
         isBlockFull = false;
         
-        // Also clear any orphaned elements from the container
         if (packingContainer) {
             const orphanedElements = packingContainer.querySelectorAll('.transaction-square');
             orphanedElements.forEach(element => {
@@ -453,32 +588,30 @@
         }
     }
     
-    // Export functions for parent component controls
+    // ENHANCED - export functions with new animations
     export function addDummyTransactions() {
-        console.log('🎭 Adding dummy transactions for testing');
+        console.log('🎭 Adding dummy transactions with arrival animations');
         
-        const dummyCount = 12;
+        const dummyCount = 8;
         const dummyTransactions = [];
         
         for (let i = 0; i < dummyCount; i++) {
             const dummyTx = {
                 id: `dummy_${Date.now()}_${i}`,
-                size: 800 + Math.random() * 15000, // 0.8KB to 15.8KB
-                value: 0.1 + Math.random() * 5,
-                usd_value: (0.1 + Math.random() * 5) * 1.5,
+                size: 800 + Math.random() * 12000,
+                value: 0.1 + Math.random() * 4,
+                usd_value: (0.1 + Math.random() * 4) * 1.5,
                 inputs: [],
                 outputs: [],
                 isDummy: true
             };
             
-            // Check capacity before adding
             const dummyTxObj = new Transaction(dummyTx, $walletConnector.connectedAddress);
             if (currentCapacityBytes + dummyTxObj.sizeBytes <= BLOCKCHAIN_CONFIG.maxBlockSizeBytes) {
                 dummyTransactions.push(dummyTx);
             }
         }
         
-        // Add to transactions store (will trigger reactive update and auto-repack)
         $transactions = [...$transactions, ...dummyTransactions];
         
         showCapacityStatus(`Added ${dummyTransactions.length} dummy transactions`, 'success');
@@ -487,10 +620,7 @@
     export function clearAllTransactions() {
         console.log('🗑️ Clearing all transactions');
         
-        // Destroy all transaction elements
         clearAllTransactionsInternal();
-        
-        // Clear the transactions store (will trigger reactive update)
         $transactions = [];
         
         updatePackingStats();
@@ -499,19 +629,18 @@
     
     export function repackTransactions() {
         console.log('🔄 Manually repacking all transactions');
-        runPackingAlgorithm();
+        scheduleRepack('manual repack');
     }
     
     export function getPackingStats() {
         return packingStats;
     }
     
-    // Block Flow Integration (optional - keep existing functionality)
+    // ENHANCED - block flow integration with new animations
     export function toggleBlockFlow() {
         blockFlowActive = !blockFlowActive;
         
         if (blockFlowActive && !blockFlowManager) {
-            // Initialize block flow manager if needed
             blockFlowManager = new BlockFlowManager(
                 {
                     transactions: () => transactionObjects,
@@ -526,20 +655,21 @@
         return blockFlowActive;
     }
     
-    export function triggerTestBlockMining() {
+    export async function triggerTestBlockMining() {
         if (blockFlowManager) {
             blockFlowManager.triggerTestBlockMining();
         } else {
-            console.log('🧪 Simulating block mining - removing some transactions');
+            console.log('🧪 Simulating realistic block mining with sweep animation...');
             
-            // Remove 20-30% of transactions to simulate mining
-            const removeCount = Math.floor(transactionObjects.length * 0.25);
-            const removedTxIds = transactionObjects.slice(0, removeCount).map(tx => tx.id);
+            if (transactionObjects.length === 0) {
+                showCapacityStatus('No transactions to mine', 'info');
+                return;
+            }
             
-            // Remove from store (will trigger reactive update and auto-repack)
-            $transactions = $transactions.filter(storeTx => !removedTxIds.includes(storeTx.id));
+            const mineCount = Math.min(Math.floor(transactionObjects.length * 0.4), 8);
+            await performBlockMiningSweep(mineCount);
             
-            showCapacityStatus(`Block mined! ${removeCount} transactions confirmed`, 'success');
+            console.log(`✅ Test block mined: ${mineCount} transactions confirmed`);
         }
     }
     
@@ -547,17 +677,19 @@
         if (blockFlowManager) {
             blockFlowManager.triggerTestTransactionEntry();
         } else {
-            console.log('🧪 Simulating new transactions arriving');
+            console.log('🧪 Simulating new transactions arriving from left');
             addDummyTransactions();
         }
     }
 </script>
 
+<!-- UNCHANGED - template with sweep line added -->
 <div class="transaction-packing-container">
     <div 
         class="transaction-packing-area" 
         class:block-full={isBlockFull}
         class:block-flow-active={blockFlowActive}
+        class:mining-active={isMining}
         style="width: {containerDimensions.width}px; height: {containerDimensions.height}px;"
         bind:this={packingContainer}
     >
@@ -567,7 +699,9 @@
             {#if blockFlowActive}
                 <span class="flow-indicator">🎬 LIVE</span>
             {/if}
-            {#if isBlockFull}
+            {#if isMining}
+                <span class="mining-indicator">⛏️ MINING</span>
+            {:else if isBlockFull}
                 <span class="full-indicator">🚫 FULL</span>
             {:else if (currentCapacityBytes / BLOCKCHAIN_CONFIG.maxBlockSizeBytes) > 0.8}
                 <span class="warning-indicator">⚠️ {((currentCapacityBytes / BLOCKCHAIN_CONFIG.maxBlockSizeBytes) * 100).toFixed(0)}%</span>
@@ -593,10 +727,13 @@
                 {((currentCapacityBytes / BLOCKCHAIN_CONFIG.maxBlockSizeBytes) * 100).toFixed(1)}% Used
             </div>
         </div>
+        
+        <!-- Arrival and departure zones removed for cleaner look -->
     </div>
 </div>
 
 <style>
+    /* UNCHANGED - basic container styles */
     .transaction-packing-container {
         width: 100%;
         max-width: 900px;
@@ -619,6 +756,21 @@
         box-shadow: 0 8px 32px rgba(39, 174, 96, 0.3);
     }
     
+    .transaction-packing-area.mining-active {
+        border-color: #f39c12;
+        box-shadow: 0 8px 32px rgba(243, 156, 18, 0.4);
+        animation: miningPulse 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes miningPulse {
+        from { 
+            box-shadow: 0 8px 32px rgba(243, 156, 18, 0.4);
+        }
+        to { 
+            box-shadow: 0 12px 40px rgba(243, 156, 18, 0.6);
+        }
+    }
+    
     .transaction-packing-area.block-full {
         border: 3px solid #e74c3c;
         box-shadow: 0 8px 32px rgba(231, 76, 60, 0.4);
@@ -636,6 +788,7 @@
         }
     }
     
+    /* UNCHANGED - label styles with new mining indicator */
     .block-label {
         position: absolute;
         top: 10px;
@@ -651,6 +804,20 @@
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+    
+    .mining-indicator {
+        background: #f39c12;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        animation: miningFlash 1s ease-in-out infinite alternate;
+    }
+    
+    @keyframes miningFlash {
+        from { opacity: 1; background: #f39c12; }
+        to { opacity: 0.7; background: #e67e22; }
     }
     
     .flow-indicator {
@@ -689,6 +856,9 @@
         to { opacity: 0.7; }
     }
     
+    /* Side zones removed for cleaner interface */
+    
+    /* UNCHANGED - algorithm status */
     .algorithm-status {
         position: absolute;
         top: 60px;
@@ -708,6 +878,7 @@
         50% { opacity: 0.8; transform: scale(1.05); }
     }
     
+    /* UNCHANGED - capacity indicator */
     .capacity-indicator {
         position: absolute;
         top: 15px;
@@ -755,7 +926,7 @@
         text-align: center;
     }
     
-    /* Transaction square styling */
+    /* UNCHANGED - transaction square styling */
     :global(.transaction-square) {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -799,7 +970,12 @@
         50% { box-shadow: 0 0 12px #f39c1280; }
     }
     
-    /* Tooltip styling - same as MempoolGrid */
+    /* NEW - mining sweep line styling */
+    :global(.mining-sweep-line) {
+        transition: left 0.1s linear, opacity 0.5s ease;
+    }
+    
+    /* UNCHANGED - tooltip styling (preserved exactly) */
     :global(.transaction-tooltip) {
         position: absolute !important;
         background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%) !important;
@@ -819,7 +995,7 @@
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
     }
     
-    /* Responsive adjustments */
+    /* UNCHANGED - responsive adjustments */
     @media (max-width: 768px) {
         .block-label {
             font-size: 12px;
@@ -834,6 +1010,8 @@
         .capacity-bar {
             width: 60px;
         }
+        
+
     }
     
     @media (max-width: 480px) {
@@ -855,5 +1033,6 @@
         .capacity-text {
             font-size: 10px;
         }
+        
     }
 </style>
