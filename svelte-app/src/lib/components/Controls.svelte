@@ -257,7 +257,7 @@
             class:active={currentMode === 'ball'}
             on:click={() => setMode('ball')}
         >
-            🏀 Ball
+            🏀 Ballzy
         </button>
         
         <button 
