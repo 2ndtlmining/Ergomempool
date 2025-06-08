@@ -431,7 +431,7 @@ export const PLATFORM_CONFIGS = {
     color: "#e74c3c",
     website: "https://app.hodlcoin.co.in/",
     contractAddresses: [
-      // NFT marketplace addresses - add real addresses here
+      // Hold Erg
       "TZPn3oLcgqXcSLXXguTKqW6TXsMC9brGikXUrMfygBTPdeLgbKLkWj63EQ8rUQQodcVveRjDSigJ3CVd8yjeBwY4jQLr6ZMxDXTPn7V42zNTskCp18maQwN3p4S82tezBcJnTdWoSzeQVbqhARUyNNFjKdyKc6Z49XKkQL7jktSJcG4fnFayBqPZRhQMEB1ZZ12bU2rX5SkQj5jE65N2ZFCTi6WbNeNWWZQYPtZv8fGVLmNdhxgg968LYPLNLBJVa7rUo6Nyce4CszBYq44bD14rvKMZXq1zQ6ZjkFRfmXjDFg92MsXGuENuZdPnTgKJ7Cdct3EP4UFjgZx1PQSauX8own7pPEAf9MBRdF84WNqo9cbZhvrhUVvispD6bP2AoCZWKkrppi1atoV22RPxbouC1rkpsKW287HAXxfiwP8VKVDRUi1aVjRvFP13RpyrBf9cu1z44xnJwTC9ui38XPAUjz4DWp87mGh6JC54z2Mqyk2nEaai7nBP4fPW53XSExd5AK5JC9fVyfdrRtiR5ADkcc2yqXrF",
     ]
   },
@@ -442,7 +442,7 @@ export const PLATFORM_CONFIGS = {
     color: "#34495e",
     website: "https://sigmafi.app/",
     contractAddresses: [
-      // Mining pool payout addresses - add real addresses here
+      // USD Oracle
       "NTkuk55NdwCXkF1e2nCABxq7bHjtinX3wH13zYPZ6qYT71dCoZBe1gZkh9FAr7GeHo2EpFoibzpNQmoi89atUjKRrhZEYrTapdtXrWU4kq319oY7BEWmtmRU9cMohX69XMuxJjJP5hRM8WQLfFnffbjshhEP3ck9CKVEkFRw1JDYkqVke2JVqoMED5yxLVkScbBUiJJLWq9BSbE1JJmmreNVskmWNxWE6V7ksKPxFMoqh1SVePh3UWAaBgGQRZ7TWf4dTBF5KMVHmRXzmQqEu2Fz2yeSLy23sM3pfqa78VuvoFHnTFXYFFxn3DNttxwq3EU3Zv25SmgrWjLKiZjFcEcqGgH6DJ9FZ1DfucVtTXwyDJutY3ksUBaEStRxoUQyRu4EhDobixL3PUWRcxaRJ8JKA9b64ALErGepRHkAoVmS8DaE6VbroskyMuhkTo7LbrzhTyJbqKurEzoEfhYxus7bMpLTePgKcktgRRyB7MjVxjSpxWzZedvzbjzZaHLZLkWZESk1WtdM25My33wtVLNXiTvficEUbjA23sNd24pv1YQ72nY1aqUHa2",
     ]
   },
@@ -455,7 +455,7 @@ export const PLATFORM_CONFIGS = {
     color: "#34495e",
     website: "https://sigmafi.app/",
     contractAddresses: [
-      // Mining pool payout addresses - add real addresses here
+      // Sigmafi address
       "3FdyuY8fqeTtYcsuvTsmsw4ZBGde2cad6hyntGxzSY3rd4JtTwTvK64xp3XJZvYNTijrTMZMQxkFiULuHpq46VFbAiSSHXLe1qy5WXNRELj4tcx6wEPbSDqzDyVbY6wKFQhmvYQT2XjqLJAiBGV9F6f2uXrjXFPzPnXpVeJnWc8ob1wMqbfgBQKdfu24qx3pejkAfAz2hmQQ57xgzGwHCcGyJdad7UxwmDetAUER8iwE32rygGCmqXaVeKGcJ33epYNGpDLPnYUg3Qz7eYuHHb7mAqwkEp6XGE1jWbf8nS7TA1taNpakssbWYN2YmB9NBG8nWNzLhc9QBdqyAn9WQ63Jh1znt2up6sQJR7xnon9ZsYoeo7bErzg4uoJbTLzwjhZBJ9En9bMX72xUb5zhvSSua6CseMMA6s86g2mwrieRwqFM7CGDypy78MzWS1nagUBKLet8LAFFpb6DKBK1h2HpAvLnMbWB7Kp3rJ4be6ed5crNdZTqhbSww96P2KNSZemhwfgAkUFjMJzB2dEG9VNAW1dMk5nBrS8JsRHhYpPqFcJiFtQvcar1ijs2PqsR9k4P41Y99iomfYXkSoA6z612v1U1C19ASVurzuxGP1vNwNyKLceFVTYXbgkgUFX8Z2nwMz6d2TCa4XTpt9daV5sBV88YJgCiYbL5QhxnoTdYRZbxu725jnV7gbnX9FWjLNaXYJubi5u8kPs3MYzSALeUvtfx6wJV1XyBn5DMbvy8XgFFMKyxtUrfU3dAVaZmUZJnYy8Dz6qrf8tyKx3uU7RfosjV7rcAFRDpozznWRfsxZUir5EzcVFQc9NbjB4HdgJxxvUJ9Nr9F8XCQLL89wCTtaNZBFF284qLtrQ",
     ]
   },
