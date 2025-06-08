@@ -1,4 +1,4 @@
-<!-- UPDATED +page.svelte with Header Integration, Clean Design, and Origin Activity Panel -->
+<!-- ENHANCED +page.svelte with Optimized Space Utilization -->
 
 <script>
     import { onMount, onDestroy } from 'svelte';
@@ -246,7 +246,7 @@
     }
     
     onMount(async () => {
-        console.log('🚀 Ergomempool SvelteKit app initialized - WITH ORIGIN ACTIVITY PANEL');
+        console.log('🚀 Ergomempool SvelteKit app initialized - ENHANCED LAYOUT');
         
         // Stage 1: Load price first (fastest)
         loadingStage = 'price';
@@ -486,57 +486,66 @@
     <!-- Blocks Section -->
     <BlocksSection />
     
-    <main class="visualizer" 
+    <!-- ENHANCED MAIN CONTENT LAYOUT WITH BETTER SPACE UTILIZATION -->
+    <main class="main-content" 
           class:hex-mode={currentMode === 'hex'} 
           class:pack-mode={currentMode === 'pack'} 
           class:ball-mode={currentMode === 'ball'}
           class:grid-mode={currentMode === 'grid'}>
-        <h2>Mempool Visualizer</h2>
         
-        <!-- Stats Display with Add Test Transactions button -->
-        <StatsDisplay 
-            packingStats={currentPackingStats} 
-            {currentMode}
-            onAddTestTransactions={handleAddTestTransactions}
-        />
-        
-        <!-- NEW: Origin Activity Panel -->
-        <OriginActivityPanel />
-        
-        <!-- Dynamic Content Based on Current Mode -->
         {#if coreDataLoaded}
-            {#if currentMode === 'pack'}
-                <!-- Transaction Packing Mode (DEFAULT - Always loaded) -->
-                <TransactionPackingGrid 
-                    bind:this={transactionPackingRef}
-                    bind:packingStats={currentPackingStats}
-                />
-            {:else if currentMode === 'hex' && ErgoPackingGrid}
-                <!-- Hexagon Packing Mode (Lazy loaded) -->
-                <svelte:component 
-                    this={ErgoPackingGrid}
-                    bind:this={ergoPackingRef}
-                    packingStats={currentPackingStats} 
-                />
-            {:else if currentMode === 'ball' && BallPhysicsGrid}
-                <!-- Ball Physics Mode (Lazy loaded) -->
-                <svelte:component 
-                    this={BallPhysicsGrid}
-                    bind:this={ballPhysicsRef}
-                    packingStats={currentPackingStats} 
-                />
-            {:else if currentMode === 'grid' && MempoolGrid}
-                <!-- Grid Mode (Lazy loaded) -->
-                <svelte:component this={MempoolGrid} />
-            {:else}
-                <!-- Loading placeholder for lazy-loaded components -->
-                <div class="lazy-loading-container">
-                    <div class="lazy-loading-spinner"></div>
-                    <div class="lazy-loading-text">Loading {getDisplayModeName(currentMode)}...</div>
-                </div>
-            {/if}
+            <!-- Enhanced Packing/Visualization Area (Main Content) -->
+            <section class="packing-area">
+                {#if currentMode === 'pack'}
+                    <!-- Transaction Packing Mode (DEFAULT - Always loaded) -->
+                    <TransactionPackingGrid 
+                        bind:this={transactionPackingRef}
+                        bind:packingStats={currentPackingStats}
+                    />
+                {:else if currentMode === 'hex' && ErgoPackingGrid}
+                    <!-- Hexagon Packing Mode (Lazy loaded) -->
+                    <svelte:component 
+                        this={ErgoPackingGrid}
+                        bind:this={ergoPackingRef}
+                        packingStats={currentPackingStats} 
+                    />
+                {:else if currentMode === 'ball' && BallPhysicsGrid}
+                    <!-- Ball Physics Mode (Lazy loaded) -->
+                    <svelte:component 
+                        this={BallPhysicsGrid}
+                        bind:this={ballPhysicsRef}
+                        packingStats={currentPackingStats} 
+                    />
+                {:else if currentMode === 'grid' && MempoolGrid}
+                    <!-- Grid Mode (Lazy loaded) -->
+                    <svelte:component this={MempoolGrid} />
+                {:else}
+                    <!-- Loading placeholder for lazy-loaded components -->
+                    <div class="lazy-loading-container">
+                        <div class="lazy-loading-spinner"></div>
+                        <div class="lazy-loading-text">Loading {getDisplayModeName(currentMode)}...</div>
+                    </div>
+                {/if}
+            </section>
+            
+            <!-- Enhanced Right Sidebar: Stats + Platform Activity -->
+            <aside class="sidebar">
+                <!-- Stats Section -->
+                <section class="stats-section">
+                    <StatsDisplay 
+                        packingStats={currentPackingStats} 
+                        {currentMode}
+                        onAddTestTransactions={handleAddTestTransactions}
+                    />
+                </section>
+                
+                <!-- Platform Activity Section -->
+                <section class="platform-section">
+                    <OriginActivityPanel />
+                </section>
+            </aside>
         {:else}
-            <!-- Initial loading state -->
+            <!-- Initial loading state spanning full width -->
             <div class="loading-container">
                 <div class="loading-spinner"></div>
                 <div class="loading-text">
@@ -638,77 +647,107 @@
         line-height: 1.4;
     }
     
-    .visualizer {
+    /* FIXED: Main content layout to eliminate blue area and center properly */
+    .main-content {
         flex: 1;
         background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
-        padding: 25px;
+        padding: 20px;
+        border-top: 1px solid var(--border-color);
+        
+        /* FIXED: Enhanced Responsive Grid Layout */
+        display: grid;
+        gap: 20px;
+        align-items: start;
+        transition: all 0.3s ease;
+        min-width: 0;
+        
+        /* FIXED: Remove overflow hidden that was causing issues */
+        overflow: visible;
+        
+        /* Dynamic grid template based on screen size */
+        grid-template-areas: "packing sidebar";
+        grid-template-columns: 1fr 320px;
+        
+        /* FIXED: Remove problematic margins and ensure proper container behavior */
+        margin: 0;
+        width: 100%;
         box-sizing: border-box;
+    }
+    
+    /* FIXED: Enhanced Packing Area with proper centering */
+    .packing-area {
+        grid-area: packing;
+        background: transparent;
+        padding: 0;
+        min-height: 500px;
+        transition: all 0.3s ease;
+        position: relative;
+        
+        /* FIXED: Proper width handling */
+        width: 100%;
+        max-width: 100%;
+        
+        /* FIXED: Better centering approach */
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-height: 400px;
-        border-top: 1px solid var(--border-color);
-        transition: all 0.3s ease;
+        justify-content: flex-start;
+        
+        /* FIXED: Ensure no overflow issues */
+        overflow: visible;
     }
     
-    .visualizer h2 {
-        margin-top: 0;
-        margin-bottom: 25px;
-        color: var(--primary-orange);
-        font-size: 28px;
-        text-shadow: 0 2px 4px rgba(230, 126, 34, 0.3);
-        text-align: center;
-        transition: all 0.3s ease;
+    /* FIXED: Enhanced Sidebar with consistent behavior */
+    .sidebar {
+        grid-area: sidebar;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+        
+        /* FIXED: Consistent width without conflicts */
+        width: 320px;
+        min-width: 320px;
+        max-width: 320px;
+        
+        /* FIXED: Remove problematic padding */
+        padding: 0;
+        box-sizing: border-box;
     }
     
-    .visualizer.grid-mode {
-        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+    /* Ensure both stats and platform sections have consistent styling */
+    .stats-section, .platform-section {
+        width: 100%;
+        box-sizing: border-box;
     }
     
-    .visualizer.grid-mode h2 {
-        color: var(--primary-orange);
-    }
-    
-    .visualizer.hex-mode {
+    /* Mode-specific heights */
+    .main-content.hex-mode .packing-area {
         min-height: 600px;
-        background: linear-gradient(135deg, rgba(230, 126, 34, 0.05) 0%, var(--dark-bg) 100%);
     }
     
-    .visualizer.hex-mode h2 {
-        color: var(--primary-orange);
-        font-size: 28px;
-        text-align: center;
-        margin-bottom: 20px;
+    .main-content.pack-mode .packing-area {
+        min-height: 600px;
     }
     
-    .visualizer.pack-mode {
-        min-height: 700px;
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, var(--dark-bg) 100%);
+    .main-content.ball-mode .packing-area {
+        min-height: 650px;
     }
     
-    .visualizer.pack-mode h2 {
-        color: #3498db;
-        font-size: 28px;
-        text-align: center;
-        margin-bottom: 20px;
-        text-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    /* Loading state styling spanning full width */
+    .loading-container {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        gap: 20px;
     }
     
-    .visualizer.ball-mode {
-        min-height: 700px;
-        background: linear-gradient(135deg, rgba(212, 101, 27, 0.05) 0%, var(--dark-bg) 100%);
-    }
-    
-    .visualizer.ball-mode h2 {
-        color: #d4651b;
-        font-size: 28px;
-        text-align: center;
-        margin-bottom: 20px;
-        text-shadow: 0 2px 4px rgba(212, 101, 27, 0.3);
-    }
-    
-    /* Loading state styling */
-    .loading-container, .lazy-loading-container {
+    .lazy-loading-container {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -771,24 +810,255 @@
     .progress-bar.stage-transactions { width: 75%; }
     .progress-bar.stage-complete { width: 100%; }
     
-    @media (max-width: 768px) {
-        .visualizer {
+    /* ENHANCED RESPONSIVE BREAKPOINTS FOR BETTER SPACE UTILIZATION */
+    
+    /* Ultra-wide screens: Better space utilization */
+    @media (min-width: 1600px) {
+        .main-content {
+            grid-template-columns: 1fr 380px;
+            gap: 30px;
+            max-width: 1400px; /* FIXED: Constrain total width */
+            margin: 0 auto; /* FIXED: Center the entire layout */
+            padding: 30px;
+        }
+        
+        .sidebar {
+            width: 380px;
+            min-width: 380px;
+            max-width: 380px;
+            gap: 25px;
+        }
+        
+        /* FIXED: Ensure packing area centers its content */
+        .packing-area {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+    }
+    
+    /* Very wide screens: Enhanced layout */
+    @media (min-width: 1400px) and (max-width: 1599px) {
+        .main-content {
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+            max-width: 1300px; /* FIXED: Constrain width */
+            margin: 0 auto; /* FIXED: Center layout */
+        }
+        
+        .sidebar {
+            width: 350px;
+            min-width: 350px;
+            max-width: 350px;
+            gap: 22px;
+        }
+        
+        .packing-area {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+    }
+    
+    /* Large screens: Standard enhanced layout */
+    @media (max-width: 1399px) and (min-width: 1200px) {
+        .main-content {
+            grid-template-columns: 1fr 320px;
+            gap: 22px;
+            max-width: 1200px; /* FIXED: Prevent stretching */
+            margin: 0 auto;
+        }
+        
+        .sidebar {
+            gap: 20px;
+        }
+    }
+    
+    /* Medium-large screens */
+    @media (max-width: 1199px) and (min-width: 1100px) {
+        .main-content {
+            grid-template-columns: 1fr 300px;
+            gap: 18px;
+            padding: 20px;
+        }
+        
+        .sidebar {
+            width: 300px;
+            min-width: 300px;
+            max-width: 300px;
+            gap: 18px;
+        }
+    }
+    
+    /* Medium screens */
+    @media (max-width: 1099px) and (min-width: 950px) {
+        .main-content {
+            grid-template-columns: 1fr 280px;
+            gap: 15px;
             padding: 15px;
         }
         
-        .visualizer h2 {
-            font-size: 24px;
-            margin-bottom: 20px;
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            gap: 15px;
+        }
+    }
+    
+    /* Stack layout: Mobile/Tablet */
+    @media (max-width: 949px) {
+        .main-content {
+            grid-template-columns: 1fr;
+            grid-template-areas: 
+                "packing"
+                "sidebar";
+            gap: 20px;
+            padding: 15px;
+            margin: 0;
+            max-width: none;
         }
         
-        .visualizer.hex-mode,
-        .visualizer.pack-mode,
-        .visualizer.ball-mode {
-            min-height: 500px;
+        .sidebar {
+            position: static;
+            gap: 20px;
+            width: 100%;
+            min-width: auto;
+            max-width: none;
+        }
+        
+        .packing-area {
+            min-height: 450px;
+            max-width: 100%;
+            align-items: stretch;
+        }
+        
+        .main-content.hex-mode .packing-area,
+        .main-content.pack-mode .packing-area,
+        .main-content.ball-mode .packing-area {
+            min-height: 450px;
+        }
+    }
+    
+    /* Very wide screens: Enhanced layout */
+    @media (min-width: 1400px) and (max-width: 1599px) {
+        .main-content {
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+        }
+        
+        .sidebar {
+            width: 350px;
+            min-width: 350px;
+            max-width: 350px;
+            gap: 22px;
+        }
+        
+        .packing-area {
+            max-width: 1000px;
+        }
+    }
+    
+    /* Large screens: Standard enhanced layout */
+    @media (max-width: 1399px) and (min-width: 1200px) {
+        .main-content {
+            grid-template-columns: 1fr 320px;
+            gap: 22px;
+        }
+        
+        .sidebar {
+            gap: 20px;
+        }
+    }
+    
+    /* Medium-large screens: Compact but not cramped */
+    @media (max-width: 1199px) and (min-width: 1100px) {
+        .main-content {
+            grid-template-columns: 1fr 300px;
+            gap: 18px;
+        }
+        
+        .sidebar {
+            width: 300px;
+            min-width: 300px;
+            max-width: 300px;
+            gap: 18px;
+        }
+    }
+    
+    /* Medium screens: Balanced layout */
+    @media (max-width: 1099px) and (min-width: 950px) {
+        .main-content {
+            grid-template-columns: 1fr 280px;
+            gap: 15px;
+            padding: 15px;
+            padding-right: 10px;
+        }
+        
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            gap: 15px;
+            padding: 0 6px;
+        }
+    }
+    
+    /* Stack layout: Below 950px - Mobile/Tablet */
+    @media (max-width: 949px) {
+        .main-content {
+            grid-template-columns: 1fr;
+            grid-template-areas: 
+                "packing"
+                "sidebar";
+            gap: 20px;
+            padding: 15px;
+            margin-right: 0;
+            padding-right: 15px;
+        }
+        
+        .sidebar {
+            position: static;
+            gap: 20px; /* Maintain consistent gap on mobile */
+            width: 100%;
+            min-width: auto;
+            max-width: none;
+            padding: 0;
+        }
+        
+        .packing-area {
+            min-height: 450px;
+            max-width: 100%;
+            align-items: stretch; /* Full width on mobile */
+        }
+        
+        .main-content.hex-mode .packing-area,
+        .main-content.pack-mode .packing-area,
+        .main-content.ball-mode .packing-area {
+            min-height: 450px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .main-content {
+            gap: 18px;
+            padding: 15px;
+        }
+        
+        .sidebar {
+            gap: 18px;
+        }
+        
+        .packing-area {
+            min-height: 400px;
+        }
+        
+        .main-content.hex-mode .packing-area,
+        .main-content.pack-mode .packing-area,
+        .main-content.ball-mode .packing-area {
+            min-height: 400px;
         }
         
         .loading-container, .lazy-loading-container {
-            min-height: 200px;
+            min-height: 300px;
         }
         
         .loading-spinner, .lazy-loading-spinner {
@@ -813,25 +1083,47 @@
     }
     
     @media (max-width: 480px) {
-        .visualizer {
+        .main-content {
             padding: 10px;
+            gap: 15px;
         }
         
-        .visualizer h2 {
-            font-size: 20px;
-            margin-bottom: 15px;
+        .sidebar {
+            gap: 15px;
         }
         
-        .visualizer.hex-mode,
-        .visualizer.pack-mode,
-        .visualizer.ball-mode {
-            min-height: 450px;
+        .packing-area {
+            min-height: 350px;
+        }
+        
+        .main-content.hex-mode .packing-area,
+        .main-content.pack-mode .packing-area,
+        .main-content.ball-mode .packing-area {
+            min-height: 350px;
         }
         
         .api-status-notification {
             top: 80px;
             font-size: 12px;
             padding: 10px 15px;
+        }
+    }
+    
+    /* ENHANCED PACKING AREA CONTENT CONSTRAINTS */
+    
+    /* For very wide screens, we can constrain the inner content */
+    .packing-area > * {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    /* Special handling for transaction packing grid on wide screens */
+    @media (min-width: 1400px) {
+        .packing-area :global(.transaction-packing-container),
+        .packing-area :global(.ball-physics-container),
+        .packing-area :global(.ergo-packing-container) {
+            max-width: 1000px;
+            margin: 0 auto;
         }
     }
 </style>

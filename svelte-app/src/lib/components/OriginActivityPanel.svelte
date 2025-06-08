@@ -104,12 +104,15 @@
     background: linear-gradient(135deg, rgba(44, 74, 107, 0.15) 0%, rgba(26, 35, 50, 0.15) 100%);
     border-radius: 12px;
     border: 2px solid var(--border-color);
-    padding: 20px;
-    margin-bottom: 25px;
+    padding: 16px; /* Match StatsDisplay padding */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 900px;
+    max-width: 100%;
     transition: all 0.3s ease;
+    box-sizing: border-box; /* Ensure consistent sizing */
+    
+    /* Remove any margin that could interfere with gap */
+    margin: 0;
   }
   
   .origin-activity-panel:hover {
@@ -121,7 +124,7 @@
     color: var(--primary-orange);
     font-size: 16px;
     font-weight: 600;
-    margin: 0 0 15px 0;
+    margin: 0 0 12px 0; /* Match StatsDisplay title margin */
     text-align: center;
     text-shadow: 0 1px 2px rgba(230, 126, 34, 0.3);
     position: relative;
@@ -130,10 +133,10 @@
   .panel-title::after {
     content: '';
     position: absolute;
-    bottom: -5px;
+    bottom: -4px; /* Match StatsDisplay title underline */
     left: 50%;
     transform: translateX(-50%);
-    width: 40px;
+    width: 30px; /* Match StatsDisplay underline width */
     height: 2px;
     background: linear-gradient(90deg, var(--primary-orange), var(--secondary-orange));
     border-radius: 1px;
@@ -142,7 +145,7 @@
   .platforms-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 8px;
     justify-content: center;
     align-items: center;
   }
@@ -150,16 +153,18 @@
   .platform-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 6px;
+    padding: 6px 10px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     cursor: pointer;
-    min-width: 80px;
+    min-width: 65px;
     position: relative;
     overflow: hidden;
+    min-height: 40px; /* Match StatsDisplay stat item height */
+    justify-content: center;
   }
   
   .platform-item::before {
@@ -191,8 +196,8 @@
   }
   
   .platform-logo {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
     filter: brightness(1.1);
     transition: all 0.3s ease;
@@ -206,14 +211,14 @@
   }
   
   .fallback-logo {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 8px;
+    font-size: 7px;
     font-weight: bold;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     position: relative;
@@ -222,9 +227,9 @@
   
   .transaction-count {
     color: var(--text-light);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    min-width: 20px;
+    min-width: 18px;
     text-align: center;
     position: relative;
     z-index: 2;
@@ -289,15 +294,39 @@
     }
   }
   
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .origin-activity-panel {
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    
+  /* RESPONSIVE DESIGN - MATCH STATSDISPLAY BREAKPOINTS */
+  
+  /* For very narrow sidebars */
+  @media (max-width: 320px) {
     .platforms-grid {
       gap: 10px;
+    }
+    
+    .platform-item {
+      padding: 6px 8px;
+      gap: 6px;
+      min-width: 60px;
+    }
+    
+    .platform-logo, .fallback-logo {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .transaction-count {
+      font-size: 12px;
+    }
+    
+    .panel-title {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  }
+  
+  /* For medium sidebars (280-320px) */
+  @media (min-width: 280px) and (max-width: 320px) {
+    .platforms-grid {
+      gap: 8px;
     }
     
     .platform-item {
@@ -307,32 +336,80 @@
     }
     
     .platform-logo, .fallback-logo {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
     }
     
     .transaction-count {
       font-size: 13px;
     }
+  }
+  
+  /* For wider sidebars (320px+) */
+  @media (min-width: 320px) {
+    .platforms-grid {
+      gap: 15px;
+    }
+    
+    .platform-item {
+      padding: 8px 12px;
+    }
+  }
+  
+  /* For mobile stacked layout */
+  @media (max-width: 949px) {
+    .origin-activity-panel {
+      padding: 20px; /* Larger padding on mobile like StatsDisplay */
+    }
+    
+    .platforms-grid {
+      gap: 12px;
+    }
+    
+    .platform-item {
+      padding: 10px 14px;
+      min-height: 55px; /* Match mobile StatsDisplay height */
+    }
+    
+    .platform-logo, .fallback-logo {
+      width: 26px;
+      height: 26px;
+    }
+    
+    .transaction-count {
+      font-size: 15px;
+    }
     
     .panel-title {
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+  }
+  
+  /* For small mobile screens */
+  @media (max-width: 600px) {
+    .platforms-grid {
+      gap: 10px;
+    }
+    
+    .platform-item {
+      padding: 8px 12px;
+      min-height: 50px;
+    }
+    
+    .platform-logo, .fallback-logo {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .transaction-count {
       font-size: 14px;
-      margin-bottom: 12px;
-    }
-    
-    .debug-text {
-      font-size: 12px;
-    }
-    
-    .debug-help {
-      font-size: 10px;
     }
   }
   
   @media (max-width: 480px) {
     .origin-activity-panel {
-      padding: 12px;
-      margin-bottom: 15px;
+      padding: 15px; /* Match StatsDisplay mobile padding */
     }
     
     .platforms-grid {
@@ -340,14 +417,15 @@
     }
     
     .platform-item {
-      padding: 5px 8px;
+      padding: 6px 10px;
       gap: 5px;
       min-width: 60px;
+      min-height: 45px;
     }
     
     .platform-logo, .fallback-logo {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
     }
     
     .fallback-logo {
@@ -359,8 +437,8 @@
     }
     
     .panel-title {
-      font-size: 13px;
-      margin-bottom: 10px;
+      font-size: 14px;
+      margin-bottom: 12px;
     }
     
     .platform-tooltip {
