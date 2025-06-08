@@ -44,7 +44,7 @@
 <!-- Only show panel if there are active platforms -->
 {#if activePlatforms.length > 0}
   <div class="origin-activity-panel">
-    <h3 class="panel-title">Platform Activity</h3>
+    <h3 class="panel-title">Ergo Activity</h3>
     <div class="platforms-grid">
       {#each activePlatforms as [platform, data]}
         {@const config = PLATFORM_CONFIGS[platform]}
@@ -83,8 +83,8 @@
   <div class="origin-activity-panel debug-panel">
     <h3 class="panel-title">Platform Activity</h3>
     <div class="no-platforms">
-      <span class="debug-text">No platform activity detected yet...</span>
-      <small class="debug-help">Transaction origins will appear here once data is loaded</small>
+      <span class="debug-text">No Ergo activity detected yet...</span>
+      <small class="debug-help">Transaction will appear here....</small>
     </div>
   </div>
 {/if}
@@ -145,7 +145,7 @@
   .platforms-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
     align-items: center;
   }
@@ -154,13 +154,13 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 10px;
+    padding: 4px 8px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     cursor: pointer;
-    min-width: 65px;
+    min-width: 55px;
     position: relative;
     overflow: hidden;
     min-height: 40px; /* Match StatsDisplay stat item height */
@@ -196,8 +196,8 @@
   }
   
   .platform-logo {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
     filter: brightness(1.1);
     transition: all 0.3s ease;
@@ -211,8 +211,8 @@
   }
   
   .fallback-logo {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -227,7 +227,7 @@
   
   .transaction-count {
     color: var(--text-light);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     min-width: 18px;
     text-align: center;

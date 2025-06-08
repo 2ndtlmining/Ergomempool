@@ -1,4 +1,4 @@
-<!-- ENHANCED +page.svelte with Optimized Space Utilization -->
+<!-- ENHANCED +page.svelte with Configurable API Timing Settings -->
 
 <script>
     import { onMount, onDestroy } from 'svelte';
@@ -21,6 +21,34 @@
     
     // Import global styles
     import '../app.css';
+    
+    // ============================================
+    // API FREQUENCY CONFIGURATION - EASILY ADJUSTABLE
+    // ============================================
+    const API_REFRESH_CONFIG = {
+        // Main refresh intervals (in milliseconds)
+        TRANSACTIONS_INTERVAL: 45000,    // 45 seconds - adjust this value
+        BLOCKS_INTERVAL: 60000,          // 1 minute - adjust this value
+        PRICE_INTERVAL: 300000,          // 5 minutes - adjust this value
+        
+        // Advanced settings
+        ENABLE_AUTO_REFRESH: true,       // Set to false to disable all auto-refresh
+        INITIAL_LOAD_LIMIT: 100,         // Limit transactions on initial load for faster startup
+        BATCH_LOAD_DELAY: 2000,          // Delay before loading remaining transactions
+        
+        // Error handling
+        MAX_CONSECUTIVE_FAILURES: 3,    // Stop trying after this many failures
+        FAILURE_BACKOFF_MULTIPLIER: 1.5, // Increase interval after failures
+        
+        // Performance settings
+        LAZY_COMPONENT_DELAY: 1000,      // Delay before loading non-essential components
+    };
+    
+    // You can quickly change refresh rates here:
+    // Fast refresh (for testing): 15000, 30000, 60000
+    // Normal refresh (default): 45000, 60000, 300000  
+    // Slow refresh (save bandwidth): 120000, 300000, 600000
+    // Very slow refresh: 300000, 600000, 1800000
     
     let intervalIds = [];
     let currentMode = 'pack'; // Default to TransactionPackingGrid
@@ -63,6 +91,13 @@
     let statusMessage = '';
     let statusType = 'info';
     
+    // Dynamic interval tracking for failure handling
+    let currentIntervals = {
+        transactions: API_REFRESH_CONFIG.TRANSACTIONS_INTERVAL,
+        blocks: API_REFRESH_CONFIG.BLOCKS_INTERVAL,
+        price: API_REFRESH_CONFIG.PRICE_INTERVAL
+    };
+    
     // Lazy load other components only when needed
     $: if (currentMode !== 'pack' && !MempoolGrid) {
         loadOtherComponents();
@@ -100,13 +135,20 @@
         console.log(`📢 Status: ${type.toUpperCase()} - ${message}`);
     }
     
-    // API error handling with data persistence
+    // Enhanced API error handling with dynamic intervals
     function handleApiError(endpoint, error, data = null) {
         apiStatus[endpoint].lastError = error.message || error;
         apiStatus[endpoint].consecutiveFailures++;
         apiStatus[endpoint].working = false;
         
         const failureCount = apiStatus[endpoint].consecutiveFailures;
+        
+        // Implement backoff strategy
+        if (failureCount >= 2) {
+            const newInterval = currentIntervals[endpoint] * API_REFRESH_CONFIG.FAILURE_BACKOFF_MULTIPLIER;
+            currentIntervals[endpoint] = Math.min(newInterval, 600000); // Max 10 minutes
+            console.log(`🔄 Increased ${endpoint} interval to ${currentIntervals[endpoint]}ms due to failures`);
+        }
         
         if (data && data.error && data.fallback === 'preserve_existing') {
             console.log(`📦 Preserving existing ${endpoint} data due to API failure`);
@@ -121,7 +163,7 @@
                 'error',
                 5000
             );
-        } else if (failureCount >= 3) {
+        } else if (failureCount >= API_REFRESH_CONFIG.MAX_CONSECUTIVE_FAILURES) {
             showStatusNotification(
                 `${endpoint} API failing repeatedly (${failureCount}x), using fallback`,
                 'error',
@@ -132,13 +174,20 @@
         console.error(`❌ ${endpoint} API error (failure #${failureCount}):`, error);
     }
     
-    // Track successful API calls
+    // Track successful API calls and reset intervals
     function handleApiSuccess(endpoint) {
         const wasDown = !apiStatus[endpoint].working;
         
         apiStatus[endpoint].working = true;
         apiStatus[endpoint].lastError = null;
         apiStatus[endpoint].consecutiveFailures = 0;
+        
+        // Reset interval to original value on success
+        const originalInterval = API_REFRESH_CONFIG[endpoint.toUpperCase() + '_INTERVAL'];
+        if (currentIntervals[endpoint] !== originalInterval) {
+            currentIntervals[endpoint] = originalInterval;
+            console.log(`✅ Reset ${endpoint} interval to ${originalInterval}ms`);
+        }
         
         if (wasDown) {
             showStatusNotification(
@@ -245,8 +294,92 @@
         }
     }
     
+    // ENHANCED: Setup auto-refresh intervals with configuration
+    function setupAutoRefresh() {
+        if (!API_REFRESH_CONFIG.ENABLE_AUTO_REFRESH) {
+            console.log('🔄 Auto-refresh disabled by configuration');
+            return;
+        }
+        
+        console.log('⏰ Setting up configurable auto-refresh intervals:', {
+            transactions: `${API_REFRESH_CONFIG.TRANSACTIONS_INTERVAL}ms`,
+            blocks: `${API_REFRESH_CONFIG.BLOCKS_INTERVAL}ms`, 
+            price: `${API_REFRESH_CONFIG.PRICE_INTERVAL}ms`
+        });
+        
+        // Transaction refresh interval
+        const transactionInterval = setInterval(() => {
+            if (apiStatus.transactions.consecutiveFailures >= API_REFRESH_CONFIG.MAX_CONSECUTIVE_FAILURES) {
+                console.log('⏸️ Skipping transaction refresh due to consecutive failures');
+                return;
+            }
+            
+            loadTransactionsOptimized().catch(error => {
+                console.error('🔄 Auto-refresh transaction error:', error);
+            });
+        }, currentIntervals.transactions);
+        
+        // Price refresh interval
+        const priceInterval = setInterval(() => {
+            if (apiStatus.price.consecutiveFailures >= API_REFRESH_CONFIG.MAX_CONSECUTIVE_FAILURES) {
+                console.log('⏸️ Skipping price refresh due to consecutive failures');
+                return;
+            }
+            
+            loadPrice().catch(error => {
+                console.error('🔄 Auto-refresh price error:', error);
+            });
+        }, currentIntervals.price);
+        
+        // Block refresh interval
+        const blockInterval = setInterval(() => {
+            if (apiStatus.blocks.consecutiveFailures >= API_REFRESH_CONFIG.MAX_CONSECUTIVE_FAILURES) {
+                console.log('⏸️ Skipping block refresh due to consecutive failures');
+                return;
+            }
+            
+            loadBlocks().catch(error => {
+                console.error('🔄 Auto-refresh block error:', error);
+            });
+        }, currentIntervals.blocks);
+        
+        intervalIds = [transactionInterval, priceInterval, blockInterval];
+        
+        console.log('✅ Auto-refresh intervals configured and started');
+    }
+    
+    // Function to update refresh intervals at runtime
+    function updateRefreshInterval(endpoint, newInterval) {
+        console.log(`🔄 Updating ${endpoint} refresh interval to ${newInterval}ms`);
+        
+        currentIntervals[endpoint] = newInterval;
+        
+        // Clear existing interval and set new one
+        if (intervalIds.length > 0) {
+            intervalIds.forEach(id => clearInterval(id));
+            setupAutoRefresh();
+        }
+        
+        showStatusNotification(`Updated ${endpoint} refresh to ${newInterval/1000}s`, 'info', 2000);
+    }
+    
+    // Expose configuration for debugging
+    window.ergomempoolAPI = {
+        config: API_REFRESH_CONFIG,
+        currentIntervals,
+        apiStatus,
+        updateInterval: updateRefreshInterval,
+        refreshNow: {
+            transactions: () => loadTransactionsOptimized(),
+            blocks: () => loadBlocks(),
+            price: () => loadPrice(),
+            all: handleRefresh
+        }
+    };
+    
     onMount(async () => {
-        console.log('🚀 Ergomempool SvelteKit app initialized - ENHANCED LAYOUT');
+        console.log('🚀 Ergomempool SvelteKit app initialized with configurable API timing');
+        console.log('⚙️ API Configuration:', API_REFRESH_CONFIG);
         
         // Stage 1: Load price first (fastest)
         loadingStage = 'price';
@@ -268,38 +401,20 @@
         loadingStage = 'complete';
         initialLoadComplete = true;
         
-        // Set up auto-refresh intervals
-        const transactionInterval = setInterval(() => {
-            loadTransactionsOptimized().catch(error => {
-                console.error('🔄 Auto-refresh transaction error:', error);
-            });
-        }, 45000);
-        
-        const priceInterval = setInterval(() => {
-            loadPrice().catch(error => {
-                console.error('🔄 Auto-refresh price error:', error);
-            });
-        }, 300000);
-        
-        const blockInterval = setInterval(() => {
-            loadBlocks().catch(error => {
-                console.error('🔄 Auto-refresh block error:', error);
-            });
-        }, 60000);
-        
-        intervalIds = [transactionInterval, priceInterval, blockInterval];
-        
-        console.log('⏰ Auto-refresh intervals set up');
+        // Set up configurable auto-refresh intervals
+        setupAutoRefresh();
         
         // Load transaction table component lazily after initial render
         setTimeout(() => {
             loadOtherComponents();
-        }, 1000);
+        }, API_REFRESH_CONFIG.LAZY_COMPONENT_DELAY);
+        
+        console.log('✅ App initialization complete');
     });
     
     onDestroy(() => {
         intervalIds.forEach(id => clearInterval(id));
-        console.log('🧹 Cleaned up intervals');
+        console.log('🧹 Cleaned up all intervals');
     });
     
     // ENHANCED: Transaction loading with origin detection and data persistence
@@ -324,7 +439,7 @@
             
             const priceData = await fetchPrice();
             
-            const maxTransactions = initialLoadComplete ? txData.length : Math.min(txData.length, 100);
+            const maxTransactions = initialLoadComplete ? txData.length : Math.min(txData.length, API_REFRESH_CONFIG.INITIAL_LOAD_LIMIT);
             const limitedTxData = txData.slice(0, maxTransactions);
             
             // Add USD values
@@ -361,9 +476,9 @@
             
             console.log(`📊 Loaded ${txWithOriginsAndUsd.length}/${txData.length} transactions with origins:`, originCounts);
             
-            if (!initialLoadComplete && txData.length > 100) {
+            if (!initialLoadComplete && txData.length > API_REFRESH_CONFIG.INITIAL_LOAD_LIMIT) {
                 setTimeout(() => {
-                    const remainingTxData = txData.slice(100);
+                    const remainingTxData = txData.slice(API_REFRESH_CONFIG.INITIAL_LOAD_LIMIT);
                     const remainingTxWithUsd = addUsdValues(remainingTxData, priceData.price);
                     
                     // Apply origin detection to remaining transactions
@@ -376,7 +491,7 @@
                     
                     transactions.update(current => [...current, ...remainingTxWithOrigins]);
                     console.log(`📊 Loaded remaining ${remainingTxData.length} transactions in background`);
-                }, 2000);
+                }, API_REFRESH_CONFIG.BATCH_LOAD_DELAY);
             }
         } catch (error) {
             console.error('❌ Error loading transactions:', error);
@@ -486,84 +601,90 @@
     <!-- Blocks Section -->
     <BlocksSection />
     
-    <!-- ENHANCED MAIN CONTENT LAYOUT WITH BETTER SPACE UTILIZATION -->
-    <main class="main-content" 
-          class:hex-mode={currentMode === 'hex'} 
-          class:pack-mode={currentMode === 'pack'} 
-          class:ball-mode={currentMode === 'ball'}
-          class:grid-mode={currentMode === 'grid'}>
-        
-        {#if coreDataLoaded}
-            <!-- Enhanced Packing/Visualization Area (Main Content) -->
-            <section class="packing-area">
-                {#if currentMode === 'pack'}
-                    <!-- Transaction Packing Mode (DEFAULT - Always loaded) -->
-                    <TransactionPackingGrid 
-                        bind:this={transactionPackingRef}
-                        bind:packingStats={currentPackingStats}
-                    />
-                {:else if currentMode === 'hex' && ErgoPackingGrid}
-                    <!-- Hexagon Packing Mode (Lazy loaded) -->
-                    <svelte:component 
-                        this={ErgoPackingGrid}
-                        bind:this={ergoPackingRef}
-                        packingStats={currentPackingStats} 
-                    />
-                {:else if currentMode === 'ball' && BallPhysicsGrid}
-                    <!-- Ball Physics Mode (Lazy loaded) -->
-                    <svelte:component 
-                        this={BallPhysicsGrid}
-                        bind:this={ballPhysicsRef}
-                        packingStats={currentPackingStats} 
-                    />
-                {:else if currentMode === 'grid' && MempoolGrid}
-                    <!-- Grid Mode (Lazy loaded) -->
-                    <svelte:component this={MempoolGrid} />
-                {:else}
-                    <!-- Loading placeholder for lazy-loaded components -->
-                    <div class="lazy-loading-container">
-                        <div class="lazy-loading-spinner"></div>
-                        <div class="lazy-loading-text">Loading {getDisplayModeName(currentMode)}...</div>
-                    </div>
-                {/if}
-            </section>
+    <!-- FIXED: Main content layout with proper background handling -->
+    <main class="main-content-wrapper">
+        <div class="main-content" 
+             class:hex-mode={currentMode === 'hex'} 
+             class:pack-mode={currentMode === 'pack'} 
+             class:ball-mode={currentMode === 'ball'}
+             class:grid-mode={currentMode === 'grid'}>
             
-            <!-- Enhanced Right Sidebar: Stats + Platform Activity -->
-            <aside class="sidebar">
-                <!-- Stats Section -->
-                <section class="stats-section">
-                    <StatsDisplay 
-                        packingStats={currentPackingStats} 
-                        {currentMode}
-                        onAddTestTransactions={handleAddTestTransactions}
-                    />
+            {#if coreDataLoaded}
+                <!-- Enhanced Packing/Visualization Area (Main Content) -->
+                <section class="packing-area">
+                    {#if currentMode === 'pack'}
+                        <!-- Transaction Packing Mode (DEFAULT - Always loaded) -->
+                        <TransactionPackingGrid 
+                            bind:this={transactionPackingRef}
+                            bind:packingStats={currentPackingStats}
+                        />
+                    {:else if currentMode === 'hex' && ErgoPackingGrid}
+                        <!-- Hexagon Packing Mode (Lazy loaded) -->
+                        <svelte:component 
+                            this={ErgoPackingGrid}
+                            bind:this={ergoPackingRef}
+                            packingStats={currentPackingStats} 
+                        />
+                    {:else if currentMode === 'ball' && BallPhysicsGrid}
+                        <!-- Ball Physics Mode (Lazy loaded) -->
+                        <svelte:component 
+                            this={BallPhysicsGrid}
+                            bind:this={ballPhysicsRef}
+                            packingStats={currentPackingStats} 
+                        />
+                    {:else if currentMode === 'grid' && MempoolGrid}
+                        <!-- Grid Mode (Lazy loaded) -->
+                        <svelte:component this={MempoolGrid} />
+                    {:else}
+                        <!-- Loading placeholder for lazy-loaded components -->
+                        <div class="lazy-loading-container">
+                            <div class="lazy-loading-spinner"></div>
+                            <div class="lazy-loading-text">Loading {getDisplayModeName(currentMode)}...</div>
+                        </div>
+                    {/if}
                 </section>
                 
-                <!-- Platform Activity Section -->
-                <section class="platform-section">
-                    <OriginActivityPanel />
-                </section>
-            </aside>
-        {:else}
-            <!-- Initial loading state spanning full width -->
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <div class="loading-text">
-                    {#if loadingStage === 'price'}
-                        Loading price data...
-                    {:else if loadingStage === 'basic'}
-                        Loading blockchain data...
-                    {:else if loadingStage === 'transactions'}
-                        Loading transactions...
-                    {:else}
-                        Initializing packing algorithm...
-                    {/if}
+                <!-- Enhanced Right Sidebar: Stats + Platform Activity -->
+                <aside class="sidebar">
+                    <!-- Stats Section -->
+                    <section class="stats-section">
+                        <StatsDisplay 
+                            packingStats={currentPackingStats} 
+                            {currentMode}
+                            onAddTestTransactions={handleAddTestTransactions}
+                        />
+                    </section>
+                    
+                    <!-- Platform Activity Section -->
+                    <section class="platform-section">
+                        <OriginActivityPanel />
+                    </section>
+                </aside>
+            {:else}
+                <!-- Initial loading state spanning full width -->
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">
+                        {#if loadingStage === 'price'}
+                            Loading price data...
+                        {:else if loadingStage === 'basic'}
+                            Loading blockchain data...
+                        {:else if loadingStage === 'transactions'}
+                            Loading transactions...
+                        {:else}
+                            Initializing packing algorithm...
+                        {/if}
+                    </div>
+                    <div class="loading-progress">
+                        <div class="progress-bar" 
+                             class:stage-price={loadingStage === 'price'} 
+                             class:stage-basic={loadingStage === 'basic'} 
+                             class:stage-transactions={loadingStage === 'transactions'} 
+                             class:stage-complete={loadingStage === 'complete'}></div>
+                    </div>
                 </div>
-                <div class="loading-progress">
-                    <div class="progress-bar" class:stage-price={loadingStage === 'price'} class:stage-basic={loadingStage === 'basic'} class:stage-transactions={loadingStage === 'transactions'} class:stage-complete={loadingStage === 'complete'}></div>
-                </div>
-            </div>
-        {/if}
+            {/if}
+        </div>
     </main>
     
     <!-- Lazy load TransactionTable -->
@@ -575,14 +696,181 @@
 </div>
 
 <style>
+    /* [All the existing CSS styles remain exactly the same] */
     .container {
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
         background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+        margin: 0;
+        padding: 0;
     }
     
-    /* API Status Notification Styling */
+    .main-content-wrapper {
+        flex: 1;
+        width: 100%;
+        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+        border-top: 1px solid var(--border-color);
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+    
+    .main-content {
+        display: grid;
+        grid-template-areas: "packing sidebar";
+        grid-template-columns: 1fr 320px;
+        gap: 20px;
+        align-items: start;
+        padding: 20px;
+        margin: 0 auto;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        overflow: visible;
+        min-width: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .packing-area {
+        grid-area: packing;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 500px;
+        width: 100%;
+        max-width: 100%;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: none;
+        outline: none;
+        box-shadow: none;
+        overflow: visible;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar {
+        grid-area: sidebar;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+        width: 320px;
+        min-width: 320px;
+        max-width: 320px;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: none;
+        outline: none;
+        box-shadow: none;
+        box-sizing: border-box;
+        padding: 0;
+    }
+    
+    .stats-section,
+    .platform-section {
+        width: 100%;
+        box-sizing: border-box;
+        background: transparent;
+    }
+    
+    .main-content.hex-mode .packing-area {
+        min-height: 600px;
+    }
+    
+    .main-content.pack-mode .packing-area {
+        min-height: 600px;
+    }
+    
+    .main-content.ball-mode .packing-area {
+        min-height: 650px;
+    }
+    
+    .loading-container {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        gap: 20px;
+        background: transparent;
+    }
+    
+    .lazy-loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        gap: 20px;
+        background: transparent;
+    }
+    
+    .loading-spinner, .lazy-loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(52, 152, 219, 0.2);
+        border-left: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    .lazy-loading-spinner {
+        width: 30px;
+        height: 30px;
+        border-width: 3px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text, .lazy-loading-text {
+        color: var(--text-light);
+        font-size: 16px;
+        font-weight: 500;
+        text-align: center;
+        opacity: 0.8;
+    }
+    
+    .lazy-loading-text {
+        font-size: 14px;
+    }
+    
+    .loading-progress {
+        width: 200px;
+        height: 4px;
+        background: rgba(52, 152, 219, 0.2);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #3498db, #2980b9);
+        border-radius: 2px;
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+    
+    .progress-bar.stage-price { width: 25%; }
+    .progress-bar.stage-basic { width: 50%; }
+    .progress-bar.stage-transactions { width: 75%; }
+    .progress-bar.stage-complete { width: 100%; }
+    
     .api-status-notification {
         position: fixed;
         top: 100px;
@@ -647,178 +935,14 @@
         line-height: 1.4;
     }
     
-    /* FIXED: Main content layout to eliminate blue area and center properly */
-    .main-content {
-        flex: 1;
-        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
-        padding: 20px;
-        border-top: 1px solid var(--border-color);
-        
-        /* FIXED: Enhanced Responsive Grid Layout */
-        display: grid;
-        gap: 20px;
-        align-items: start;
-        transition: all 0.3s ease;
-        min-width: 0;
-        
-        /* FIXED: Remove overflow hidden that was causing issues */
-        overflow: visible;
-        
-        /* Dynamic grid template based on screen size */
-        grid-template-areas: "packing sidebar";
-        grid-template-columns: 1fr 320px;
-        
-        /* FIXED: Remove problematic margins and ensure proper container behavior */
-        margin: 0;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    /* FIXED: Enhanced Packing Area with proper centering */
-    .packing-area {
-        grid-area: packing;
-        background: transparent;
-        padding: 0;
-        min-height: 500px;
-        transition: all 0.3s ease;
-        position: relative;
-        
-        /* FIXED: Proper width handling */
-        width: 100%;
-        max-width: 100%;
-        
-        /* FIXED: Better centering approach */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        
-        /* FIXED: Ensure no overflow issues */
-        overflow: visible;
-    }
-    
-    /* FIXED: Enhanced Sidebar with consistent behavior */
-    .sidebar {
-        grid-area: sidebar;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        height: fit-content;
-        position: sticky;
-        top: 20px;
-        
-        /* FIXED: Consistent width without conflicts */
-        width: 320px;
-        min-width: 320px;
-        max-width: 320px;
-        
-        /* FIXED: Remove problematic padding */
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
-    /* Ensure both stats and platform sections have consistent styling */
-    .stats-section, .platform-section {
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    /* Mode-specific heights */
-    .main-content.hex-mode .packing-area {
-        min-height: 600px;
-    }
-    
-    .main-content.pack-mode .packing-area {
-        min-height: 600px;
-    }
-    
-    .main-content.ball-mode .packing-area {
-        min-height: 650px;
-    }
-    
-    /* Loading state styling spanning full width */
-    .loading-container {
-        grid-column: 1 / -1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 400px;
-        gap: 20px;
-    }
-    
-    .lazy-loading-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 300px;
-        gap: 20px;
-    }
-    
-    .loading-spinner, .lazy-loading-spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(52, 152, 219, 0.2);
-        border-left: 4px solid #3498db;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    .lazy-loading-spinner {
-        width: 30px;
-        height: 30px;
-        border-width: 3px;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .loading-text, .lazy-loading-text {
-        color: var(--text-light);
-        font-size: 16px;
-        font-weight: 500;
-        text-align: center;
-        opacity: 0.8;
-    }
-    
-    .lazy-loading-text {
-        font-size: 14px;
-    }
-    
-    /* Progress bar for initial loading */
-    .loading-progress {
-        width: 200px;
-        height: 4px;
-        background: rgba(52, 152, 219, 0.2);
-        border-radius: 2px;
-        overflow: hidden;
-    }
-    
-    .progress-bar {
-        height: 100%;
-        background: linear-gradient(90deg, #3498db, #2980b9);
-        border-radius: 2px;
-        transition: width 0.5s ease;
-        width: 0%;
-    }
-    
-    .progress-bar.stage-price { width: 25%; }
-    .progress-bar.stage-basic { width: 50%; }
-    .progress-bar.stage-transactions { width: 75%; }
-    .progress-bar.stage-complete { width: 100%; }
-    
     /* ENHANCED RESPONSIVE BREAKPOINTS FOR BETTER SPACE UTILIZATION */
     
-    /* Ultra-wide screens: Better space utilization */
     @media (min-width: 1600px) {
         .main-content {
             grid-template-columns: 1fr 380px;
             gap: 30px;
-            max-width: 1400px; /* FIXED: Constrain total width */
-            margin: 0 auto; /* FIXED: Center the entire layout */
+            max-width: 1400px;
+            margin: 0 auto;
             padding: 30px;
         }
         
@@ -829,20 +953,18 @@
             gap: 25px;
         }
         
-        /* FIXED: Ensure packing area centers its content */
         .packing-area {
             max-width: 1000px;
             margin: 0 auto;
         }
     }
     
-    /* Very wide screens: Enhanced layout */
     @media (min-width: 1400px) and (max-width: 1599px) {
         .main-content {
             grid-template-columns: 1fr 350px;
             gap: 25px;
-            max-width: 1300px; /* FIXED: Constrain width */
-            margin: 0 auto; /* FIXED: Center layout */
+            max-width: 1300px;
+            margin: 0 auto;
         }
         
         .sidebar {
@@ -858,12 +980,11 @@
         }
     }
     
-    /* Large screens: Standard enhanced layout */
     @media (max-width: 1399px) and (min-width: 1200px) {
         .main-content {
             grid-template-columns: 1fr 320px;
             gap: 22px;
-            max-width: 1200px; /* FIXED: Prevent stretching */
+            max-width: 1200px;
             margin: 0 auto;
         }
         
@@ -872,7 +993,6 @@
         }
     }
     
-    /* Medium-large screens */
     @media (max-width: 1199px) and (min-width: 1100px) {
         .main-content {
             grid-template-columns: 1fr 300px;
@@ -888,7 +1008,6 @@
         }
     }
     
-    /* Medium screens */
     @media (max-width: 1099px) and (min-width: 950px) {
         .main-content {
             grid-template-columns: 1fr 280px;
@@ -904,7 +1023,6 @@
         }
     }
     
-    /* Stack layout: Mobile/Tablet */
     @media (max-width: 949px) {
         .main-content {
             grid-template-columns: 1fr;
@@ -929,105 +1047,6 @@
             min-height: 450px;
             max-width: 100%;
             align-items: stretch;
-        }
-        
-        .main-content.hex-mode .packing-area,
-        .main-content.pack-mode .packing-area,
-        .main-content.ball-mode .packing-area {
-            min-height: 450px;
-        }
-    }
-    
-    /* Very wide screens: Enhanced layout */
-    @media (min-width: 1400px) and (max-width: 1599px) {
-        .main-content {
-            grid-template-columns: 1fr 350px;
-            gap: 25px;
-        }
-        
-        .sidebar {
-            width: 350px;
-            min-width: 350px;
-            max-width: 350px;
-            gap: 22px;
-        }
-        
-        .packing-area {
-            max-width: 1000px;
-        }
-    }
-    
-    /* Large screens: Standard enhanced layout */
-    @media (max-width: 1399px) and (min-width: 1200px) {
-        .main-content {
-            grid-template-columns: 1fr 320px;
-            gap: 22px;
-        }
-        
-        .sidebar {
-            gap: 20px;
-        }
-    }
-    
-    /* Medium-large screens: Compact but not cramped */
-    @media (max-width: 1199px) and (min-width: 1100px) {
-        .main-content {
-            grid-template-columns: 1fr 300px;
-            gap: 18px;
-        }
-        
-        .sidebar {
-            width: 300px;
-            min-width: 300px;
-            max-width: 300px;
-            gap: 18px;
-        }
-    }
-    
-    /* Medium screens: Balanced layout */
-    @media (max-width: 1099px) and (min-width: 950px) {
-        .main-content {
-            grid-template-columns: 1fr 280px;
-            gap: 15px;
-            padding: 15px;
-            padding-right: 10px;
-        }
-        
-        .sidebar {
-            width: 280px;
-            min-width: 280px;
-            max-width: 280px;
-            gap: 15px;
-            padding: 0 6px;
-        }
-    }
-    
-    /* Stack layout: Below 950px - Mobile/Tablet */
-    @media (max-width: 949px) {
-        .main-content {
-            grid-template-columns: 1fr;
-            grid-template-areas: 
-                "packing"
-                "sidebar";
-            gap: 20px;
-            padding: 15px;
-            margin-right: 0;
-            padding-right: 15px;
-        }
-        
-        .sidebar {
-            position: static;
-            gap: 20px; /* Maintain consistent gap on mobile */
-            width: 100%;
-            min-width: auto;
-            max-width: none;
-            padding: 0;
-        }
-        
-        .packing-area {
-            min-height: 450px;
-            max-width: 100%;
-            align-items: stretch; /* Full width on mobile */
         }
         
         .main-content.hex-mode .packing-area,
@@ -1109,15 +1128,11 @@
         }
     }
     
-    /* ENHANCED PACKING AREA CONTENT CONSTRAINTS */
-    
-    /* For very wide screens, we can constrain the inner content */
-    .packing-area > * {
+    .packing-area > :global(*) {
         width: 100%;
         max-width: 100%;
     }
     
-    /* Special handling for transaction packing grid on wide screens */
     @media (min-width: 1400px) {
         .packing-area :global(.transaction-packing-container),
         .packing-area :global(.ball-physics-container),
@@ -1126,4 +1141,37 @@
             margin: 0 auto;
         }
     }
+    
+    .main-content::before,
+    .main-content::after,
+    .packing-area::before,
+    .packing-area::after,
+    .sidebar::before,
+    .sidebar::after,
+    .main-content-wrapper::before,
+    .main-content-wrapper::after,
+    .container::before,
+    .container::after {
+        display: none !important;
+        content: none !important;
+    }
+    
+    .main-content,
+    .packing-area,
+    .sidebar {
+        background-attachment: unset !important;
+        background-blend-mode: unset !important;
+        background-clip: unset !important;
+        background-origin: unset !important;
+        background-position: unset !important;
+        background-repeat: unset !important;
+        background-size: unset !important;
+    }
+    
+    .main-content *,
+    .packing-area *,
+    .sidebar * {
+        background-image: none !important;
+    }
+    
 </style>
