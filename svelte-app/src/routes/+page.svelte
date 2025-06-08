@@ -1,15 +1,16 @@
-<!-- Optimized +page.svelte with faster loading for TransactionPackingGrid -->
+<!-- UPDATED +page.svelte with Header Integration, Clean Design, and Origin Activity Panel -->
 
 <script>
     import { onMount, onDestroy } from 'svelte';
-    import { transactions, currentPrice, blockData } from '$lib/stores.js';
+    import { transactions, currentPrice, blockData, walletConnector } from '$lib/stores.js';
     import { fetchTransactions, fetchBlocks, fetchPrice, addUsdValues } from '$lib/api.js';
+    import { processTransactionForOrigins } from '$lib/transactionOrigins.js';
     
-    // Import components with lazy loading approach
+    // Import components
     import Header from '$lib/components/Header.svelte';
     import BlocksSection from '$lib/components/BlocksSection.svelte';
     import StatsDisplay from '$lib/components/StatsDisplay.svelte';
-    import Controls from '$lib/components/Controls.svelte';
+    import OriginActivityPanel from '$lib/components/OriginActivityPanel.svelte';
     import Footer from '$lib/components/Footer.svelte';
     
     // Lazy import for non-default components
@@ -26,7 +27,7 @@
     let ergoPackingRef;
     let ballPhysicsRef;
     let transactionPackingRef;
-    let controlsRef;
+    let headerRef;
     let currentPackingStats = {
         blockCapacity: 2000000,
         mempoolSize: 0,
@@ -38,19 +39,29 @@
         statusClass: 'info'
     };
     
-    // Optimized loading states
+    // Data persistence and error tracking
+    let lastSuccessfulLoad = {
+        transactions: null,
+        blocks: null,
+        price: null
+    };
+    
+    let apiStatus = {
+        transactions: { working: true, lastError: null, consecutiveFailures: 0 },
+        blocks: { working: true, lastError: null, consecutiveFailures: 0 },
+        price: { working: true, lastError: null, consecutiveFailures: 0 }
+    };
+    
+    // Loading states
     let coreDataLoaded = false;
     let componentsReady = false;
     let initialLoadComplete = false;
-    
-    // Performance optimization: Load data in stages
     let loadingStage = 'price'; // 'price' -> 'basic' -> 'transactions' -> 'complete'
     
-    // Connect controls to components when ready
-    $: if (controlsRef && transactionPackingRef) {
-        controlsRef.setTransactionPackingRef(transactionPackingRef);
-        componentsReady = true;
-    }
+    // Status notifications
+    let showApiStatus = false;
+    let statusMessage = '';
+    let statusType = 'info';
     
     // Lazy load other components only when needed
     $: if (currentMode !== 'pack' && !MempoolGrid) {
@@ -76,15 +87,68 @@
         }
     }
     
-    // Enhanced debug logging
-    $: {
-        console.log('🎯 Main page state:', {
-            currentMode,
-            loadingStage,
-            coreDataLoaded,
-            componentsReady,
-            initialLoadComplete
-        });
+    // Show API status notifications
+    function showStatusNotification(message, type = 'info', duration = 4000) {
+        statusMessage = message;
+        statusType = type;
+        showApiStatus = true;
+        
+        setTimeout(() => {
+            showApiStatus = false;
+        }, duration);
+        
+        console.log(`📢 Status: ${type.toUpperCase()} - ${message}`);
+    }
+    
+    // API error handling with data persistence
+    function handleApiError(endpoint, error, data = null) {
+        apiStatus[endpoint].lastError = error.message || error;
+        apiStatus[endpoint].consecutiveFailures++;
+        apiStatus[endpoint].working = false;
+        
+        const failureCount = apiStatus[endpoint].consecutiveFailures;
+        
+        if (data && data.error && data.fallback === 'preserve_existing') {
+            console.log(`📦 Preserving existing ${endpoint} data due to API failure`);
+            showStatusNotification(
+                `${endpoint} API unavailable, showing last known data`,
+                'warning',
+                6000
+            );
+        } else if (failureCount === 1) {
+            showStatusNotification(
+                `${endpoint} API error: ${error.message || error}`,
+                'error',
+                5000
+            );
+        } else if (failureCount >= 3) {
+            showStatusNotification(
+                `${endpoint} API failing repeatedly (${failureCount}x), using fallback`,
+                'error',
+                8000
+            );
+        }
+        
+        console.error(`❌ ${endpoint} API error (failure #${failureCount}):`, error);
+    }
+    
+    // Track successful API calls
+    function handleApiSuccess(endpoint) {
+        const wasDown = !apiStatus[endpoint].working;
+        
+        apiStatus[endpoint].working = true;
+        apiStatus[endpoint].lastError = null;
+        apiStatus[endpoint].consecutiveFailures = 0;
+        
+        if (wasDown) {
+            showStatusNotification(
+                `${endpoint} API restored`,
+                'success',
+                3000
+            );
+        }
+        
+        console.log(`✅ ${endpoint} API working normally`);
     }
     
     function getDisplayModeName(mode) {
@@ -97,8 +161,92 @@
         }
     }
     
+    // Handle mode changes from Header
+    function handleModeChange(mode) {
+        console.log(`📱 Header: Mode changed to ${mode}`);
+        currentMode = mode;
+        
+        // Trigger specific actions for certain modes
+        if (mode === 'hex') {
+            setTimeout(() => {
+                if (ergoPackingRef && ergoPackingRef.startPackingAnimation) {
+                    console.log('🎬 Auto-starting hexagon packing animation');
+                    ergoPackingRef.startPackingAnimation();
+                }
+            }, 500);
+        }
+    }
+    
+    // Handle refresh from Header
+    async function handleRefresh() {
+        console.log('🔄 Header: Refreshing all data...');
+        showStatusNotification('Refreshing all data...', 'info', 2000);
+        
+        try {
+            await Promise.all([
+                loadPrice(),
+                loadBlocks(),
+                loadTransactionsOptimized()
+            ]);
+            
+            console.log('✅ All data refresh completed');
+            showStatusNotification('Data refreshed successfully', 'success', 2000);
+        } catch (error) {
+            console.error('❌ Error during full data refresh:', error);
+            showStatusNotification('Some data could not be refreshed', 'warning', 4000);
+        }
+    }
+    
+    // Add Test Transactions function (to be called from StatsDisplay and Header)
+    function handleAddTestTransactions() {
+        console.log('🎭 Adding test transactions based on current mode:', currentMode);
+        
+        if (currentMode === 'pack' && transactionPackingRef) {
+            transactionPackingRef.addDummyTransactions();
+            showStatusNotification('✅ Added test transactions to packing grid', 'success');
+        } else if (currentMode === 'ball' && ballPhysicsRef) {
+            ballPhysicsRef.addDummyTransactions();
+            showStatusNotification('✅ Added test transactions to ball physics', 'success');
+        } else if (currentMode === 'hex' && ergoPackingRef) {
+            // For hex mode, we might want to refresh the packing or add some demo data
+            if (ergoPackingRef.startPackingAnimation) {
+                ergoPackingRef.startPackingAnimation();
+                showStatusNotification('🎬 Started hexagon packing animation', 'success');
+            }
+        } else {
+            showStatusNotification('ℹ️ Test transactions not available for current mode', 'info');
+        }
+    }
+    
+    // Repack function (NEW - to be called from Header)
+    function handleRepack() {
+        console.log('🔄 Repacking based on current mode:', currentMode);
+        
+        if (currentMode === 'pack' && transactionPackingRef) {
+            transactionPackingRef.repackTransactions();
+            showStatusNotification('🔄 Repacking transactions with gravity algorithm', 'info');
+        } else if (currentMode === 'ball' && ballPhysicsRef) {
+            // For ball physics, clear and reload transactions
+            ballPhysicsRef.clearBalls();
+            setTimeout(() => {
+                if (ballPhysicsRef) {
+                    ballPhysicsRef.addDummyTransactions();
+                }
+            }, 500);
+            showStatusNotification('🔄 Reorganizing ball physics', 'info');
+        } else if (currentMode === 'hex' && ergoPackingRef) {
+            // For hex mode, restart animation
+            if (ergoPackingRef.startPackingAnimation) {
+                ergoPackingRef.startPackingAnimation();
+                showStatusNotification('🔄 Restarting hexagon packing', 'info');
+            }
+        } else {
+            showStatusNotification('ℹ️ Repack not available for current mode', 'info');
+        }
+    }
+    
     onMount(async () => {
-        console.log('🚀 Ergomempool SvelteKit app initialized - OPTIMIZED LOADING');
+        console.log('🚀 Ergomempool SvelteKit app initialized - WITH ORIGIN ACTIVITY PANEL');
         
         // Stage 1: Load price first (fastest)
         loadingStage = 'price';
@@ -120,22 +268,28 @@
         loadingStage = 'complete';
         initialLoadComplete = true;
         
-        // Set up auto-refresh intervals (with longer intervals to reduce load)
-        const transactionInterval = setInterval(loadTransactionsOptimized, 45000); // 45s instead of 30s
-        const priceInterval = setInterval(loadPrice, 300000); // 5 minutes
-        const blockInterval = setInterval(loadBlocks, 60000); // 1 minute instead of 30s
+        // Set up auto-refresh intervals
+        const transactionInterval = setInterval(() => {
+            loadTransactionsOptimized().catch(error => {
+                console.error('🔄 Auto-refresh transaction error:', error);
+            });
+        }, 45000);
+        
+        const priceInterval = setInterval(() => {
+            loadPrice().catch(error => {
+                console.error('🔄 Auto-refresh price error:', error);
+            });
+        }, 300000);
+        
+        const blockInterval = setInterval(() => {
+            loadBlocks().catch(error => {
+                console.error('🔄 Auto-refresh block error:', error);
+            });
+        }, 60000);
         
         intervalIds = [transactionInterval, priceInterval, blockInterval];
         
-        console.log('⏰ Optimized auto-refresh intervals set up');
-        
-        // Initialize Controls component with default mode
-        setTimeout(() => {
-            if (controlsRef && controlsRef.setMode) {
-                controlsRef.setMode('pack');
-                console.log('🎯 Set initial mode to pack in Controls component');
-            }
-        }, 100);
+        console.log('⏰ Auto-refresh intervals set up');
         
         // Load transaction table component lazily after initial render
         setTimeout(() => {
@@ -148,167 +302,188 @@
         console.log('🧹 Cleaned up intervals');
     });
     
-    // Optimized transaction loading - load smaller batches initially
+    // ENHANCED: Transaction loading with origin detection and data persistence
     async function loadTransactionsOptimized() {
         try {
-            console.log('📊 Loading transactions (optimized)...');
+            console.log('📊 Loading transactions with origin detection...');
             const txData = await fetchTransactions();
+            
+            if (txData && txData.error && txData.serverData) {
+                handleApiError('transactions', new Error(txData.error), txData.serverData);
+                
+                if (txData.serverData.fallback === 'preserve_existing' && lastSuccessfulLoad.transactions) {
+                    console.log('📦 Using preserved transaction data');
+                    return;
+                } else {
+                    if (!lastSuccessfulLoad.transactions) {
+                        transactions.set([]);
+                    }
+                    return;
+                }
+            }
+            
             const priceData = await fetchPrice();
             
-            // For initial load, only process first 100 transactions for faster rendering
             const maxTransactions = initialLoadComplete ? txData.length : Math.min(txData.length, 100);
             const limitedTxData = txData.slice(0, maxTransactions);
             
+            // Add USD values
             const txWithUsd = addUsdValues(limitedTxData, priceData.price);
             
-            transactions.set(txWithUsd);
-            console.log(`📊 Loaded ${txWithUsd.length}/${txData.length} transactions (optimized)`);
+            // ENHANCED: Ensure origin detection is applied and wallet detection is current
+            const txWithOriginsAndUsd = txWithUsd.map(tx => {
+                if (!tx.origin) {
+                    // Apply origin detection if not already present
+                    const processed = processTransactionForOrigins(tx, $walletConnector.connectedAddress);
+                    console.log(`🔍 Applied origin detection to tx ${tx.id?.substring(0, 8)}...: ${processed.origin}`);
+                    return processed;
+                } else {
+                    // Update wallet detection with current wallet address
+                    return {
+                        ...tx,
+                        isWallet: $walletConnector.connectedAddress && (
+                            tx.inputs?.some(input => input.address === $walletConnector.connectedAddress) ||
+                            tx.outputs?.some(output => output.address === $walletConnector.connectedAddress)
+                        )
+                    };
+                }
+            });
             
-            // Load remaining transactions in background if initial load
+            transactions.set(txWithOriginsAndUsd);
+            lastSuccessfulLoad.transactions = new Date();
+            handleApiSuccess('transactions');
+            
+            // Log origin distribution
+            const originCounts = txWithOriginsAndUsd.reduce((counts, tx) => {
+                counts[tx.origin] = (counts[tx.origin] || 0) + 1;
+                return counts;
+            }, {});
+            
+            console.log(`📊 Loaded ${txWithOriginsAndUsd.length}/${txData.length} transactions with origins:`, originCounts);
+            
             if (!initialLoadComplete && txData.length > 100) {
                 setTimeout(() => {
                     const remainingTxData = txData.slice(100);
                     const remainingTxWithUsd = addUsdValues(remainingTxData, priceData.price);
-                    transactions.update(current => [...current, ...remainingTxWithUsd]);
+                    
+                    // Apply origin detection to remaining transactions
+                    const remainingTxWithOrigins = remainingTxWithUsd.map(tx => {
+                        if (!tx.origin) {
+                            return processTransactionForOrigins(tx, $walletConnector.connectedAddress);
+                        }
+                        return tx;
+                    });
+                    
+                    transactions.update(current => [...current, ...remainingTxWithOrigins]);
                     console.log(`📊 Loaded remaining ${remainingTxData.length} transactions in background`);
                 }, 2000);
             }
         } catch (error) {
             console.error('❌ Error loading transactions:', error);
-            transactions.set([]);
+            handleApiError('transactions', error);
+            
+            if (!lastSuccessfulLoad.transactions) {
+                transactions.set([]);
+            } else {
+                console.log('📦 Keeping existing transaction data due to API error');
+            }
         }
     }
     
+    // Price loading with persistence
     async function loadPrice() {
         try {
             const priceData = await fetchPrice();
             currentPrice.set(priceData.price);
+            lastSuccessfulLoad.price = new Date();
+            handleApiSuccess('price');
             console.log(`💰 Current ERG price: $${priceData.price}`);
         } catch (error) {
             console.error('❌ Error loading price:', error);
-            currentPrice.set(1.0);
+            handleApiError('price', error);
+            
+            if (!lastSuccessfulLoad.price) {
+                currentPrice.set(1.0);
+            } else {
+                console.log('📦 Keeping existing price data due to API error');
+            }
         }
     }
     
+    // Block loading with persistence
     async function loadBlocks() {
         try {
+            console.log('🧱 Loading blocks...');
             const blocks = await fetchBlocks();
+            
+            if (blocks && blocks.error && blocks.serverData) {
+                handleApiError('blocks', new Error(blocks.error), blocks.serverData);
+                
+                if (blocks.serverData.fallback === 'preserve_existing' && lastSuccessfulLoad.blocks) {
+                    console.log('📦 Using preserved block data');
+                    return;
+                } else {
+                    if (!lastSuccessfulLoad.blocks) {
+                        blockData.set([]);
+                    }
+                    return;
+                }
+            }
+            
             blockData.set(blocks);
+            lastSuccessfulLoad.blocks = new Date();
+            handleApiSuccess('blocks');
             console.log(`🧱 Loaded ${blocks.length} blocks`);
         } catch (error) {
             console.error('❌ Error loading blocks:', error);
-            blockData.set([]);
-        }
-    }
-    
-    // Full data reload for manual refresh
-    async function loadAllData() {
-        console.log('📡 Loading all data...');
-        try {
-            await loadPrice();
-            await loadBlocks();
+            handleApiError('blocks', error);
             
-            // Load full transaction set
-            const txData = await fetchTransactions();
-            const priceData = await fetchPrice();
-            const txWithUsd = addUsdValues(txData, priceData.price);
-            transactions.set(txWithUsd);
-            
-            console.log('✅ All data loaded successfully');
-        } catch (error) {
-            console.error('❌ Error loading data:', error);
-            // Set fallback data to prevent crashes
-            transactions.set([]);
-            currentPrice.set(1.0);
-            blockData.set([]);
-        }
-    }
-    
-    function handleRefresh() {
-        console.log('🔄 Manual refresh triggered');
-        loadAllData();
-        
-        const refreshButton = document.querySelector('.control-button.refresh-button');
-        if (refreshButton) {
-            const originalText = refreshButton.textContent;
-            refreshButton.textContent = 'Refreshing...';
-            refreshButton.disabled = true;
-            
-            setTimeout(() => {
-                refreshButton.textContent = originalText;
-                refreshButton.disabled = false;
-            }, 1000);
-        }
-    }
-    
-    // Handle mode changes from Controls component
-    function handlePack(isHexPacking) {
-        console.log('📦 Handle pack called with:', isHexPacking);
-        
-        if (isHexPacking) {
-            currentMode = 'hex';
-            console.log('📦 Switching to Hexagon packing mode');
-            
-            setTimeout(() => {
-                if (ergoPackingRef && ergoPackingRef.startPackingAnimation) {
-                    console.log('🎬 Starting hexagon packing animation');
-                    ergoPackingRef.startPackingAnimation();
-                } else {
-                    console.log('⚠️ Hexagon packing component not ready yet, retrying...');
-                    
-                    setTimeout(() => {
-                        if (ergoPackingRef && ergoPackingRef.startPackingAnimation) {
-                            console.log('🎬 Starting hexagon packing animation (retry)');
-                            ergoPackingRef.startPackingAnimation();
-                        }
-                    }, 1000);
-                }
-            }, 500);
-        } else {
-            if (controlsRef && controlsRef.getCurrentMode) {
-                currentMode = controlsRef.getCurrentMode();
-                console.log('🎯 Updated mode from Controls:', currentMode);
+            if (!lastSuccessfulLoad.blocks) {
+                blockData.set([]);
             } else {
-                currentMode = 'pack';
-                console.log('📊 Fallback to pack mode');
+                console.log('📦 Keeping existing block data due to API error');
             }
         }
     }
-    
-    // Watch for mode changes from Controls component
-    function handleModeChange() {
-        if (controlsRef && controlsRef.getCurrentMode) {
-            const newMode = controlsRef.getCurrentMode();
-            if (newMode !== currentMode) {
-                console.log(`🔄 Mode change detected: ${currentMode} → ${newMode}`);
-                currentMode = newMode;
-            }
-        }
-    }
-    
-    // Poll for mode changes
-    let modeCheckInterval;
-    onMount(() => {
-        modeCheckInterval = setInterval(handleModeChange, 1000); // Reduced frequency
-    });
-    
-    onDestroy(() => {
-        if (modeCheckInterval) {
-            clearInterval(modeCheckInterval);
-        }
-    });
 </script>
 
 <svelte:head>
     <title>Ergomempool</title>
     <meta name="description" content="Real-time Ergo blockchain mempool visualizer with transaction packing simulation">
     <meta name="keywords" content="Ergo, blockchain, mempool, visualization, cryptocurrency">
-    <!-- Preload critical resources -->
     <link rel="preload" href="/Ergomempool_logo_f.svg" as="image">
 </svelte:head>
 
+<!-- API Status Notification -->
+{#if showApiStatus}
+    <div class="api-status-notification {statusType}">
+        <div class="status-icon">
+            {#if statusType === 'success'}
+                ✅
+            {:else if statusType === 'warning'}
+                ⚠️
+            {:else if statusType === 'error'}
+                ❌
+            {:else}
+                ℹ️
+            {/if}
+        </div>
+        <div class="status-message">{statusMessage}</div>
+    </div>
+{/if}
+
 <div class="container">
-    <Header />
+    <!-- Clean Header with Navigation -->
+    <Header 
+        bind:this={headerRef}
+        {currentMode}
+        onModeChange={handleModeChange}
+        onRefresh={handleRefresh}
+        onAddTestTransactions={handleAddTestTransactions}
+        onRepack={handleRepack}
+    />
+
+    <!-- Blocks Section -->
     <BlocksSection />
     
     <main class="visualizer" 
@@ -318,17 +493,18 @@
           class:grid-mode={currentMode === 'grid'}>
         <h2>Mempool Visualizer</h2>
         
-        <StatsDisplay packingStats={currentPackingStats} />
-        
-        <Controls 
-            bind:this={controlsRef}
-            onRefresh={handleRefresh} 
-            onPack={handlePack} 
+        <!-- Stats Display with Add Test Transactions button -->
+        <StatsDisplay 
+            packingStats={currentPackingStats} 
+            {currentMode}
+            onAddTestTransactions={handleAddTestTransactions}
         />
         
-        <!-- Optimized loading with better performance -->
+        <!-- NEW: Origin Activity Panel -->
+        <OriginActivityPanel />
+        
+        <!-- Dynamic Content Based on Current Mode -->
         {#if coreDataLoaded}
-            <!-- Priority-based conditional rendering with lazy loading -->
             {#if currentMode === 'pack'}
                 <!-- Transaction Packing Mode (DEFAULT - Always loaded) -->
                 <TransactionPackingGrid 
@@ -395,6 +571,71 @@
         flex-direction: column;
         min-height: 100vh;
         background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+    }
+    
+    /* API Status Notification Styling */
+    .api-status-notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 400px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid transparent;
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .api-status-notification.success {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+        border-color: #2ecc71;
+    }
+    
+    .api-status-notification.warning {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        border-color: #f39c12;
+    }
+    
+    .api-status-notification.error {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border-color: #e74c3c;
+    }
+    
+    .api-status-notification.info {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        border-color: #3498db;
+    }
+    
+    .status-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .status-message {
+        flex: 1;
+        line-height: 1.4;
     }
     
     .visualizer {
@@ -466,7 +707,7 @@
         text-shadow: 0 2px 4px rgba(212, 101, 27, 0.3);
     }
     
-    /* Enhanced loading state styling */
+    /* Loading state styling */
     .loading-container, .lazy-loading-container {
         display: flex;
         flex-direction: column;
@@ -562,6 +803,13 @@
         .loading-progress {
             width: 150px;
         }
+        
+        .api-status-notification {
+            left: 10px;
+            right: 10px;
+            max-width: none;
+            font-size: 13px;
+        }
     }
     
     @media (max-width: 480px) {
@@ -578,6 +826,12 @@
         .visualizer.pack-mode,
         .visualizer.ball-mode {
             min-height: 450px;
+        }
+        
+        .api-status-notification {
+            top: 80px;
+            font-size: 12px;
+            padding: 10px 15px;
         }
     }
 </style>
