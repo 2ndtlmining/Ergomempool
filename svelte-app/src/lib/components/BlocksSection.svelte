@@ -13,7 +13,9 @@
         "NXXe6NnN": "Nanopool",
         "utiXtQYP": "Sigmanauts",
         "ofdQbHbY": "Woolypooly",
-        "NhuNP8Je": "JJpool"
+        "NhuNP8Je": "JJpool",
+        "C5AFYfSc": "2Miners Solo"
+
     };
     
     const minerLogos = {
@@ -26,7 +28,8 @@
         "utiXtQYP": "logos/sigmanauts.png",
         "ofdQbHbY": "logos/woolypooly.jpg",
         "Unknown": "logos/unknown.svg",
-        "NhuNP8Je": "logos/jjpool.png"
+        "NhuNP8Je": "logos/jjpool.png",
+        "C5AFYfSc": "logos/2miners.png"
     };
     
     let mounted = false;

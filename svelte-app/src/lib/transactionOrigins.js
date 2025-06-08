@@ -7,8 +7,8 @@ export const PLATFORM_CONFIGS = {
     website: "https://app.ergodex.io",
     contractAddresses: [
       // ErgoDEX smart contract addresses - add real addresses here
-      "9f4QF8AD1nQ3nJahQVkMj8hFSVVzVom77b52JU7EW71Zexg6N8v",
-      "8b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
+      "9fdmUutc4DhcqXAAyQeBTsw49PjEM4vuW9riQCHtXAoGEw3R11d",
+      "5vSUZRZbdVbnk4sJWjg2uhL94VZWRg4iatK9VgMChufzUgdihgvhR8yWSUEJKszzV7Vmi6K8hCyKTNhUaiP8p5ko6YEU9yfHpjVuXdQ4i5p4cRCzch6ZiqWrNukYjv7Vs5jvBwqg5hcEJ8u1eerr537YLWUoxxi1M4vQxuaCihzPKMt8NDXP4WcbN6mfNxxLZeGBvsHVvVmina5THaECosCWozKJFBnscjhpr3AJsdaL8evXAvPfEjGhVMoTKXAb2ZGGRmR8g1eZshaHmgTg2imSiaoXU5eiF3HvBnDuawaCtt674ikZ3oZdekqswcVPGMwqqUKVsGY4QuFeQoGwRkMqEYTdV2UDMMsfrjrBYQYKUBFMwsQGMNBL1VoY78aotXzdeqJCBVKbQdD3ZZWvukhSe4xrz8tcF3PoxpysDLt89boMqZJtGEHTV9UBTBEac6sDyQP693qT3nKaErN8TCXrJBUmHPqKozAg9bwxTqMYkpmb9iVKLSoJxG7MjAj72SRbcqQfNCVTztSwN3cRxSrVtz4p87jNFbVtFzhPg7UqDwNFTaasySCqM",
       // Add more ErgoDEX addresses here as needed
     ]
   },
@@ -120,9 +120,7 @@ export const PLATFORM_CONFIGS = {
     color: "#9b59b6",
     website: "https://spectrum.fi",
     contractAddresses: [
-      // Spectrum Finance addresses - add real addresses here
-      "5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d",
-      "4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c",
+      "4B8vRwhxhAJb8TuN4RZpBeLmAkQUtf7a4QaYqqSCZAQHjyhzgVLGiFTPp9CaZRbssRnVHAzqUKtBBCWjfMSxpi1Z59H7sj1E8o6XFqYCRYFp1n2aC6tYptFLrrX3c1jXBhcsS7NNU5NLHSuCNC6bDf9KYhxfgQTtYkozrGk2qzB3aB8mmaC8ZHaAfzvQmSzcxGwtTyquk4yfeR9tsvrvhGPeyv6Ys74Q3VqQoVkuSMq21gRY5wgBz4gq6tTBY1Xv4BkHoFQm2wx8TWQc8Rof81DCePanX598Z9ZJzaDLnT5TDjQpECKPXvuuxLivbbFjtc4FZ65xTSHGk2uHsohRAMrMiug5aVa7UXwoRRLomvCrg8MbyowkuiQXcZWu8ue3QBTLuL5yy6yqxs2SYDPiFHqJhU3ag94Tb5Q2bPaJcAgomJehtn9BB5L9GoLe6Mx9Jti6F1WXgrGcuHeBQnXpiS8pRMN845AxseExzyvksmj4gyXEJqgookbneHtPuDW3QefeWH4LH13AvmXhm8QFTYdAFRuhXMBwJJbXL1yBcLE4nexa7d2AY7Hndr7gfecxRY4UnypdpLnpTTec5vEppaDrEx6KQ4gdeiDyJLmJCGHeB",
     ]
   },
   
@@ -134,6 +132,7 @@ export const PLATFORM_CONFIGS = {
     contractAddresses: [
       // Rosen Bridge addresses - add real addresses here
       "nB3L2PD3J4rMmyGk7nnNdESpPXxhPRQ4t1chF8LTXtceMQjKCEgL2pFjPY6cehGjyEFZyHEomBTFXZyqfonvxDozrTtK5JzatD8SdmcPeJNWPvdRb5UxEMXE4WQtpAFzt2veT8Z6bmoWN",
+      "HNJiaJVyw1qtkiuQYxDTjaA8rmogotVzADinCt5qqavoyoREWM27WAp6f9Y79meFcMoJLt3yr8nsWC5xU5474ojCxE7VweGpd9sLz79VrSiyu7zBjBXPjgGLFZdJAEJhsH8A4y924MVZa7D9te6t3FUiLcpyTbrvTBhD7SpnD6hUjbGszCEGf1fRX1SmWZikeXcJEkfej42dPRimT6Fw423XAc9Tbeih8ZW8x7f5Y7y8frF5kxEdw998JdLU6UzPSwhrDjfKhySqmssQeQxCFwb19PMCB8ZZtx2mGwczr2H12Yi3hnEWn9ArqRqKWip24pJgm6e4Ky7n7BzGRRTmDtcA2EGH3zEVzpRH6aNSHE1MJ51dbCZSNFnRJfk3vxenkSevCfvEMfn5KyQP9wPU5foZACuHX8TQXvVUe1va3HXJFwCm74gxRssBy61GcYdwVbtxykPrw3t6aDX7c46BejsXvEaz5Ydcu7U8MJCoYia9pZ6zkjAj8d7Su12DMK1aLkBxw4vY2zQYc",
     ]
   },
   
@@ -148,16 +147,316 @@ export const PLATFORM_CONFIGS = {
       "0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e",
     ]
   },
+
+    MEWFINANCE: {
+    name: "MewFinance",
+    logo: "/logos/mew.png",
+    color: "#e74c3c",
+    website: "https://dex.mewfinance.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9hMAkrPjRnT3ewjx6xkF6Sg4DQaxvZZvQBPyb6Y4FoUTFwy75Gx",
+      "9fCMmB72WcFLseNx6QANheTCrDjKeb9FzdFNTdBREt2FzHTmusY",
+      "2Czxg7U54ZyGMzjt35EYX9g98H9UjFqteuYWX5CSgGCYWAjg1ng2jgm4BHjA6u1Azeo7EYQsBMVLbhRreNASJu54ho",
+      "2DnYaspUNUtsGfFELT8Bhvn1pGGE3nuHxyzxdDML4P31NgVPYZYwG2tsXJLsAWEvZRcKyBYXc6kUuoUpYVPHRpMQen36R2hFx4pBF6DmbeKWbXExsbXxyNaiQre58GUfwB2qktmaHETbgSSX64H2zFvCpPnLD8nPWAivN9zidxuWJyu1o8MxLf88bzJRBj8P3x75Qrd65KbfcWvFF9trYu6CyFc8M81DZ9GbPJVTNjvC9gdaRvkFBEWL8fM4xFTjZru3UT7NkbPy27RJwxgMNun7NQw3bhz3L5AGre4RXo8Ur4m3fJZjXK3GLUAGcTmV4VvjwF7WR3DDK2wiZGZnuWfkg8rXoyNBNf5NRe2FjoPWFU21R44ujLbnvsYRPZ5y24XzraKpLrYUhNDnMKHPqFo9CB6He8BnFWQzqQWJdWqYmdNgwbFC3yTuoyn1bNieRKPf2hXPMzQonRTcJBHLPXqgjhP39tbbc7fD83uDCxkyaT6TJzroCy7MU5TW159cDryPJQXwcbEir6EuACnqxs7e1BPzhFgDEdb3yw7m7rhvxYwcyk3mEamAdUJHxnnvi7M3uw8",
+      "2DnYaspUNUtsGfFELT8Bhvn1pGGE3nuHxyzxdDML4P31NgVPYZYwG2tsXJLsAWEvZRcKyBYXc6kUuoUpYVPHRpMQen36R2hFx4pBF6DmbeKWbXExsbXxyNaiQre58GUfwB2qktmaHETbgSSX64H2zFvCpPnLD8nPWAivN9zidxuWJyu1o8MxLf88bzJRBj8P3x75Qrd65KbfcWvFF9trYu6CyFc8M81DZ9GbPJVTNjvC9gdaRvkFBEWL8fM4xFTjZru3UT7NkbPy27RJwxgMNun7NQw3bhz3L5AGre4RXo8Ur4m3fJZjXK3GLUAGcTmV4VvjwFTzrDfb2bShgGYjEANjM7Fx9b3CbQHdJWwfq88hUXeqcoDJ9fT97zRJCxLCTYTuA9CDVaENsGGiRWQHykDwcdPZRSEWL5tJUr5knHxejdkQqE6unn3pZnHdwWWXqUqMuYKpfaeSS4za8MYUx1AK927ouM4yxUewQPJpbeTt8YQKDdeRNRwahqbQjziLYfRc3A1e4fqAgtWSsWcwn4sNVAXTm3EE7wJgA14yezRiEdpdkiam3mFjYR6xne1GtcSfssF",
+      "9fVqM8vqjpD6qBZQwnpheLT2AejFZLNBbhxRVzjALubnrCCZ8dd",
+
+    ]
+  },
+    
+  Padeia: {
+    name: "Padeia",
+    logo: "/logos/padeia.png",
+    color: "#e74c3c",
+    website: "https://www.paideia.im/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "3bseGyneBTFGJrm7ueHQFcDckgh1hzMJL8avfTECXVZuTbMd8ED1EzqyB8YT5yVEpR4jMFj9JxcEMBmQoQ1jbMRH34SarPaaEnQmhX5M8K5hnwgP8xb1yAXowMsKcmS5n4t2n1yWHhAcCAcdfDJDhyzZrbToqy8o4uXRWyRm2sVy1mymUoXMrbnSRjkojNw9PTLyKPtT1VD3GScKyz8v8AhgTXT7LJvt2QLJJnoAReGRoL6vrYpz7934gMUdsmmxq99LRQoiayRBUvim8joSAFNQMWVvmoqzkfXc6mRFeFo1YXbaBEiwevrz3xrXiEtqUmf4UPAs4os8KNwjVwgAGUXrChA3jiFaQpecjyTzCEFQqCbXRShVvZUsnovbxRrDBndpLeoLM5taaqi9HRCgD2rV2mgrc6iq2d9ridyVLuSFXPXNCAZpZKqBw4hW7FcESsy1D84pxf8S5AKdgEwKXb1pE86F1TVzgcmbKhJMWmxk2k46EaUw43AfQR1p5Uf1BRQWd2nzGmNaGpZbxd9VoNDqstXuTei3TyTNDw7HnmawXEpmZggFaB1hi9qhrz5Wbyz1KP4znhsm8biLec9QrFfPuN5bkFCon2Jm6Y37xKpzX3dad3S7y5Kf8Zxo3rPUdqr5kVT7H91F3QJX67p7WoidR7Dr2LvLabUEa4wfVFvG8DA71ztAFX1daTNkyAEu7j4wQUUuBzmCC7MNFMXx3YKaPmpy7d3xKo88XzygRiZocW1QuDZmBcxhrYhyUpBRFzUrgDsjyfmWKi9HoWzdxrHhrrafE5xfPEaishpQEEV5MdXoCKLzgxZYAFTgRj38kiLLKFRXR74GrJWntdHvkULDdtye2G1SU3PA4Qub4C2XEMYgCPMRyT7J1ybd8aH254DRR3ecVK8y9qbps4JLgrnEdNWDWqQxzMqVXFJfejcdLjS1G3X5reRhHHBDn4fdvgpGT6eKxaavpKPGckyvPNhGZqVFCJPwzBKFtQk9Ntko7EcJCdNUDSL2KWrypwcvScqrEJXyUYPMpVMP8uugEwbKRoMvn6C8xUF9bjkx7v5smugVGTiuYNYgN1EjEPUw93W9FejBStQCFgoxY7b6q5jWMfScki3oDL3fscQS7ZJBu3GmwZGC5Am5Av4TDVXXY6Rw7dS9gipoudeBnKehFXqPeGyKFuYQ16HgzfAMXvp9MF2cVYTZBhHPcugbDVugaYTUSaPtKAihhHjCj8D4LZBxEB3Zun72DrUb9dwbK2vt7RYcAmULa9wz4FyvYcjrqBNnAB3GgWnCMFEWZh2vg6hgEcCKDo7Dd9f1jSqRfnPHakJ8JdCX2mHpzSzBaNsvgWFqab5uqUQpXTKh39igGvEgNRizzHLtLEJ7ioFTMuQHZ3JAHpdSESSGDnsPR7dZ6aQLjN4wa2rNsFTG6x3muDVcvKZWNyiT3DtK7cvoNEvW8Km7e3Uc3kywaZnFrvJAYqfWxZdHQ2pKJcjhs8maFGm9dYkTP39sQ9uFzECahFRqy6WNrcsVuucw66i6cgWtHAR5oomf89fqskYrr55PoqcnAETCCqaHA3wD8ccXjvzKJwgnFCLX2ypBeXBumGgciu9EaGkZ3LJcodf8grpvjmZgPoNZKqQRNzGycFGm21YHEcjk98VaBNDFd9vArSvTtWrqq4xZmaeusHtE52ddnZNDTmt5jvS6QAJ8bd4bKvomrZ6fDX1r9nHydMaJCfqMxyHPEJT7gtJFPmFKoRjv7n5xDSM5yy6RAK5jVKf1fTD2F3uLuVs4AdEvdYvBBW8HKkpAUS9QjQqQaFwE9pP8uwKr",
+    ]
+  },
+
+
+  AUCTIONCOIN: {
+    name: "Auction Coin",
+    logo: "/logos/auctioncoin.png",
+    color: "#e74c3c",
+    website: "https://auctioncoin.app/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "R6Hbr4mRLjU9WRxKtMZiCcm4VX7txovoioP1RZw47NU3tiauZqq4TNsriemh8xWWxXmcZP7rYwWor9EgSNMV9BQY7b7EF4X7yee4gbRLFM4mKGVno4XSWNcpdY3ogJBhFVuvE7TowGuUh3iAwncXEMon1Q1hLCKSWsuQLRpsWcqRxrEonCVx9msj2Pm4WhpW4TbSTRvF8QCvEJ6bC7ima4tVrzYzRJpTAehhqwBkWFMJe6jG6c9wV9pdpy4czSyURikZ4VEYTQt2wDf4GvYgP9hse2skL1e2AQs3aaB3ooFKT2chPRQVV5krGo8Lr8Fiap4Cp3LCqhERwHciWn6UfsqZiMcqWJEB1YbZz2VUJsWXNmBX2XDbDMs4QrETqYyVwCoK1Sad7V8CohpxUEVtgT4XseBxX5V4JxedvubnEzeDNQ7g9JYK1J4SYH3KEwEAPGMPuFuZnCNLL5iK7tcsrb99ncSMc4CH15NdRQSVJM3UKbATaH77qMYscKDYLE6R99TjywDPqRFvu4bob8NRPjsNzCtZ7Gj2vsTHdXnR7FjvQ1Mk55BrBxMym8kDZ2UNdkPpmcyCjHcn5Gcx2WFastxTeN1QUWMovp2iFmjYxYNEHWnHHoBjECz8FvKXmNUBLruez6HJp21oE7kQSN6oixrLCpN25bynDAoKZhXjDW8uMoqa5PqKH4gARAKSPsg4ShfptBdH",
+      "xHu3f1P27DXd31Th3N8sxSfjaKVVoqeaF7gr4j1Y83ZFcd1L4RBhEy3df5sMezJmWDCy227TWMPnY1L4brtzpDJEPA3BUp1epttC3nTRrUfsCmt228GBBR3eGmovFvfPuUocqbJRkdVjRBcidV5zBtrWjkEJ5CpQSTXUY391M15P9sFKiS7GGUzYyqDBRHQXK2sPjXGLEqiSmaE6RRjLM6eFx5wva3YdkSj4y7zupsxAPLtfjNThg7E5z11aN8cU6thZrkvdmwNNMUBqdJT769B1pD7aY2WkaygcM2feqJJYJJtBmKMHZE8VoFDDpuescGn8wJSjRgXZkPaWPAYwcckSF87CFxdmDWRUeCLUAc2FuRoHuVdPyqbnNwf4Rz9e7yWy3RSBzqAZ2X2viFhT7M3WCFEnq8Eep5pNVdy3W6vjXgzbzoRdyVx9tpMh9Yp72Bfwvk2QdNkUUTnpLiVHdeCBptFm65EBkXEcgiW5fq6M2bNFwiZYPMzPZ4CU1x7SZuvr5SATaG9pm1wPFkfd6KCpNT5YxTrcRcPdgZgeDcJDiumnCKeHmXYZ3RvDcxGfe9CbMXSaEuHRST39aoJasvCWw6VAf2ZnUsWyxLDZ9LbxBXEykNuj81kiBNeBx3RGj7dsLygFS9rpuaTqmk3WyioXQCqppQ9TaeyAMZE29PNFLv2CHMbdYmz8XQKtKKMcbfmkBCsMm3NYaCyiT3gd8C8769QEGwuxerdXNJ3nFHB2xV3rs4DmgSfotZvFPksHw8SJicqMQmfWVa1jcpeg2j5gkem2fMTDGJXZWMbRQUpiRbNCWqZ6MDytZ75BYq7nZjR1CMZUekN4GwK11ukCjLEB75TdZagAkwG9R9KeAueCqsQ9TemE9a1rzZmHBghDRSuU66PPbiaXNs7T8JaMDyzPR99t58JEwVEyQnVeBJnMnHwDueDXah1gcvaQDjDmh5aRd9mxphKABesEqh4DndP2EbVz147JRW1QDw7mXwSvUvP4gUuwRkKGPgob2MCVM3ewiXGDpEgbE2QfZzQHkVHsTYGLmKEabqExUe7wPGypgcCzpfNJQrVan3zTsYN7TBcG2shTovcfxKDMU4mBn76UhrAGvGikDtdrovExPQdZBc7BTo4sPHyKwq6nTdeWikw7K",
+
+    ]
+  },
+
+  SKYHARBOUR: {
+    name: "SkyHarbour",
+    logo: "/logos/sky.png",
+    color: "#e74c3c",
+    website: "https://www.skyharbor.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "26tpZU6i6zeBRuzZVo7tr47zjArAxkHP8x7ijiRbbrvLhySvSU84bH8wNPGGG27EwhJfJLe7bvRPv6B1jQFQqrWUQqBX1XJpVGoiNgveance6JFZ4mKv1KkRE8nBSB3jKBGnVJjJF6wR1Z8YXRsUqrTff4bfmtbhaRRjibnDDtKhS71spfjjTBeU1AhhQpitCDg4NFxmTLyV1arE7G2riZKzDryjWnCiEJGzWNxYtVt8uDxd3qNSRE5sHECwcsb98x7rn4q4FyHMvvWrRMPFfVgAQd5wHCAHwhMEdqUrSFQVkmUMavju8CLAgCNcVFjUBKPX4ooEHLUw3QkxS9Jp6fAFAGmzJ6QVD71mAZYMYhoEQnFyUBx1txJjVJjCrcZsW43dimbt5su4ahATJ8qRtWgwat8vTViTVXAcBmUSnqbqhAqTCxcsS5EFS6ApJSfthPHYUyXwtcbTptfdnUx1e5hEiGcwxoQ8ivufNNiZE9xkxi4nsBBrBVBJ7pfSSoHvbodkzLrq91RHYrvuatyLuBSxgJxs198xUQhULqxmWwgthJLrG5VVfVYH",
+
+    ]
+  },
+
+  XEGGEX: {
+    name: "Xeggex",
+    logo: "/logos/xeggex.png",
+    color: "#e74c3c",
+    website: "https://xeggex.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9hphYTmicjazd45pz2ovoHVPz5LTq9EvXoEK9JMGsfWuMtX6eDu",
+
+    ]
+  },
+
+  TRADEOGRE: {
+    name: "Trade Ogre",
+    logo: "/logos/tradeogre.png",
+    color: "#e74c3c",
+    website: "https://tradeogre.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9fs99SejQxDjnjwrZ13YMZZ3fwMEVXFewpWWj63nMhZ6zDf2gif",
+
+    ]
+  },
+
+  PROBIT: {
+    name: "Probit",
+    logo: "/logos/probit.png",
+    color: "#e74c3c",
+    website: "https://www.probit.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9eg2Rz3tGogzLaVZhG1ycPj1dJtN4Jn8ySa2mnVLJyVJryb13QB",
+
+    ]
+  },
+
+  MEXC: {
+    name: "MEXC",
+    logo: "/logos/mexc.png",
+    color: "#e74c3c",
+    website: "https://www.mexc.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9heCed7HKoDwUXAnKU6P4mZZq1emzX7s4wLgaKziaEtxnVQEod2",
+
+    ]
+  },
+
+  KUCOIN: {
+    name: "KUCOIN",
+    logo: "/logos/kucoin.png",
+    color: "#e74c3c",
+    website: "https://kucoin.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9fpUtN7d22jS3cMWeZxBbzkdnHCB46YRJ8qiiaVo2wRCkaBar1Z",
+      "9fs7HkPGY9fhN6WsHd7V7LMcuMqsgseXzNahyToxJKwHCc1zc1c",
+      "9how9k2dp67jXDnCM6TeRPKtQrToCs5MYL2JoSgyGHLXm1eHxWs",
+
+    ]
+  },
+
+  HUOBI: {
+    name: "Huobi",
+    logo: "/logos/huobi.png",
+    color: "#e74c3c",
+    website: "https://huobi.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9feMGM1qwNG8NnNuk3pz4yeCGm59s2RbjFnS7DxwUxCbzUrNnJw",
+
+    ]
+  },
+
+  GATE: {
+    name: "Gate",
+    logo: "/logos/gate.png",
+    color: "#e74c3c",
+    website: "https://gate.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9gQYrh6yubA4z55u4TtsacKnaEteBEdnY4W2r5BLcFZXcQoQDcq",
+      "9iKFBBrryPhBYVGDKHuZQW7SuLfuTdUJtTPzecbQ5pQQzD4VykC",
+
+    ]
+  },
+
+  FLUX: {
+    name: "Flux Swap",
+    logo: "/logos/flux.png",
+    color: "#e74c3c",
+    website: "https://runonflux.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9fCKJ7g6ZffHAQb9UQY7S6YLF6dRVejBAXw284XNazkq8XLuZbw",
+    ]
+  },
+
+  COINEX: {
+    name: "Coinex",
+    logo: "/logos/coinex.png",
+    color: "#e74c3c",
+    website: "https://www.coinex.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9gD9khJaxi3SvcX9VVPQ3vnV3xUTonVQe3Fvg5X7cGGbXMRgd8i",
+      "9i51m3reWk99iw8WF6PgxbUT6ZFKhzJ1PmD11vEuGu125hRaKAH",
+    ]
+  },
+
+  WHALE: {
+    name: "Ergo whale",
+    logo: "/logos/whale.png",
+    color: "#e74c3c",
+    website: "https://gate.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9fu1mLunnUUYEdJSXRUu1KZDJyJZV4gajd1uEFMEBsCWLEAJENo",
+      "9fNFeYEeP9BYZCBpZNvdyesgGt1maqzycAaJZLeAsHMoxNd2oY4",
+      "9gSeGpfX7Q79XFwkH4V9hHsEqVWg9oY3V9t6WPkpudugn9s5t8u",
+      "9hUhEkUXJWYwigebSqhLMsLhmLj84UQSbChdBEbDpsFL59PKQ27",
+      "9f1veLQTxoAqxwYRGDuBfyaHhJd3cEwa34Ta69WUhrk7xa5ff56",
+      "9etDbVVWiZqQyPdKy8zn1XnLK4xH3h7ojxj9joPXRA7PHxfSejf",
+      "9etajWETQahf17pJNajRR6WPSxxz7MySS7HHWZEm4TXYQEevGCn",
+      "9gYo8cdgXQA7bysv1V5FZh7sRHrUDcHc9xYwgwHh6z9sNkJLkm4",
+      "9fe81G4udUeCNoKKUWTUhzs5B9kzuKAH6YCCaJMmSTMkaKHALGo",
+      "9hzhxCYK3tLw6KFBRg6dDUS9zvrJcrsHpoyFRhdDQ46CEuFwexh",
+      "9h3pPBU4sFuVxqWunPJNXuuEPMWBWrpewzKYhSZw5PAHKdmLnaf",
+      "9fBwfXHEpvtcBuJr2A3oeM6oDnLPo86GPRg1ftKmwwfd3e8pPKQ",
+      "9heprrYLa5i74DiAVerk83HcNTdhzUwDJmU7cTwtGQWDGDW61rC",
+      "9hXUYMuuSnsxFst7g4Wp2ZNvaggPDKqFnrWpiAfKSTDEGrpopiZ",
+      "9gwBXonhDNqKdHi3XHhx1EpEJCn6YM3AJpsZyNAHnFsNJQh4sXB",
+      "9geuhjLKGFhRBkKBBnGkhNLX1DrzJSWpv6ApqSoa6wqEekhXLmh",
+      "9hhQwN2Ku8ki6GvrdiphK4g2rwqJirXA1QSsNzMjZGigQPBbRus",
+      "9gN2v4mLGABGMcrBXL5pGkm6gjbJYkEvDqwuN5AUABmX2gPzaE4",
+      "9gKyL2AsdNgnL3a67AAXtufPoPUjoobwHWtFXNMART2QSZvyCXp",
+      "9gt6qyTtxrLSkpU4HAxearigmJPZ6KVK8qgHQgkQTpJS2ovjtQp",
+      "9gQydN8DJMoeULFe6YtU3sZutJTTDeDH752BRWjk69SG9siJFso",
+      "9h1D36JprBxfcbhBGLTFPwKavamPiEnQpZ5VEHymQYP5RaBBHyQ",
+      "9fgc4cBEMfz8RDfwxduRA895Sxm5p9LKdE3DqfEQp2LVU1XwyT2",
+      "9gDb3eYPUnM2z9s1ZZCKQLsgcPFh43eCTWKaUfEut7f6cEf9Pip",
+      "9hhDmzGSFmYsggZTtqLp3aETvbwU7ajLm4Rsk7qDgn9XXYnC3i2",
+      "9hdGM8D8fx2qiNJf1g2pX4WnkdGMmG75RNrkz8znbwnfVBYmct1",
+    ]
+  },
+
+  AUCTIONHOUSE: {
+    name: "Auction House",
+    logo: "/logos/auctioncoin.png",
+    color: "#e74c3c",
+    website: "https://ergoauctions.org",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "2JhU6VoVfmAxjDRnfJxXp77vERh1cgiu7wXocpjLqVANTFH2F2WWiBDfh6eV1NFAxCXWYhvKjMgHZLKMGxadKhWbRJR2hYCaUwP1LfcWV6kqEJokSxf7Kk3TyG8Zgx43kRP7n2eXSmPQYbSghY3zKaFmmi618EJYxgdwMuse9PH16ukYfWz7KXqbjczJLUTMNa867nJ2KmhrMUYgLHBTBKh6taK2grAVN1XLGgRQsKGqDeksAHbocytvcyZYqmqApftSHZFuBt6AxjUZkpN5PvkZJT9VQjQiN1jSWXB4sijF1B79AFDJmvX2yMt1wav9Zd4C2HSuKDwKEeNgQVfixRh9eH3pftpsaG9aoCvrJz6gD4JPkbUFLiuHkRV8WUKvD99KkbbwU8aJszSWcRRR4jbnwKjuZ2wSL1QMUyBmwEi6rrb1i7bN5FCUtvSyU9AYdZhMELWEgF9P5UDSuMDWWbHfJnviyg7C2aUA6YWoGt7W2xPNPbHRCmBWkGUw18fyqRmMLpYiNnLdfBoZwn2ECxEcyj1JBNH7U88MiDnYwZp5EzTSTSTLvfAT2YRhd4qa3tvSLCgkwLAXa4FEui8gUfEQ2jrGBMjSe8L9qMusncpAywZhB5Q6VepENxstYAPyDEZqhCotuzCC3anJcq5LZzRsbEC8zKLxvV7uMqg5bUJdSdo472CG98DiRwAYgG6Qiia3JwVFX9bHu5y4XdDpEbvr73n7UEi3FMaPG9PPm4xedNryfSdR8dSdBm7Km2aBGcH4nLoTGnHXRkeGCFbfA3dcAGwLQGhq7N4JhaQ6LgRS32Q1Fo34xE73aunrHy5hhAWq9ykpz6Ao1ks8sgorVW23R7V87d6oy7rfhKo27FK6YYxvwS9reB2qKwPDRg3JPWGDemS1oTmxU95mg4HTQ4HjzBbTEJreUofLxUdgkkZGknFA1HGSJZHJ1BFui86C7CrUq1UbNQmq66n8aezkC332CPB9ddz7rLgFF7tomCKRWYibwKquVJ875a7svvsw3465hADbaQ6pX5adj1oUHWQZeKdfBHhipHYqZw17JUUBb1E9cNjZVWiaSB8vN89R6oWaebQhL24b9dUpmQrV7ANaJ9AFFZE4ocsQrVHiak1Y4tiHNuG5cT7kYfT2mNSB3p5wqFNu2DVmX4V8yQaxCBKKkhjFPjmmeErjtQCbXbBuV8CPt8b3Ak9jyaqL9WF6MUKTcFrDWnAgwdNtfXT7ibnKBWxrpvGTqr7oUZFsnVqdaCgUuYeGwyFM66yrYRr9SmU3bjUhhwazZQpAzzFQc4yos6e3PfYBCZd7aTjduNDUkLqV9GEM43cZtKpU25c4AWikiQqzeBAGPSYpPxtxtzKoN8izE8PekBMq5ejv7qoVzfMqJ9SWwN1MgVJj7wjyuJ98x1QQ8VX9scodhfU1Ff3MgZk7may2kefyER1qqTzwFZYTbYhDzRJdb98QEJz6b4aZiBpurueSpjXGo4qMzkfC9467DGRmwQCbBLN97nfJ2d8zgeihr6zLyDvLK7rNBGc6PVp9SEsv3cvxQrvVShYkAqxUxTFkbdfvzsrdGHanUaQ5zZX24GRxM2wb2GWUuZxkBcpVj6a5gKJrQtjyK7d3WADNoEcbcAYphgJf",
+    ]
+  },
+
+    CROOKS: {
+    name: "Crooks Finance",
+    logo: "/logos/crooks.png",
+    color: "#e74c3c",
+    website: "https://crooks-fi.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9gpSJSBCSmti2xDqjSgf51N4z5QpUePJrF3cS8jto62ufhDrxLm",
+    ]
+  },
+
+  CYBERVERSE: {
+    name: "Cyberverse",
+    logo: "/logos/cyberverse.png",
+    color: "#e74c3c",
+    website: "https://www.cyberversegame.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9hjDAn8egB1RwNsMWvCV6fvx5GLRh53QzZ5rVe7TNbapxjwC6Yb",
+    ]
+  },
+
+  ERGORAFFLE: {
+    name: "Ergo Raffle",
+    logo: "/logos/ergo_raffle.png",
+    color: "#e74c3c",
+    website: "https://ergoraffle.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9hjDAn8egB1RwNsMKWS1gdArUXRDwTgdW5XbBHwZnusjpchYJcoZXYnFqyHN4Ere7BjZAdJepNdkAuE3ZbXyJxnXSwDKrvzmga5MgDEySeF7r42ixE8Q3VH11D9doJT7C2pxBHgn8qsCvaSwfG9zmyqYSqD1UTjXXpV5u3JPJFXT6fMtgM9dNsDr7o6i5gns7M54Gkv7iMkQgSWtCHBC6CaKfBpmXUkoRYCvjxEjSuj4MFUG48psPeU8JaFcPWuj4k6vnjatG7WyLng2zGYsHWSAtAk4kJ2EkHrNZtY2gmC3UePuX7KAeoFyAMB7CquEThKvumCDZTUuZpwMnqzLH6tToiAMPqNyXVphWpTmquobhVY7DJGTzFV5LyYqfomGwhsftE1u4Kt2vPY3Zbjwzp5kzkhvJwKu9ouxVKrb4XRaoKWy7qX2Ne8gi2SHykeRX2dCtKMaeAeyXaCNGPwd2yVPPodBK62FEopCFGrRbbuzr7rzjLTUWvCV6fvx5GLRh53QzZ5rVe7TNbapxjwC6Yb",
+    ]
+  },
+
+  TIPPERBOT: {
+    name: "Tipperbot ",
+    logo: "/logos/tipper.png",
+    color: "#e74c3c",
+    website: "https://ergoraffle.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9fEVRjBn42bk7XnzaZ91sdzrqyd25msyBhW8731TA7CMPZC1BE2",
+    ]
+  },
+
+  SIGSRCOL: {
+    name: "Sig SR Collection",
+    logo: "/logos/sigmanauts.png",
+    color: "#e74c3c",
+    website: "https://ergominers.com/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9fE5o7913CKKe6wvNgM11vULjTuKiopPcvCaj7t2zcJWXM2gcLu",
+    ]
+  },
+
+  GAMBIT: {
+    name: "Grand Gambit",
+    logo: "/logos/grandgambit.png",
+    color: "#e74c3c",
+    website: "https://www.grandgambit.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9fSuzs5tQUSaitGQhurYFfHJUBqQ4pz94BTvwQKL37vT81UcEij",
+    ]
+  },
+
+  HODLERG: {
+    name: "HODL ERG",
+    logo: "/logos/safe.png",
+    color: "#e74c3c",
+    website: "https://app.hodlcoin.co.in/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "TZPn3oLcgqXcSLXXguTKqW6TXsMC9brGikXUrMfygBTPdeLgbKLkWj63EQ8rUQQodcVveRjDSigJ3CVd8yjeBwY4jQLr6ZMxDXTPn7V42zNTskCp18maQwN3p4S82tezBcJnTdWoSzeQVbqhARUyNNFjKdyKc6Z49XKkQL7jktSJcG4fnFayBqPZRhQMEB1ZZ12bU2rX5SkQj5jE65N2ZFCTi6WbNeNWWZQYPtZv8fGVLmNdhxgg968LYPLNLBJVa7rUo6Nyce4CszBYq44bD14rvKMZXq1zQ6ZjkFRfmXjDFg92MsXGuENuZdPnTgKJ7Cdct3EP4UFjgZx1PQSauX8own7pPEAf9MBRdF84WNqo9cbZhvrhUVvispD6bP2AoCZWKkrppi1atoV22RPxbouC1rkpsKW287HAXxfiwP8VKVDRUi1aVjRvFP13RpyrBf9cu1z44xnJwTC9ui38XPAUjz4DWp87mGh6JC54z2Mqyk2nEaai7nBP4fPW53XSExd5AK5JC9fVyfdrRtiR5ADkcc2yqXrF",
+    ]
+  },
+
+  USDORACLE: {
+    name: "USD Oracle",
+    logo: "/logos/usdoracle.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    contractAddresses: [
+      // Mining pool payout addresses - add real addresses here
+      "NTkuk55NdwCXkF1e2nCABxq7bHjtinX3wH13zYPZ6qYT71dCoZBe1gZkh9FAr7GeHo2EpFoibzpNQmoi89atUjKRrhZEYrTapdtXrWU4kq319oY7BEWmtmRU9cMohX69XMuxJjJP5hRM8WQLfFnffbjshhEP3ck9CKVEkFRw1JDYkqVke2JVqoMED5yxLVkScbBUiJJLWq9BSbE1JJmmreNVskmWNxWE6V7ksKPxFMoqh1SVePh3UWAaBgGQRZ7TWf4dTBF5KMVHmRXzmQqEu2Fz2yeSLy23sM3pfqa78VuvoFHnTFXYFFxn3DNttxwq3EU3Zv25SmgrWjLKiZjFcEcqGgH6DJ9FZ1DfucVtTXwyDJutY3ksUBaEStRxoUQyRu4EhDobixL3PUWRcxaRJ8JKA9b64ALErGepRHkAoVmS8DaE6VbroskyMuhkTo7LbrzhTyJbqKurEzoEfhYxus7bMpLTePgKcktgRRyB7MjVxjSpxWzZedvzbjzZaHLZLkWZESk1WtdM25My33wtVLNXiTvficEUbjA23sNd24pv1YQ72nY1aqUHa2",
+    ]
+  },
+
+
   
   SIGMAFI: {
     name: "SigmaFi",
     logo: "/logos/sigmafi.png",
     color: "#34495e",
-    website: "https://ergo.getblok.io",
+    website: "https://sigmafi.app/",
     contractAddresses: [
       // Mining pool payout addresses - add real addresses here
-      "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d",
-      "8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c",
+      "3FdyuY8fqeTtYcsuvTsmsw4ZBGde2cad6hyntGxzSY3rd4JtTwTvK64xp3XJZvYNTijrTMZMQxkFiULuHpq46VFbAiSSHXLe1qy5WXNRELj4tcx6wEPbSDqzDyVbY6wKFQhmvYQT2XjqLJAiBGV9F6f2uXrjXFPzPnXpVeJnWc8ob1wMqbfgBQKdfu24qx3pejkAfAz2hmQQ57xgzGwHCcGyJdad7UxwmDetAUER8iwE32rygGCmqXaVeKGcJ33epYNGpDLPnYUg3Qz7eYuHHb7mAqwkEp6XGE1jWbf8nS7TA1taNpakssbWYN2YmB9NBG8nWNzLhc9QBdqyAn9WQ63Jh1znt2up6sQJR7xnon9ZsYoeo7bErzg4uoJbTLzwjhZBJ9En9bMX72xUb5zhvSSua6CseMMA6s86g2mwrieRwqFM7CGDypy78MzWS1nagUBKLet8LAFFpb6DKBK1h2HpAvLnMbWB7Kp3rJ4be6ed5crNdZTqhbSww96P2KNSZemhwfgAkUFjMJzB2dEG9VNAW1dMk5nBrS8JsRHhYpPqFcJiFtQvcar1ijs2PqsR9k4P41Y99iomfYXkSoA6z612v1U1C19ASVurzuxGP1vNwNyKLceFVTYXbgkgUFX8Z2nwMz6d2TCa4XTpt9daV5sBV88YJgCiYbL5QhxnoTdYRZbxu725jnV7gbnX9FWjLNaXYJubi5u8kPs3MYzSALeUvtfx6wJV1XyBn5DMbvy8XgFFMKyxtUrfU3dAVaZmUZJnYy8Dz6qrf8tyKx3uU7RfosjV7rcAFRDpozznWRfsxZUir5EzcVFQc9NbjB4HdgJxxvUJ9Nr9F8XCQLL89wCTtaNZBFF284qLtrQ",
     ]
   },
   
