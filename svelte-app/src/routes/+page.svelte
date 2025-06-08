@@ -363,19 +363,6 @@
         showStatusNotification(`Updated ${endpoint} refresh to ${newInterval/1000}s`, 'info', 2000);
     }
     
-    // Expose configuration for debugging
-    window.ergomempoolAPI = {
-        config: API_REFRESH_CONFIG,
-        currentIntervals,
-        apiStatus,
-        updateInterval: updateRefreshInterval,
-        refreshNow: {
-            transactions: () => loadTransactionsOptimized(),
-            blocks: () => loadBlocks(),
-            price: () => loadPrice(),
-            all: handleRefresh
-        }
-    };
     
     onMount(async () => {
         console.log('🚀 Ergomempool SvelteKit app initialized with configurable API timing');

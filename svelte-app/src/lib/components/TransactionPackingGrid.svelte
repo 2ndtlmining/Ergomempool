@@ -1,4 +1,3 @@
-<!-- UNCHANGED - template structure -->
 <div class="transaction-packing-container">
     <div 
         class="transaction-packing-area" 
@@ -343,13 +342,23 @@
             font-size: 10px;
         }
     }
-</style><!-- Simplified TransactionPackingGrid.svelte - Essential optimizations only -->
+</style><!-- Complete TransactionPackingGrid.svelte with Real Block Data and Synchronized Animations -->
 <script>
     import { transactions, walletConnector, blockData } from '$lib/stores.js';
     import { onMount, onDestroy } from 'svelte';
     import { Transaction } from '$lib/Transaction.js';
     import { GravityPackingAlgorithm } from '$lib/PackingAlgorithm.js';
     import { BlockFlowManager } from '$lib/BlockFlowManager.js';
+    
+    // SHARED TIMING CONSTANTS for coordination with BlocksSection
+    const BLOCK_ANIMATION_TIMING = {
+        DETECTION_DELAY: 100,           // BlocksSection starts after 100ms
+        MINING_SWEEP_DELAY: 150,        // Mining sweep starts 50ms after blocks
+        BLOCK_ANIMATION_DURATION: 1000, // Block train animation duration
+        MINING_SWEEP_BASE_DURATION: 500, // Base sweep duration
+        SETTLING_DELAY: 500,            // Delay before settling animation
+        TOTAL_SEQUENCE_DURATION: 2000   // Total time for complete sequence
+    };
     
     // SIMPLIFIED - blockchain configuration (back to original values)
     const BLOCKCHAIN_CONFIG = {
@@ -428,7 +437,7 @@
         }, 100); // Light debouncing
     }
     
-    // SIMPLIFIED - mount logic (back to original but cleaner)
+    // ENHANCED: Mount logic with coordinated event listener
     onMount(() => {
         updateContainerSize();
         window.addEventListener('resize', updateContainerSize);
@@ -443,11 +452,37 @@
             // Create sweep line element
             createSweepLine();
             
-            console.log('📦 Transaction Packing Grid initialized');
+            console.log('📦 Transaction Packing Grid initialized with coordination support');
             
             if ($transactions.length > 0) {
                 initializeFromExistingTransactions();
             }
+        }
+        
+        // COORDINATED EVENT LISTENER: Listen for block events from BlocksSection
+        const handleNewBlockEvent = (event) => {
+            const blockInfo = event.detail;
+            console.log(`🎭 TransactionPackingGrid received coordinated block event:`, blockInfo);
+            
+            // Use the timing from the event to coordinate
+            const miningDelay = blockInfo.animationTiming.MINING_SWEEP_DELAY - blockInfo.animationTiming.DETECTION_DELAY;
+            
+            setTimeout(() => {
+                handleCoordinatedMining(blockInfo);
+            }, miningDelay);
+        };
+        
+        if (typeof window !== 'undefined') {
+            window.addEventListener('ergomempool:newblock', handleNewBlockEvent);
+            console.log('📡 Listening for coordinated block events');
+            
+            // Cleanup function
+            const cleanup = () => {
+                window.removeEventListener('ergomempool:newblock', handleNewBlockEvent);
+                console.log('🧹 Removed coordinated block event listener');
+            };
+            
+            return cleanup;
         }
     });
     
@@ -475,17 +510,99 @@
         statusElements.forEach(el => el.remove());
     });
     
-    // UNCHANGED - reactive watchers (original logic)
+    // UNCHANGED - reactive watchers (but handleNewBlock is replaced with coordinated events)
     $: if ($transactions.length >= 0 && packingAlgorithm) {
         handleTransactionChanges();
     }
     
-    $: if ($blockData.length > 0 && packingAlgorithm && transactionObjects.length > 0) {
-        handleNewBlock();
-    }
-    
     $: if ($walletConnector.connectedAddress && transactionObjects.length > 0) {
         updateWalletHighlighting();
+    }
+    
+    // NEW: Coordinated mining function that uses actual block data
+    async function handleCoordinatedMining(blockInfo) {
+        const { height, transactionsCount, size } = blockInfo;
+        
+        console.log(`⛏️ Starting coordinated mining for block ${height}: ${transactionsCount} transactions, ${(size / 1000000).toFixed(2)} MB`);
+        
+        if (transactionObjects.length === 0) {
+            console.log(`📭 No transactions available to mine for block ${height}`);
+            showCapacityStatus(`🎉 Block ${height} mined! (No transactions to sweep)`, 'success');
+            
+            // Update last block height even if no mining
+            lastBlockHeight = height;
+            return;
+        }
+        
+        // SMART TRANSACTION COUNT with guard rails
+        let transactionsToMine = calculateTransactionsToMine(transactionsCount, transactionObjects.length);
+        
+        if (transactionsToMine > 0) {
+            await performBlockMiningSweep(transactionsToMine, blockInfo);
+            
+            // Enhanced status message
+            const statusMessage = createMiningStatusMessage(height, transactionsToMine, transactionsCount);
+            showCapacityStatus(statusMessage, 'success');
+            
+            // Schedule repack after mining completes
+            setTimeout(() => {
+                if (transactionObjects.length > 0) {
+                    scheduleRepack(`block ${height} mined`);
+                }
+            }, BLOCK_ANIMATION_TIMING.SETTLING_DELAY);
+        }
+        
+        // Update last block height
+        lastBlockHeight = height;
+    }
+    
+    // NEW: Smart transaction count calculation with multiple guard rails
+    function calculateTransactionsToMine(blockTxCount, availableTxCount) {
+        console.log(`🧮 Calculating transactions to mine: block=${blockTxCount}, available=${availableTxCount}`);
+        
+        // Guard Rail 1: No transactions available
+        if (availableTxCount === 0) {
+            console.log(`📭 No transactions to mine`);
+            return 0;
+        }
+        
+        // Guard Rail 2: Block reports 0 transactions (coinbase only)
+        if (blockTxCount === 0) {
+            const coinbaseAmount = Math.min(1, availableTxCount);
+            console.log(`🪙 Coinbase-only block, mining ${coinbaseAmount} transaction(s)`);
+            return coinbaseAmount;
+        }
+        
+        // Guard Rail 3: Perfect match - we have exactly what the block needs
+        if (blockTxCount <= availableTxCount) {
+            console.log(`✅ Perfect match: mining ${blockTxCount} transactions`);
+            return blockTxCount;
+        }
+        
+        // Guard Rail 4: Block needs more than we have - mine all available
+        if (blockTxCount > availableTxCount) {
+            console.log(`⚠️ Block needs ${blockTxCount} but only ${availableTxCount} available - mining all`);
+            return availableTxCount;
+        }
+        
+        // Guard Rail 5: Fallback safety - should never reach here
+        const fallbackAmount = Math.min(5, availableTxCount);
+        console.log(`🔄 Fallback: mining ${fallbackAmount} transactions`);
+        return fallbackAmount;
+    }
+    
+    // NEW: Enhanced status message creation
+    function createMiningStatusMessage(blockHeight, minedCount, actualCount) {
+        if (minedCount === actualCount) {
+            return `🎉 Block ${blockHeight} mined! ${minedCount} transactions confirmed`;
+        } else if (minedCount < actualCount) {
+            const offScreen = actualCount - minedCount;
+            return `🎉 Block ${blockHeight} mined! ${minedCount}/${actualCount} transactions swept (${offScreen} off-screen)`;
+        } else if (actualCount === 0) {
+            return `🎉 Block ${blockHeight} mined! ${minedCount} transaction(s) swept (coinbase block)`;
+        } else {
+            return `🎉 Block ${blockHeight} mined! ${minedCount} transactions swept`;
+        }
     }
     
     // UNCHANGED - initialization (back to original)
@@ -598,32 +715,6 @@
         }, BLOCKCHAIN_CONFIG.repackDelay);
     }
     
-    // UNCHANGED - new block handling
-    async function handleNewBlock() {
-        if ($blockData.length === 0) return;
-        
-        const latestBlock = $blockData[0];
-        const currentBlockHeight = latestBlock.height;
-        
-        if (lastBlockHeight > 0 && currentBlockHeight > lastBlockHeight) {
-            console.log(`🎉 Real block mined: ${lastBlockHeight} → ${currentBlockHeight}`);
-            
-            if (transactionObjects.length > 0) {
-                await performBlockMiningSweep(Math.min(5, transactionObjects.length));
-            }
-            
-            showCapacityStatus(`🎉 Block ${currentBlockHeight} mined!`, 'success');
-            
-            setTimeout(() => {
-                if (transactionObjects.length > 0) {
-                    scheduleRepack('block mined');
-                }
-            }, 500);
-        }
-        
-        lastBlockHeight = currentBlockHeight;
-    }
-    
     // UNCHANGED - wallet highlighting
     function updateWalletHighlighting() {
         transactionObjects.forEach(tx => {
@@ -666,12 +757,17 @@
         packingContainer.appendChild(sweepLine);
     }
     
-    // UNCHANGED - block mining sweep animation
-    async function performBlockMiningSweep(transactionsToMine) {
+    // ENHANCED - block mining sweep animation with real block data
+    async function performBlockMiningSweep(transactionsToMine, blockInfo = null) {
         if (isMining || !sweepLine) return;
         
         isMining = true;
-        console.log(`⛏️ Starting mining sweep for ${transactionsToMine} transactions`);
+        
+        // Get the current block info for accurate messaging
+        const currentBlock = blockInfo || $blockData[0];
+        const actualBlockTxCount = currentBlock?.transactionsCount || transactionsToMine;
+        
+        console.log(`⛏️ Starting mining sweep: ${transactionsToMine} visual transactions for block ${currentBlock?.height || 'unknown'} with ${actualBlockTxCount} actual transactions`);
         
         // Sort transactions by x position for left-to-right sweep
         const sortedTransactions = [...transactionObjects]
@@ -680,6 +776,7 @@
             .slice(0, transactionsToMine);
         
         if (sortedTransactions.length === 0) {
+            console.log(`📭 No visible transactions to mine`);
             isMining = false;
             return;
         }
@@ -727,6 +824,8 @@
             // Update transaction arrays
             const minedIds = sortedTransactions.map(tx => tx.id);
             transactionObjects = transactionObjects.filter(tx => !minedIds.includes(tx.id));
+            
+            // IMPORTANT: Update the store to remove mined transactions
             $transactions = $transactions.filter(storeTx => !minedIds.includes(storeTx.id));
             
             // Hide sweep line
@@ -738,7 +837,13 @@
             
             isMining = false;
             
-            console.log(`✅ Mining sweep complete: ${minedIds.length} transactions mined`);
+            // Enhanced logging with actual vs visual transaction counts
+            const logMessage = sortedTransactions.length === actualBlockTxCount 
+                ? `✅ Mining sweep complete: ${sortedTransactions.length} transactions mined (matches block)`
+                : `✅ Mining sweep complete: ${sortedTransactions.length} visual transactions mined (block had ${actualBlockTxCount})`;
+                
+            console.log(logMessage);
+            
         }, sweepDuration + 200);
     }
     
@@ -1037,4 +1142,4 @@
             addDummyTransactions();
         }
     }
-    </script>
+</script>

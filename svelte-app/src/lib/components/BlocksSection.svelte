@@ -4,6 +4,16 @@
     import { onMount } from 'svelte';
     import { browser } from '$app/environment';
     
+    // SHARED TIMING CONSTANTS for coordination
+    const BLOCK_ANIMATION_TIMING = {
+        DETECTION_DELAY: 100,           // BlocksSection starts after 100ms
+        MINING_SWEEP_DELAY: 150,        // Mining sweep starts 50ms after blocks
+        BLOCK_ANIMATION_DURATION: 1000, // Block train animation duration
+        MINING_SWEEP_BASE_DURATION: 500, // Base sweep duration
+        SETTLING_DELAY: 500,            // Delay before settling animation
+        TOTAL_SEQUENCE_DURATION: 2000   // Total time for complete sequence
+    };
+    
     const minerNames = {
         "2TH22DBY": "2Miners",
         "jndPhqGm": "DX Pool", 
@@ -26,7 +36,7 @@
         "DnPQovBb": "logos/kryptex.png",
         "NXXe6NnN": "logos/nanopool.png",
         "utiXtQYP": "logos/sigmanauts.png",
-        "ofdQbHbY": "logos/woolypooly.jpg",
+        "ofdQbHbY": "logos/wooly.png",
         "Unknown": "logos/unknown.svg",
         "NhuNP8Je": "logos/jjpool.png",
         "C5AFYfSc": "logos/2miners.png"
@@ -236,7 +246,7 @@
         }
     }
     
-    // Watch for new blocks and trigger animation
+    // ENHANCED: Watch for new blocks and trigger COORDINATED animation sequence
     $: if (browser && mounted && $blockData.length > 0) {
         const latestBlock = $blockData[0];
         const currentHeight = latestBlock.height;
@@ -246,13 +256,32 @@
             previousBlockHeight = currentHeight;
             console.log(`📊 Initial block height: ${currentHeight}`);
         } else if (currentHeight > previousBlockHeight) {
-            // New block detected - trigger animation
+            // New block detected - trigger COORDINATED animation sequence
             console.log(`🎉 New block detected! Height: ${currentHeight} (prev: ${previousBlockHeight})`);
+            console.log(`📋 Block details: ${latestBlock.transactionsCount} transactions, ${(latestBlock.size / 1000000).toFixed(2)} MB`);
             
-            // Small delay to ensure DOM is updated
+            // COORDINATED TIMING: Start block animation first
             setTimeout(() => {
                 animateNewBlock();
-            }, 100);
+            }, BLOCK_ANIMATION_TIMING.DETECTION_DELAY);
+            
+            // Notify other components about the new block with detailed info
+            const blockEvent = new CustomEvent('ergomempool:newblock', {
+                detail: {
+                    height: currentHeight,
+                    previousHeight: previousBlockHeight,
+                    transactionsCount: latestBlock.transactionsCount,
+                    size: latestBlock.size,
+                    timestamp: Date.now(),
+                    animationTiming: BLOCK_ANIMATION_TIMING,
+                    blockData: latestBlock
+                }
+            });
+            
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(blockEvent);
+                console.log(`📡 Dispatched coordinated block event for height ${currentHeight}`);
+            }
             
             previousBlockHeight = currentHeight;
         }
@@ -287,6 +316,7 @@
         if (typeof window !== 'undefined') {
             window.testBlockAnimation = animateNewBlock;
             window.resetBlockAnimations = resetAnimations;
+            window.BLOCK_ANIMATION_TIMING = BLOCK_ANIMATION_TIMING;
             console.log('🌍 Block animation functions available globally');
         }
     }
@@ -295,7 +325,8 @@
         mounted = true;
         
         if (browser) {
-            console.log('🔧 BlocksSection mounted with animation support');
+            console.log('🔧 BlocksSection mounted with coordinated animation support');
+            console.log('⏰ Animation timing configuration:', BLOCK_ANIMATION_TIMING);
             
             // Make animation functions available globally
             makeAnimationGloballyAvailable();
@@ -316,6 +347,7 @@
                 if (typeof window !== 'undefined') {
                     delete window.testBlockAnimation;
                     delete window.resetBlockAnimations;
+                    delete window.BLOCK_ANIMATION_TIMING;
                 }
             };
         }
