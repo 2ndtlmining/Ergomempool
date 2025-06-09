@@ -428,7 +428,6 @@
     }
     
     .logo-image:hover {
-        transform: scale(1.05) rotate(2deg);
         filter: drop-shadow(0 4px 12px rgba(230, 126, 34, 0.5));
     }
     
