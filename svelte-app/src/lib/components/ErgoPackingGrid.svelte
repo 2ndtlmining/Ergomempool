@@ -596,4 +596,35 @@
         0%, 100% { transform: scale(1); opacity: 0.9; }
         50% { transform: scale(1.1); opacity: 1; }
     }
+    
+    /* Mobile adjustments - only change the left positioning */
+    @media (max-width: 768px) {
+        .ergo-packing-hexagon-container-centered svg {
+            left: -10% !important;
+        }
+        
+        .ergo-packing-area {
+            left: -10% !important;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .ergo-packing-hexagon-container-centered svg {
+            left: -5% !important;
+        }
+        
+        .ergo-packing-area {
+            left: -5% !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .ergo-packing-hexagon-container-centered svg {
+            left: -10% !important;
+        }
+        
+        .ergo-packing-area {
+            left: -10% !important;
+        }
+    }
 </style>

@@ -624,8 +624,6 @@
         100% { transform: rotate(360deg); }
     }
     
-    /* Remove all the custom CSS tooltips since we're using title attributes now */
-    
     /* Responsive design */
     @media (max-width: 1024px) {
         .header-container {
@@ -660,71 +658,148 @@
     @media (max-width: 768px) {
         .header-container {
             padding: 8px 16px;
-            flex-wrap: wrap;
-            gap: 12px;
+            /* Keep horizontal layout - don't wrap */
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 50px;
         }
         
         .header-left {
-            gap: 16px;
-            flex: none;
+            gap: 12px;
+            flex: 1;
+            min-width: 0; /* Allow shrinking */
         }
         
         .header-right {
-            gap: 10px;
-            flex: none;
+            gap: 8px;
+            flex-shrink: 0;
+            margin-left: 8px;
         }
         
         .logo-image {
-            height: 40px;
+            height: 36px; /* Slightly smaller logo */
         }
         
         .main-navigation,
         .wallet-navigation {
-            gap: 4px;
-            padding: 4px;
+            gap: 2px;
+            padding: 3px;
         }
         
         .nav-icon {
-            width: 36px;
-            height: 36px;
-        }
-        
-        .nav-icon-img {
-            width: 16px;
-            height: 16px;
-        }
-    }
-    
-    @media (max-width: 640px) {
-        .header-container {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 12px;
-            padding: 12px;
-        }
-        
-        .header-left {
-            justify-content: center;
-        }
-        
-        .header-right {
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .main-navigation,
-        .wallet-navigation {
-            justify-content: center;
-        }
-        
-        .nav-icon {
-            width: 32px;
+            width: 32px; /* Smaller buttons */
             height: 32px;
+            border-radius: 8px;
         }
         
         .nav-icon-img {
             width: 14px;
             height: 14px;
+        }
+        
+        /* Reduce spacing for function buttons */
+        .nav-refresh, .nav-function {
+            margin-left: 4px;
+            padding-left: 6px;
+        }
+        
+        .nav-function {
+            margin-left: 2px;
+            padding-left: 2px;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .header-container {
+            padding: 6px 12px;
+            /* Keep horizontal layout, don't go vertical */
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .header-right {
+            gap: 6px;
+            flex-shrink: 0;
+            margin-left: 6px;
+        }
+        
+        .logo-image {
+            height: 32px; /* Even smaller logo */
+        }
+        
+        .main-navigation,
+        .wallet-navigation {
+            gap: 1px;
+            padding: 2px;
+        }
+        
+        .nav-icon {
+            width: 28px; /* Smaller buttons for tight fit */
+            height: 28px;
+            border-radius: 6px;
+        }
+        
+        .nav-icon-img {
+            width: 12px;
+            height: 12px;
+        }
+        
+        /* Minimal spacing for function buttons */
+        .nav-refresh, .nav-function {
+            margin-left: 2px;
+            padding-left: 4px;
+            border-left-width: 0.5px;
+        }
+        
+        .nav-function {
+            margin-left: 1px;
+            padding-left: 1px;
+            border-left: none;
+        }
+    }
+    
+    /* Extra small screens - if needed */
+    @media (max-width: 480px) {
+        .header-container {
+            padding: 4px 8px;
+        }
+        
+        .header-left {
+            gap: 6px;
+        }
+        
+        .header-right {
+            gap: 4px;
+            margin-left: 4px;
+        }
+        
+        .logo-image {
+            height: 28px;
+        }
+        
+        .nav-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 5px;
+        }
+        
+        .nav-icon-img {
+            width: 11px;
+            height: 11px;
+        }
+        
+        .main-navigation,
+        .wallet-navigation {
+            gap: 0px;
+            padding: 1px;
         }
     }
 </style>
