@@ -1,8 +1,8 @@
-// FIXED src/routes/api/+server.js - Add Origin Detection to API Response
+// ENHANCED src/routes/api/+server.js - Add Robust Transaction Caching and Validation
 import { json } from '@sveltejs/kit';
 import { processTransactionsWithOrigins } from '$lib/transactionOrigins.js';
 
-// API Configuration with fallback
+// API Configuration with fallback (UNCHANGED)
 const API_CONFIG = {
     primary: {
         name: 'Ergoplatform',
@@ -20,6 +20,19 @@ const API_CONFIG = {
     retryDelay: 1000
 };
 
+// NEW: Transaction cache configuration and storage
+const CACHE_CONFIG = {
+    MAX_AGE_MINUTES: 30,           // Remove transactions older than 30 minutes
+    VALIDATION_BATCH_SIZE: 10,     // Validate this many transactions per check
+    FULL_SYNC_INTERVAL_MS: 120000, // Full sync every 2 minutes
+    QUICK_SYNC_INTERVAL_MS: 15000, // Quick sync every 15 seconds
+    MAX_VALIDATION_FAILURES: 3,   // Remove after 3 failed validations
+};
+
+// NEW: In-memory transaction cache with metadata
+let transactionCache = new Map();
+let lastFullSync = null;
+
 export async function GET({ url }) {
     const endpoint = url.searchParams.get('endpoint');
     
@@ -27,7 +40,7 @@ export async function GET({ url }) {
     
     switch (endpoint) {
         case 'transactions':
-            console.log('📡 Fetching transactions with origin detection...');
+            console.log('📡 Fetching transactions with robust caching...');
             return getTransactionsWithOrigins();
         case 'blocks':
             console.log('🧱 Fetching blocks...');
@@ -35,15 +48,16 @@ export async function GET({ url }) {
         case 'price':
             console.log('💰 Fetching price...');
             return getPrice();
+        case 'cache-stats':
+            console.log('📊 Getting cache statistics...');
+            return json(getCacheStats());
         default:
             console.log('❌ Invalid endpoint:', endpoint);
             return json({ error: 'Invalid endpoint' }, { status: 400 });
     }
 }
 
-/**
- * Enhanced fetch with primary/backup API support and timeout handling
- */
+// UNCHANGED: Enhanced fetch with primary/backup API support and timeout handling
 async function robustFetch(url, options = {}) {
     const { timeout = API_CONFIG.timeout } = options;
     
@@ -69,9 +83,7 @@ async function robustFetch(url, options = {}) {
     }
 }
 
-/**
- * Try primary API, fall back to backup if needed
- */
+// UNCHANGED: Try primary API, fall back to backup if needed
 async function fetchWithFallback(primaryUrl, backupUrl, options = {}) {
     console.log(`🎯 Trying primary API: ${primaryUrl}`);
     
@@ -99,130 +111,383 @@ async function fetchWithFallback(primaryUrl, backupUrl, options = {}) {
     }
 }
 
-// NEW: Enhanced getTransactions with automatic origin detection
+// ENHANCED: getTransactions with robust caching and validation system
 async function getTransactionsWithOrigins() {
-    console.log('🔥 getTransactionsWithOrigins() function called');
-    
-    const ERGO_FEE_ADDRESS = "2iHkR7CWvD1R4j1yZg5bkeDRQavjAaVPeTDFGGLZduHyfWMuYpmhHocX8GJoaieTx78FntzJbCBVL6rf96ocJoZdmWBL2fci7NqWgAirppPQmZ7fN9V6z13Ay6brPriBKYqLp1bT2Fk4FkFLCfdPpe";
+    console.log('🔥 Enhanced robust transaction fetching started');
     
     try {
-        console.log('📞 Making API call for unconfirmed transactions...');
+        const now = Date.now();
+        const shouldDoFullSync = !lastFullSync || (now - lastFullSync) > CACHE_CONFIG.FULL_SYNC_INTERVAL_MS;
         
-        const primaryUrl = `${API_CONFIG.primary.transactions}?limit=99999&offset=0&sortBy=size&sortDirection=desc`;
-        const backupUrl = `${API_CONFIG.backup.transactions}?limit=99999&offset=0&sortBy=size&sortDirection=desc`;
-        
-        const { response, source } = await fetchWithFallback(primaryUrl, backupUrl);
-        console.log(`📡 Transactions API response from ${source}: ${response.status} ${response.statusText}`);
-        
-        const data = await response.json();
-        console.log('📦 API response data keys:', Object.keys(data));
-        console.log('📊 Transaction count:', data.items?.length || 0);
-        
-        const transactions = data.items || [];
-        const processedTransactions = [];
-        
-        // Process transactions with fee calculation
-        for (let i = 0; i < transactions.length; i++) {
-            const tx = transactions[i];
-            
-            try {
-                if (i % 50 === 0) {
-                    console.log(`📈 Processing transaction ${i + 1}/${transactions.length}...`);
-                }
-                
-                // Extract input addresses
-                const inputAddresses = [];
-                for (const input of tx.inputs || []) {
-                    if (input.address) {
-                        inputAddresses.push({
-                            address: input.address,
-                            value: (input.value || 0) / 1_000_000_000
-                        });
-                    }
-                }
-                
-                // Extract output addresses
-                const outputAddresses = [];
-                for (const output of tx.outputs || []) {
-                    if (output.address) {
-                        outputAddresses.push({
-                            address: output.address,
-                            value: (output.value || 0) / 1_000_000_000
-                        });
-                    }
-                }
-                
-                // Calculate fee
-                let transactionFee = 0.001;
-                let feeSource = 'fallback';
-                
-                if (tx.outputs && tx.outputs.length > 0) {
-                    let feeOutput = null;
-                    
-                    for (const output of tx.outputs) {
-                        if (output.address === ERGO_FEE_ADDRESS) {
-                            feeOutput = output;
-                            break;
-                        }
-                    }
-                    
-                    if (feeOutput) {
-                        const feeValueNanoErg = feeOutput.value || 0;
-                        transactionFee = feeValueNanoErg / 1_000_000_000;
-                        feeSource = 'fee-address-output';
-                    }
-                }
-                
-                if (transactionFee <= 0 || transactionFee > 10) {
-                    transactionFee = 0.001;
-                    feeSource = 'fallback-unreasonable';
-                }
-                
-                // Create transaction object
-                const processedTx = {
-                    id: tx.id,
-                    size: tx.size,
-                    value: (tx.outputs?.reduce((sum, output) => sum + (output.value || 0), 0) || 0) / 1_000_000_000,
-                    fee: transactionFee,
-                    feeSource: feeSource,
-                    inputs: inputAddresses,
-                    outputs: outputAddresses
-                };
-                
-                processedTransactions.push(processedTx);
-                
-            } catch (error) {
-                console.error(`❌ Skipping transaction ${tx.id?.substring(0, 8) || 'unknown'} due to error: ${error.message}`);
-            }
+        if (shouldDoFullSync) {
+            console.log('🔄 Performing full transaction sync');
+            await performFullTransactionSync();
+            lastFullSync = now;
+        } else {
+            console.log('⚡ Performing quick transaction validation');
+            await performQuickTransactionValidation();
         }
         
-        // NEW: Add origin detection to all transactions
-        console.log(`🔍 Adding origin detection to ${processedTransactions.length} transactions...`);
-        const transactionsWithOrigins = processTransactionsWithOrigins(processedTransactions);
+        // Clean up old transactions
+        cleanupOldTransactions();
         
-        // Summary logging
-        const totalCalculatedFees = transactionsWithOrigins.reduce((sum, tx) => sum + tx.fee, 0);
-        const originCounts = transactionsWithOrigins.reduce((counts, tx) => {
-            counts[tx.origin] = (counts[tx.origin] || 0) + 1;
-            return counts;
-        }, {});
+        // Return current valid transactions
+        const validTransactions = Array.from(transactionCache.values())
+            .filter(item => item.valid && !item.confirmed)
+            .map(item => item.transaction)
+            .sort((a, b) => (b.size || 0) - (a.size || 0)); // Sort by size descending
         
-        console.log(`📊 Processing Summary (via ${source}):`);
-        console.log(`   Processed: ${transactionsWithOrigins.length} transactions`);
-        console.log(`   Total fees: ${totalCalculatedFees.toFixed(6)} ERG`);
-        console.log(`   Origin breakdown:`, originCounts);
+        console.log(`✅ Returning ${validTransactions.length} validated transactions`);
+        
+        // Add origin detection (UNCHANGED)
+        const transactionsWithOrigins = processTransactionsWithOrigins(validTransactions);
         
         return json(transactionsWithOrigins);
         
     } catch (error) {
-        console.error('❌ Failed to fetch transactions from all APIs:', error);
-        return json({ error: 'Failed to fetch transactions from all available APIs' }, { status: 500 });
+        console.error('❌ Enhanced transaction fetching failed:', error);
+        
+        // Return cached transactions as fallback
+        const cachedTransactions = Array.from(transactionCache.values())
+            .filter(item => item.valid && !item.confirmed)
+            .map(item => item.transaction);
+            
+        if (cachedTransactions.length > 0) {
+            console.log(`🔄 Returning ${cachedTransactions.length} cached transactions as fallback`);
+            const transactionsWithOrigins = processTransactionsWithOrigins(cachedTransactions);
+            return json(transactionsWithOrigins);
+        }
+        
+        return json({ error: 'Failed to fetch transactions from all available sources' }, { status: 500 });
     }
 }
 
-/**
- * Enhanced getMinerFees with fallback API support
- */
+// NEW: Perform full sync - Get all unconfirmed transactions and update cache
+async function performFullTransactionSync() {
+    console.log('📡 Starting full transaction sync...');
+    
+    try {
+        // Fetch from API (reusing existing logic)
+        const primaryUrl = `${API_CONFIG.primary.transactions}?limit=99999&offset=0&sortBy=size&sortDirection=desc`;
+        const backupUrl = `${API_CONFIG.backup.transactions}?limit=99999&offset=0&sortBy=size&sortDirection=desc`;
+        
+        const { response, source } = await fetchWithFallback(primaryUrl, backupUrl);
+        const data = await response.json();
+        const rawTransactions = data.items || [];
+        
+        console.log(`📦 Fetched ${rawTransactions.length} transactions from ${source}`);
+        
+        // Process new transactions (reusing existing processing logic)
+        const processedTransactions = await processRawTransactions(rawTransactions, source);
+        
+        // Update cache with new transactions
+        const newTransactionIds = new Set();
+        processedTransactions.forEach(tx => {
+            newTransactionIds.add(tx.id);
+            
+            if (transactionCache.has(tx.id)) {
+                // Update existing transaction
+                const existing = transactionCache.get(tx.id);
+                transactionCache.set(tx.id, {
+                    ...existing,
+                    transaction: tx,
+                    lastSeen: Date.now(),
+                    valid: true,
+                    validationFailures: 0
+                });
+            } else {
+                // Add new transaction
+                transactionCache.set(tx.id, {
+                    transaction: tx,
+                    firstSeen: Date.now(),
+                    lastSeen: Date.now(),
+                    valid: true,
+                    confirmed: false,
+                    validationFailures: 0,
+                    source: source
+                });
+                console.log(`➕ New transaction cached: ${tx.id.substring(0, 8)}...`);
+            }
+        });
+        
+        // Mark transactions not in latest fetch as potentially stale
+        transactionCache.forEach((item, txId) => {
+            if (!newTransactionIds.has(txId) && item.valid) {
+                console.log(`⚠️ Transaction ${txId.substring(0, 8)}... not in latest fetch, marking for validation`);
+                item.needsValidation = true;
+            }
+        });
+        
+        console.log(`✅ Full sync complete: ${processedTransactions.length} transactions processed`);
+        
+    } catch (error) {
+        console.error('❌ Full sync failed:', error);
+        throw error;
+    }
+}
+
+// NEW: Perform quick validation - Check existence of cached transactions that need validation
+async function performQuickTransactionValidation() {
+    const transactionsNeedingValidation = Array.from(transactionCache.entries())
+        .filter(([id, item]) => item.needsValidation || item.validationFailures > 0)
+        .slice(0, CACHE_CONFIG.VALIDATION_BATCH_SIZE);
+    
+    if (transactionsNeedingValidation.length === 0) {
+        console.log('✅ No transactions need validation');
+        return;
+    }
+    
+    console.log(`🔍 Validating ${transactionsNeedingValidation.length} transactions...`);
+    
+    const validationPromises = transactionsNeedingValidation.map(async ([txId, item]) => {
+        try {
+            // Check if transaction still exists in unconfirmed pool
+            const isValid = await validateTransactionExists(txId);
+            
+            if (isValid) {
+                // Transaction still exists - mark as valid
+                item.valid = true;
+                item.lastSeen = Date.now();
+                item.needsValidation = false;
+                item.validationFailures = 0;
+                console.log(`✅ Validated: ${txId.substring(0, 8)}... still unconfirmed`);
+            } else {
+                // Transaction not found - increment failure count
+                item.validationFailures = (item.validationFailures || 0) + 1;
+                
+                if (item.validationFailures >= CACHE_CONFIG.MAX_VALIDATION_FAILURES) {
+                    // Check if it was confirmed rather than disappeared
+                    const isConfirmed = await checkIfTransactionConfirmed(txId);
+                    
+                    if (isConfirmed) {
+                        item.confirmed = true;
+                        item.valid = false;
+                        console.log(`🎉 Transaction ${txId.substring(0, 8)}... was confirmed`);
+                    } else {
+                        item.valid = false;
+                        console.log(`❌ Transaction ${txId.substring(0, 8)}... marked invalid after ${item.validationFailures} failures`);
+                    }
+                } else {
+                    console.log(`⚠️ Validation failed for ${txId.substring(0, 8)}... (${item.validationFailures}/${CACHE_CONFIG.MAX_VALIDATION_FAILURES})`);
+                }
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error validating transaction ${txId.substring(0, 8)}...:`, error);
+            item.validationFailures = (item.validationFailures || 0) + 1;
+        }
+    });
+    
+    await Promise.allSettled(validationPromises);
+    console.log('✅ Quick validation complete');
+}
+
+// NEW: Check if a transaction still exists in the unconfirmed pool
+async function validateTransactionExists(txId) {
+    try {
+        // Try primary API first
+        const primaryUrl = `${API_CONFIG.primary.base}/transactions/unconfirmed/${txId}`;
+        
+        try {
+            const response = await robustFetch(primaryUrl, { timeout: 8000 });
+            return response.ok;
+        } catch (primaryError) {
+            // Try backup API
+            const backupUrl = `${API_CONFIG.backup.base}/transactions/unconfirmed/${txId}`;
+            
+            try {
+                const response = await robustFetch(backupUrl, { timeout: 8000 });
+                return response.ok;
+            } catch (backupError) {
+                console.warn(`⚠️ Could not validate ${txId.substring(0, 8)}... on either API`);
+                return false;
+            }
+        }
+    } catch (error) {
+        console.error(`❌ Error validating transaction existence for ${txId}:`, error);
+        return false;
+    }
+}
+
+// NEW: Check if a transaction was confirmed (moved to a block)
+async function checkIfTransactionConfirmed(txId) {
+    try {
+        // Try to find the transaction in confirmed transactions
+        const primaryUrl = `${API_CONFIG.primary.base}/transactions/${txId}`;
+        
+        try {
+            const response = await robustFetch(primaryUrl, { timeout: 8000 });
+            if (response.ok) {
+                console.log(`🎉 Transaction ${txId.substring(0, 8)}... found in confirmed transactions`);
+                return true;
+            }
+        } catch (primaryError) {
+            // Try backup API
+            const backupUrl = `${API_CONFIG.backup.base}/transactions/${txId}`;
+            
+            try {
+                const response = await robustFetch(backupUrl, { timeout: 8000 });
+                if (response.ok) {
+                    console.log(`🎉 Transaction ${txId.substring(0, 8)}... found in confirmed transactions (backup API)`);
+                    return true;
+                }
+            } catch (backupError) {
+                // Transaction not found in confirmed either
+            }
+        }
+        
+        return false;
+    } catch (error) {
+        console.error(`❌ Error checking if transaction ${txId} was confirmed:`, error);
+        return false;
+    }
+}
+
+// NEW: Clean up old transactions from cache
+function cleanupOldTransactions() {
+    const now = Date.now();
+    const maxAge = CACHE_CONFIG.MAX_AGE_MINUTES * 60 * 1000;
+    let removedCount = 0;
+    
+    for (const [txId, item] of transactionCache.entries()) {
+        const age = now - item.firstSeen;
+        
+        // Remove if too old, invalid, or confirmed
+        if (age > maxAge || (!item.valid && item.validationFailures >= CACHE_CONFIG.MAX_VALIDATION_FAILURES) || item.confirmed) {
+            transactionCache.delete(txId);
+            removedCount++;
+            
+            const reason = item.confirmed ? 'confirmed' : 
+                          age > maxAge ? 'expired' : 'invalid';
+            console.log(`🗑️ Removed transaction ${txId.substring(0, 8)}... (${reason})`);
+        }
+    }
+    
+    if (removedCount > 0) {
+        console.log(`🧹 Cleaned up ${removedCount} transactions from cache`);
+    }
+}
+
+// NEW: Process raw transactions from API into our format (extracted from existing code)
+async function processRawTransactions(rawTransactions, source) {
+    const ERGO_FEE_ADDRESS = "2iHkR7CWvD1R4j1yZg5bkeDRQavjAaVPeTDFGGLZduHyfWMuYpmhHocX8GJoaieTx78FntzJbCBVL6rf96ocJoZdmWBL2fci7NqWgAirppPQmZ7fN9V6z13Ay6brPriBKYqLp1bT2Fk4FkFLCfdPpe";
+    const processedTransactions = [];
+    
+    // Process transactions with fee calculation (UNCHANGED logic from original)
+    for (let i = 0; i < rawTransactions.length; i++) {
+        const tx = rawTransactions[i];
+        
+        try {
+            if (i % 50 === 0) {
+                console.log(`📈 Processing transaction ${i + 1}/${rawTransactions.length}...`);
+            }
+            
+            // Extract input addresses
+            const inputAddresses = [];
+            for (const input of tx.inputs || []) {
+                if (input.address) {
+                    inputAddresses.push({
+                        address: input.address,
+                        value: (input.value || 0) / 1_000_000_000
+                    });
+                }
+            }
+            
+            // Extract output addresses
+            const outputAddresses = [];
+            for (const output of tx.outputs || []) {
+                if (output.address) {
+                    outputAddresses.push({
+                        address: output.address,
+                        value: (output.value || 0) / 1_000_000_000
+                    });
+                }
+            }
+            
+            // Calculate fee
+            let transactionFee = 0.001;
+            let feeSource = 'fallback';
+            
+            if (tx.outputs && tx.outputs.length > 0) {
+                let feeOutput = null;
+                
+                for (const output of tx.outputs) {
+                    if (output.address === ERGO_FEE_ADDRESS) {
+                        feeOutput = output;
+                        break;
+                    }
+                }
+                
+                if (feeOutput) {
+                    const feeValueNanoErg = feeOutput.value || 0;
+                    transactionFee = feeValueNanoErg / 1_000_000_000;
+                    feeSource = 'fee-address-output';
+                }
+            }
+            
+            if (transactionFee <= 0 || transactionFee > 10) {
+                transactionFee = 0.001;
+                feeSource = 'fallback-unreasonable';
+            }
+            
+            // Create transaction object
+            const processedTx = {
+                id: tx.id,
+                size: tx.size,
+                value: (tx.outputs?.reduce((sum, output) => sum + (output.value || 0), 0) || 0) / 1_000_000_000,
+                fee: transactionFee,
+                feeSource: feeSource,
+                inputs: inputAddresses,
+                outputs: outputAddresses
+            };
+            
+            processedTransactions.push(processedTx);
+            
+        } catch (error) {
+            console.error(`❌ Skipping transaction ${tx.id?.substring(0, 8) || 'unknown'} due to error: ${error.message}`);
+        }
+    }
+    
+    return processedTransactions;
+}
+
+// NEW: Get cache statistics for debugging
+function getCacheStats() {
+    const stats = {
+        total: transactionCache.size,
+        valid: 0,
+        invalid: 0,
+        confirmed: 0,
+        needingValidation: 0,
+        oldestTransaction: null,
+        newestTransaction: null,
+        lastFullSync: lastFullSync
+    };
+    
+    let oldestTime = Date.now();
+    let newestTime = 0;
+    
+    for (const [txId, item] of transactionCache.entries()) {
+        if (item.valid) stats.valid++;
+        if (!item.valid) stats.invalid++;
+        if (item.confirmed) stats.confirmed++;
+        if (item.needsValidation) stats.needingValidation++;
+        
+        if (item.firstSeen < oldestTime) {
+            oldestTime = item.firstSeen;
+            stats.oldestTransaction = txId.substring(0, 8) + '...';
+        }
+        
+        if (item.firstSeen > newestTime) {
+            newestTime = item.firstSeen;
+            stats.newestTransaction = txId.substring(0, 8) + '...';
+        }
+    }
+    
+    return stats;
+}
+
+// UNCHANGED: Enhanced getMinerFees with fallback API support
 async function getMinerFees(blockId, minerAddress) {
     try {
         const primaryUrl = `${API_CONFIG.primary.blocks}/${blockId}`;
@@ -278,9 +543,7 @@ async function getMinerFees(blockId, minerAddress) {
     }
 }
 
-/**
- * Enhanced getBlocks with robust API handling and fallback support
- */
+// UNCHANGED: Enhanced getBlocks with robust API handling and fallback support
 async function getBlocks() {
     try {
         console.log('🏗️ Fetching blocks with robust API handling...');
@@ -348,6 +611,7 @@ async function getBlocks() {
     }
 }
 
+// UNCHANGED: Price fetching
 async function getPrice() {
     try {
         console.log('💰 Fetching ERG price...');
