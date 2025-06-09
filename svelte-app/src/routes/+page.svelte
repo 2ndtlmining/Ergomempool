@@ -27,9 +27,9 @@
     // ============================================
     const API_REFRESH_CONFIG = {
         // Main refresh intervals (in milliseconds)
-        TRANSACTIONS_INTERVAL: 45000,    // 45 seconds - adjust this value
+        TRANSACTIONS_INTERVAL: 30000,    // 30 seconds - adjust this value
         BLOCKS_INTERVAL: 60000,          // 1 minute - adjust this value
-        PRICE_INTERVAL: 300000,          // 5 minutes - adjust this value
+        PRICE_INTERVAL: 3000000,          // 50 minutes - adjust this value
         
         // Advanced settings
         ENABLE_AUTO_REFRESH: true,       // Set to false to disable all auto-refresh

@@ -238,95 +238,110 @@
                     class="nav-icon"
                     class:active={currentMode === 'pack'}
                     on:click={() => setMode('pack')}
-                    title="Transaction Packing"
+                    aria-label=""
+                    role="button"
                 >
-                    <img src="/icons/dashboard.png" alt="Pack" class="nav-icon-img" />
+                    <img src="/icons/dashboard.png" alt="" class="nav-icon-img" draggable="false" />
                 </button>
                 
                 <button 
                     class="nav-icon"
                     class:active={currentMode === 'hex'}
                     on:click={() => setMode('hex')}
-                    title="Hexagon Packing"
+                    aria-label=""
+                    role="button"
                 >
-                    <img src="/icons/hexagon_white.png" alt="Hex" class="nav-icon-img" />
+                    <img src="/icons/hexagon_white.png" alt="" class="nav-icon-img" draggable="false" />
                 </button>
                 
                 <button 
                     class="nav-icon"
                     class:active={currentMode === 'ball'}
                     on:click={() => setMode('ball')}
-                    title="Ball Physics"
+                    aria-label=""
+                    role="button"
                 >
-                    <img src="/icons/basketball.png" alt="Ball" class="nav-icon-img" />
+                    <img src="/icons/basketball.png" alt="" class="nav-icon-img" draggable="false" />
                 </button>
                 
                 <button 
                     class="nav-icon nav-refresh"
                     on:click={handleRefresh}
-                    title="Refresh Data"
+                    aria-label=""
+                    role="button"
                 >
-                    <img src="/icons/refresh_white.png" alt="Refresh" class="nav-icon-img" />
+                    <img src="/icons/refresh_white.png" alt="" class="nav-icon-img" draggable="false" />
                 </button>
                 
                 <button 
                     class="nav-icon nav-function"
                     on:click={handleAddDummy}
-                    title="Add Test Transactions"
+                    aria-label=""
+                    role="button"
                 >
-                    <img src="/icons/dummy.png" alt="Add Dummy" class="nav-icon-img" />
+                    <img src="/icons/dummy.png" alt="" class="nav-icon-img" draggable="false" />
                 </button>
                 
                 <button 
                     class="nav-icon nav-function"
                     on:click={handleRepack}
-                    title="Repack Transactions"
+                    aria-label=""
+                    role="button"
                 >
-                    <img src="/icons/brain.png" alt="Repack" class="nav-icon-img" />
+                    <img src="/icons/brain.png" alt="" class="nav-icon-img" draggable="false" />
                 </button>
             </nav>
         </div>
 
-        <!-- Right side: Wallet section -->
+        <!-- Right side: Wallet section with matching navigation style -->
         <div class="header-right">
-            <button 
-                class="test-transaction-button" 
-                class:disabled={!$walletConnector.isConnected}
-                on:click={handleTestTransaction}
-                disabled={!$walletConnector.isConnected}
-                title={$walletConnector.isConnected ? "Send test transaction" : "Connect wallet to send test transactions"}
-            >
-                <img src="/icons/flask2-white.png" alt="Test" class="test-icon">
-                Test Transaction
-            </button>
-            
-            {#if !$walletConnector.isConnected}
+            <nav class="wallet-navigation">
                 <button 
-                    class="connect-button"
-                    on:click={handleWalletConnect}
-                    disabled={isConnecting}
+                    class="nav-icon wallet-test-btn"
+                    class:disabled={!$walletConnector.isConnected}
+                    on:click={handleTestTransaction}
+                    disabled={!$walletConnector.isConnected}
+                    title={$walletConnector.isConnected ? "Send test transaction" : "Connect wallet to send test transactions"}
+                    aria-label=""
+                    role="button"
                 >
-                    <img src="/wallet/ergo-wallet-white.png" alt="Ergo Wallet" class="wallet-icon">
-                    {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                    <img src="/icons/flask2-white.png" alt="" class="nav-icon-img" draggable="false">
+                    {#if !$walletConnector.isConnected}
+                        <div class="lock-overlay">🔒</div>
+                    {/if}
                 </button>
-            {:else}
-                <div class="wallet-info-display">
-                    <div class="wallet-content">
-                        <strong>{$walletConnector.connectedWallet?.name} Connected</strong>
-                        <div class="balance">Balance: {walletBalance} ERG</div>
-                        <div class="address">{$walletConnector.connectedAddress?.substring(0, 20)}...</div>
-                    </div>
-                    
+                
+                {#if !$walletConnector.isConnected}
                     <button 
-                        class="disconnect-icon-btn"
-                        on:click|stopPropagation={handleWalletConnect}
-                        title="Disconnect wallet"
-                        aria-label="Disconnect wallet"
+                        class="nav-icon wallet-connect-btn"
+                        class:connecting={isConnecting}
+                        on:click={handleWalletConnect}
+                        disabled={isConnecting}
+                        title="Click to connect wallet"
+                        aria-label=""
+                        role="button"
                     >
-                        <img src="/icons/disconnect-white.png" alt="Disconnect" class="disconnect-icon">
+                        <img src="/wallet/ergo-wallet-white.png" alt="" class="nav-icon-img" draggable="false">
+                        {#if isConnecting}
+                            <div class="connecting-spinner"></div>
+                        {/if}
                     </button>
-                </div>
-            {/if}
+                {:else}
+                    <button 
+                        class="nav-icon wallet-connected-btn"
+                        on:click={handleWalletConnect}
+                        title="Click to disconnect wallet"
+                        data-wallet-name={$walletConnector.connectedWallet?.name || ''}
+                        data-wallet-balance={walletBalance || ''}
+                        data-wallet-address={$walletConnector.connectedAddress?.substring(0, 20) || ''}
+                        aria-label=""
+                        role="button"
+                    >
+                        <img src="/wallet/ergo-wallet-white.png" alt="" class="nav-icon-img" draggable="false">
+                        <div class="connection-indicator"></div>
+                    </button>
+                {/if}
+            </nav>
         </div>
     </div>
 </header>
@@ -430,6 +445,19 @@
         -webkit-backdrop-filter: blur(10px);
     }
     
+    /* Wallet navigation - matches main navigation styling exactly */
+    .wallet-navigation {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    
     .nav-icon {
         display: flex;
         align-items: center;
@@ -443,6 +471,12 @@
         transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
+        /* Completely disable browser tooltips */
+        pointer-events: auto;
+    }
+    
+    .nav-icon * {
+        pointer-events: none;
     }
     
     .nav-icon::before {
@@ -504,170 +538,93 @@
         transform: scale(1.1) rotate(10deg);
     }
     
-    /* Wallet section styles - restored original styling */
-    .test-transaction-button,
-    .connect-button {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        cursor: pointer;
-        background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
-        color: white;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.3s ease;
+    /* Wallet-specific button states */
+    .wallet-test-btn {
         position: relative;
-        overflow: hidden;
-        white-space: nowrap;
     }
     
-    .test-transaction-button::before,
-    .connect-button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s ease;
-    }
-    
-    .test-transaction-button:hover::before,
-    .connect-button:hover::before {
-        left: 100%;
-    }
-    
-    .test-transaction-button:hover,
-    .connect-button:hover {
-        background: linear-gradient(135deg, var(--secondary-orange) 0%, var(--light-orange) 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px var(--glow-orange);
-        border-color: rgba(255, 255, 255, 0.4);
-    }
-    
-    .test-icon,
-    .wallet-icon {
-        width: 16px;
-        height: 16px;
-        transition: transform 0.2s ease;
-        flex-shrink: 0;
-        filter: brightness(0) invert(1);
-    }
-    
-    .test-transaction-button:hover .test-icon,
-    .connect-button:hover .wallet-icon {
-        transform: scale(1.1) rotate(5deg);
-    }
-    
-    .test-transaction-button.disabled {
-        opacity: 0.6;
+    .wallet-test-btn.disabled {
+        opacity: 0.4;
         cursor: not-allowed;
-        transform: none !important;
-        box-shadow: none !important;
     }
     
-    .test-transaction-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none !important;
-        box-shadow: none !important;
+    .wallet-test-btn.disabled:hover::before {
+        opacity: 0;
     }
     
-    .wallet-info-display {
-        background: linear-gradient(135deg, rgba(44, 74, 107, 0.9) 0%, rgba(61, 90, 122, 0.9) 100%);
-        border: 2px solid var(--primary-orange);
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 11px;
-        min-width: 160px;
-        max-width: 220px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 
-            0 4px 15px rgba(44, 74, 107, 0.3),
-            0 2px 8px rgba(230, 126, 34, 0.2);
-    }
-    
-    .wallet-info-display:hover {
-        background: linear-gradient(135deg, rgba(61, 90, 122, 0.9) 0%, rgba(74, 107, 138, 0.9) 100%);
-        transform: translateY(-2px);
-        box-shadow: 
-            0 6px 20px rgba(44, 74, 107, 0.4),
-            0 3px 12px rgba(230, 126, 34, 0.3);
-        border-color: var(--secondary-orange);
-    }
-    
-    .wallet-content {
-        position: relative;
-        z-index: 2;
-    }
-    
-    .wallet-info-display strong {
-        color: var(--primary-orange);
-        display: block;
-        margin-bottom: 3px;
-        font-size: 12px;
-        font-weight: 700;
-        text-shadow: 0 1px 2px rgba(230, 126, 34, 0.3);
-        letter-spacing: 0.3px;
-    }
-    
-    .wallet-info-display .balance {
-        opacity: 0.95;
-        color: var(--secondary-orange);
-        font-weight: 600;
-        font-size: 11px;
-        margin-bottom: 2px;
-        text-shadow: 0 1px 1px rgba(243, 156, 18, 0.2);
-    }
-    
-    .wallet-info-display .address {
-        opacity: 0.8;
-        font-family: 'Courier New', monospace;
-        font-size: 9px;
-        color: #bdc3c7;
-        line-height: 1.2;
-        word-break: break-all;
-    }
-    
-    .disconnect-icon-btn {
-        background: rgba(231, 76, 60, 0.9);
-        border: 1px solid #e74c3c;
-        border-radius: 4px;
-        padding: 4px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 24px;
-        height: 24px;
-        flex-shrink: 0;
+    /* Lock overlay for disabled test button */
+    .lock-overlay {
         position: absolute;
-        top: 4px;
-        right: 4px;
+        top: 2px;
+        right: 2px;
+        font-size: 10px;
+        z-index: 10;
+        text-shadow: 0 0 3px rgba(0,0,0,0.8);
+    }
+    
+    .wallet-connect-btn {
+        position: relative;
+    }
+    
+    .wallet-connect-btn.connecting {
+        background: rgba(52, 152, 219, 0.2);
+    }
+    
+    .wallet-connected-btn {
+        background: var(--primary-orange);
+        box-shadow: 0 2px 8px rgba(212, 101, 27, 0.4);
+        position: relative;
+    }
+    
+    .wallet-connected-btn::before {
+        opacity: 0;
+    }
+    
+    /* Connection indicator */
+    .connection-indicator {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 8px;
+        height: 8px;
+        background: #27ae60;
+        border-radius: 50%;
+        border: 1px solid white;
+        animation: connectionPulse 2s ease-in-out infinite;
         z-index: 10;
     }
     
-    .disconnect-icon-btn:hover {
-        background: #e74c3c;
-        transform: scale(1.1);
-        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.5);
-        border-color: #c0392b;
+    @keyframes connectionPulse {
+        0%, 100% { 
+            background: #27ae60;
+            box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7);
+        }
+        50% { 
+            background: #2ecc71;
+            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0);
+        }
     }
     
-    .disconnect-icon {
-        width: 14px;
-        height: 14px;
-        filter: brightness(0) invert(1);
+    /* Connecting spinner */
+    .connecting-spinner {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 8px;
+        height: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-top: 1px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 10;
     }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Remove all the custom CSS tooltips since we're using title attributes now */
     
     /* Responsive design */
     @media (max-width: 1024px) {
@@ -683,7 +640,8 @@
             gap: 12px;
         }
         
-        .main-navigation {
+        .main-navigation,
+        .wallet-navigation {
             gap: 2px;
             padding: 3px;
         }
@@ -720,7 +678,8 @@
             height: 40px;
         }
         
-        .main-navigation {
+        .main-navigation,
+        .wallet-navigation {
             gap: 4px;
             padding: 4px;
         }
@@ -733,28 +692,6 @@
         .nav-icon-img {
             width: 16px;
             height: 16px;
-        }
-        
-        .test-transaction-button,
-        .connect-button {
-            padding: 8px 12px;
-            font-size: 12px;
-        }
-        
-        .test-icon,
-        .wallet-icon {
-            width: 14px;
-            height: 14px;
-        }
-        
-        .wallet-info-display {
-            min-width: 120px;
-            max-width: 160px;
-            font-size: 10px;
-        }
-        
-        .wallet-info-display .address {
-            display: none;
         }
     }
     
@@ -775,7 +712,8 @@
             flex-wrap: wrap;
         }
         
-        .main-navigation {
+        .main-navigation,
+        .wallet-navigation {
             justify-content: center;
         }
         
@@ -787,18 +725,6 @@
         .nav-icon-img {
             width: 14px;
             height: 14px;
-        }
-        
-        .test-transaction-button,
-        .connect-button {
-            flex: 1;
-            min-width: 120px;
-            justify-content: center;
-        }
-        
-        .wallet-info-display {
-            width: 100%;
-            max-width: none;
         }
     }
 </style>

@@ -356,24 +356,17 @@
         }
         
         handleClick(e) {
+            // FIXED: Hide tooltip on click to prevent massive tooltip issue
+            this.hideTooltip();
+            
             const rect = physicsContainer.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
             
             this.applyClickBounce(clickX, clickY);
             
-            // Visual feedback
-            if (this.element && this.element.classList) {
-                this.element.classList.remove('ball-click-effect');
-                void this.element.offsetHeight;
-                this.element.classList.add('ball-click-effect');
-                
-                setTimeout(() => {
-                    if (this.element && this.element.classList && this.element.classList.contains('ball-click-effect')) {
-                        this.element.classList.remove('ball-click-effect');
-                    }
-                }, 150);
-            }
+            // FIXED: Removed all visual feedback that caused zoom/shake
+            // No more classList manipulation or transform effects
         }
         
         applyClickBounce(clickX, clickY) {
@@ -403,8 +396,9 @@
         
         showTooltip(e) {
             tooltipTransaction = this.transaction;
-            tooltipX = e.pageX + 10;
-            tooltipY = e.pageY - 10;
+            // FIXED: Use clientX/Y instead of pageX/Y for proper positioning
+            tooltipX = e.clientX + 10;
+            tooltipY = e.clientY - 10;
             showTooltip = true;
         }
         
@@ -557,13 +551,13 @@
     </div>
 </div>
 
-<!-- Simplified Tooltip -->
+<!-- FIXED: Simplified Tooltip with proper positioning -->
 {#if showTooltip && tooltipTransaction}
     {@const isWallet = $walletConnector.isConnected && $walletConnector.connectedAddress && isWalletTransaction(tooltipTransaction, $walletConnector.connectedAddress)}
     {@const transactionType = identifyTransactionType(tooltipTransaction)}
     <div 
         class="simple-ball-tooltip" 
-        style="left: {tooltipX}px; top: {tooltipY}px; display: block;"
+        style="position: fixed; left: {tooltipX}px; top: {tooltipY}px; display: block;"
     >
         {#if isWallet}
             <div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🌟 Your Wallet Transaction</div>
@@ -600,12 +594,12 @@
         background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
         overflow: hidden;
         box-shadow: 0 8px 32px rgba(232, 115, 31, 0.4);
-        transition: all 0.3s ease;
+        transition: box-shadow 0.3s ease;
     }
     
+    /* FIXED: Removed transform scale from hover */
     .simple-ball-physics-area:hover {
         box-shadow: 0 12px 40px rgba(232, 115, 31, 0.5);
-        transform: scale(1.01);
     }
     
     .simple-block-label {
@@ -635,7 +629,6 @@
     }
     
     .simple-ball-tooltip {
-        position: absolute;
         background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
         border: 2px solid var(--primary-orange);
         padding: 12px;
@@ -647,23 +640,23 @@
         white-space: nowrap;
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
+        max-width: 150px;
     }
     
-    /* Simple ball styling */
+    /* FIXED: Removed all transform/scale effects from ball styling */
     :global(.ball-physics.simple-ball) {
-        transition: transform 0.15s ease, filter 0.15s ease !important;
+        transition: filter 0.15s ease !important;
     }
     
     :global(.ball-physics.simple-ball:hover) {
-        transform: scale(1.1) !important;
         filter: brightness(1.2) !important;
         z-index: 100 !important;
     }
     
+    /* FIXED: Removed transform scale from click effect */
     :global(.ball-click-effect) {
-        transform: scale(0.85) !important;
         filter: brightness(1.3) !important;
-        transition: transform 0.15s ease, filter 0.15s ease !important;
+        transition: filter 0.15s ease !important;
     }
     
     /* Enhanced ball styling for special transaction types */
