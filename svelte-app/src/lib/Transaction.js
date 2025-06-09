@@ -1,5 +1,7 @@
-// Enhanced Transaction.js - SERVER-SAFE VERSION
-// Fixed potential server-side rendering issues
+// Enhanced Transaction.js - with Origin Detection and Logo Support
+// Simplified version - no platform-specific styling, just logo and name in tooltip
+
+import { detectTransactionOrigin, getPlatformConfig } from './transactionOrigins.js';
 
 export class Transaction {
     constructor(transactionData, walletAddress = null) {
@@ -11,6 +13,10 @@ export class Transaction {
         this.outputs = transactionData.outputs || [];
         this.isDummy = transactionData.isDummy || false;
         
+        // NEW: Origin detection and platform info
+        this.origin = transactionData.origin || detectTransactionOrigin(transactionData);
+        this.platformConfig = getPlatformConfig(this.origin);
+        
         // Visual properties
         this.element = null;
         this.placed = false;
@@ -21,7 +27,7 @@ export class Transaction {
         // Wallet detection
         this.isWallet = this.checkWalletTransaction(walletAddress);
         
-        console.log(`📦 Created transaction: ${this.id} (${this.formatSize(this.sizeBytes)})`);
+        console.log(`📦 Created transaction: ${this.id} (${this.formatSize(this.sizeBytes)}) - Origin: ${this.platformConfig.name}`);
     }
     
     checkWalletTransaction(walletAddress) {
@@ -88,7 +94,7 @@ export class Transaction {
             container.appendChild(this.element);
         }
         
-        console.log(`✨ Created DOM element for transaction ${this.id} (${visualSize}px)`);
+        console.log(`✨ Created DOM element for transaction ${this.id} (${visualSize}px) - ${this.platformConfig.name}`);
         return this.element;
     }
     
@@ -187,7 +193,7 @@ export class Transaction {
         }, { passive: false });
     }
     
-    // Tooltip functionality - SERVER-SAFE
+    // Tooltip functionality with origin logo and platform info
     showTooltip(event) {
         if (typeof document === 'undefined') return;
         
@@ -202,6 +208,21 @@ export class Transaction {
         
         let tooltipContent = '';
         
+        // Platform header with logo (for all platforms, no special treatment for P2P)
+        if (this.platformConfig.logo && this.platformConfig.name) {
+            tooltipContent += `
+                <div class="platform-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <img src="${this.platformConfig.logo}" 
+                         alt="${this.platformConfig.name}" 
+                         style="width: 20px; height: 20px; border-radius: 3px; object-fit: contain; background: rgba(255,255,255,0.1); padding: 2px;"
+                         onerror="this.style.display='none'">
+                    <span style="color: #ffffff; font-weight: bold; font-size: 11px;">
+                        ${this.platformConfig.name}
+                    </span>
+                </div>
+            `;
+        }
+        
         if (isWallet) {
             tooltipContent += '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🌟 Your Wallet Transaction</div>';
         }
@@ -212,7 +233,7 @@ export class Transaction {
             tooltipContent += '<div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🧪 Test Transaction</div>';
         }
         
-        tooltipContent += `<strong>Transaction</strong><br>`;
+        tooltipContent += `<strong>Transaction Details</strong><br>`;
         tooltipContent += `ID: ${this.shortenTransactionId(this.id)}<br>`;
         tooltipContent += `Size: ${this.sizeBytes || 'N/A'} bytes<br>`;
         tooltipContent += `Value: ${(this.value || 0).toFixed(4)} ERG<br>`;
@@ -233,6 +254,9 @@ export class Transaction {
             white-space: nowrap;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
+            max-width: 280px;
+            white-space: normal;
+            line-height: 1.4;
         `;
         
         const x = event.clientX || event.pageX || 0;
@@ -359,7 +383,7 @@ export class Transaction {
         });
     }
     
-    // Additional animation methods with SERVER-SAFE checks
+    // Mining confirmation animation
     animateMiningConfirmation() {
         if (!this.element || this.confirming || typeof document === 'undefined') return Promise.resolve();
         
@@ -393,6 +417,7 @@ export class Transaction {
         });
     }
     
+    // Mining departure animation
     animateMiningDeparture() {
         if (!this.element || this.departing) return Promise.resolve();
         
@@ -452,7 +477,7 @@ export class Transaction {
         });
     }
     
-    // Helper: Restore original styling
+    // Helper: Restore original styling without platform accents
     restoreOriginalStyling() {
         if (!this.element) return;
         
@@ -463,6 +488,7 @@ export class Transaction {
             this.element.style.border = '2px solid #e91e63';
             this.element.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
         } else {
+            // Keep original styling - no platform accents
             this.element.style.border = '1px solid rgba(255, 255, 255, 0.3)';
             this.element.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
         }
@@ -536,9 +562,7 @@ export class Transaction {
                 this.element.style.zIndex = '10';
             } else {
                 this.element.classList.remove('wallet-transaction');
-                this.element.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-                this.element.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
-                this.element.style.zIndex = '5';
+                this.restoreOriginalStyling();
             }
         }
     }

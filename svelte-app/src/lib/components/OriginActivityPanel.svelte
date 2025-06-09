@@ -84,7 +84,7 @@
     <h3 class="panel-title">Platform Activity</h3>
     <div class="no-platforms">
       <span class="debug-text">No Ergo activity detected yet...</span>
-      <small class="debug-help">Transaction will appear here....</small>
+      <small class="debug-help">Transaction types will appear here....</small>
     </div>
   </div>
 {/if}
