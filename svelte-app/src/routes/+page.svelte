@@ -1,4 +1,4 @@
-<!-- ENHANCED +page.svelte with Configurable API Timing Settings -->
+<!-- ENHANCED +page.svelte with FIXED API Timing Settings -->
 
 <script>
     import { onMount, onDestroy } from 'svelte';
@@ -50,7 +50,14 @@
     // Slow refresh (save bandwidth): 120000, 300000, 600000
     // Very slow refresh: 300000, 600000, 1800000
     
-    let intervalIds = [];
+    // FIXED: Proper interval tracking to prevent duplicates
+    let intervalRefs = {
+        transactions: null,
+        blocks: null,
+        price: null
+    };
+    let intervalIds = []; // Keep for backward compatibility but use intervalRefs primarily
+    
     let currentMode = 'pack'; // Default to TransactionPackingGrid
     let ergoPackingRef;
     let ballPhysicsRef;
@@ -135,7 +142,34 @@
         console.log(`📢 Status: ${type.toUpperCase()} - ${message}`);
     }
     
-    // Enhanced API error handling with dynamic intervals
+    // FIXED: Clear all intervals properly
+    function clearAllIntervals() {
+        console.log('🧹 Clearing all existing intervals...');
+        
+        // Clear individual refs
+        if (intervalRefs.transactions) {
+            clearInterval(intervalRefs.transactions);
+            intervalRefs.transactions = null;
+        }
+        if (intervalRefs.price) {
+            clearInterval(intervalRefs.price);
+            intervalRefs.price = null;
+        }
+        if (intervalRefs.blocks) {
+            clearInterval(intervalRefs.blocks);
+            intervalRefs.blocks = null;
+        }
+        
+        // Clear any remaining from intervalIds array
+        intervalIds.forEach(id => {
+            if (id) clearInterval(id);
+        });
+        intervalIds = [];
+        
+        console.log('✅ All intervals cleared');
+    }
+    
+    // FIXED: Enhanced API error handling with proper interval management
     function handleApiError(endpoint, error, data = null) {
         apiStatus[endpoint].lastError = error.message || error;
         apiStatus[endpoint].consecutiveFailures++;
@@ -145,9 +179,14 @@
         
         // Implement backoff strategy
         if (failureCount >= 2) {
+            const oldInterval = currentIntervals[endpoint];
             const newInterval = currentIntervals[endpoint] * API_REFRESH_CONFIG.FAILURE_BACKOFF_MULTIPLIER;
             currentIntervals[endpoint] = Math.min(newInterval, 600000); // Max 10 minutes
-            console.log(`🔄 Increased ${endpoint} interval to ${currentIntervals[endpoint]}ms due to failures`);
+            
+            console.log(`🔄 Increased ${endpoint} interval from ${oldInterval}ms to ${currentIntervals[endpoint]}ms due to failures`);
+            
+            // FIXED: Restart intervals with new timing
+            setupAutoRefresh();
         }
         
         if (data && data.error && data.fallback === 'preserve_existing') {
@@ -174,7 +213,7 @@
         console.error(`❌ ${endpoint} API error (failure #${failureCount}):`, error);
     }
     
-    // Track successful API calls and reset intervals
+    // FIXED: Track successful API calls and reset intervals properly
     function handleApiSuccess(endpoint) {
         const wasDown = !apiStatus[endpoint].working;
         
@@ -185,8 +224,11 @@
         // Reset interval to original value on success
         const originalInterval = API_REFRESH_CONFIG[endpoint.toUpperCase() + '_INTERVAL'];
         if (currentIntervals[endpoint] !== originalInterval) {
+            console.log(`✅ Resetting ${endpoint} interval from ${currentIntervals[endpoint]}ms to ${originalInterval}ms`);
             currentIntervals[endpoint] = originalInterval;
-            console.log(`✅ Reset ${endpoint} interval to ${originalInterval}ms`);
+            
+            // FIXED: Restart intervals with original timing
+            setupAutoRefresh();
         }
         
         if (wasDown) {
@@ -226,16 +268,19 @@
         }
     }
     
-    // Handle refresh from Header
+    // FIXED: Handle refresh from Header - load price first, then use it for transactions
     async function handleRefresh() {
         console.log('🔄 Header: Refreshing all data...');
         showStatusNotification('Refreshing all data...', 'info', 2000);
         
         try {
+            // FIXED: Load price first, then use it for transactions
+            await loadPrice(); // This updates the currentPrice store
+            
+            // Then load other data (which will use the updated price)
             await Promise.all([
-                loadPrice(),
                 loadBlocks(),
-                loadTransactionsOptimized()
+                loadTransactionsOptimized() // This will now use the updated price
             ]);
             
             console.log('✅ All data refresh completed');
@@ -294,79 +339,105 @@
         }
     }
     
-    // ENHANCED: Setup auto-refresh intervals with configuration
+    // FIXED: Setup auto-refresh intervals with proper cleanup and tracking
     function setupAutoRefresh() {
         if (!API_REFRESH_CONFIG.ENABLE_AUTO_REFRESH) {
             console.log('🔄 Auto-refresh disabled by configuration');
             return;
         }
         
+        // IMPORTANT: Clear existing intervals first
+        clearAllIntervals();
+        
         console.log('⏰ Setting up configurable auto-refresh intervals:', {
-            transactions: `${API_REFRESH_CONFIG.TRANSACTIONS_INTERVAL}ms`,
-            blocks: `${API_REFRESH_CONFIG.BLOCKS_INTERVAL}ms`, 
-            price: `${API_REFRESH_CONFIG.PRICE_INTERVAL}ms`
+            transactions: `${currentIntervals.transactions}ms`,
+            blocks: `${currentIntervals.blocks}ms`, 
+            price: `${currentIntervals.price}ms`
         });
         
         // Transaction refresh interval
-        const transactionInterval = setInterval(() => {
+        intervalRefs.transactions = setInterval(() => {
             if (apiStatus.transactions.consecutiveFailures >= API_REFRESH_CONFIG.MAX_CONSECUTIVE_FAILURES) {
                 console.log('⏸️ Skipping transaction refresh due to consecutive failures');
                 return;
             }
             
+            console.log(`🔄 AUTO-REFRESH: Loading transactions... (interval: ${currentIntervals.transactions}ms)`);
             loadTransactionsOptimized().catch(error => {
                 console.error('🔄 Auto-refresh transaction error:', error);
             });
         }, currentIntervals.transactions);
         
         // Price refresh interval
-        const priceInterval = setInterval(() => {
+        intervalRefs.price = setInterval(() => {
             if (apiStatus.price.consecutiveFailures >= API_REFRESH_CONFIG.MAX_CONSECUTIVE_FAILURES) {
                 console.log('⏸️ Skipping price refresh due to consecutive failures');
                 return;
             }
             
+            console.log(`🔄 AUTO-REFRESH: Loading price... (interval: ${currentIntervals.price}ms)`);
             loadPrice().catch(error => {
                 console.error('🔄 Auto-refresh price error:', error);
             });
         }, currentIntervals.price);
         
         // Block refresh interval
-        const blockInterval = setInterval(() => {
+        intervalRefs.blocks = setInterval(() => {
             if (apiStatus.blocks.consecutiveFailures >= API_REFRESH_CONFIG.MAX_CONSECUTIVE_FAILURES) {
                 console.log('⏸️ Skipping block refresh due to consecutive failures');
                 return;
             }
             
+            console.log(`🔄 AUTO-REFRESH: Loading blocks... (interval: ${currentIntervals.blocks}ms)`);
             loadBlocks().catch(error => {
                 console.error('🔄 Auto-refresh block error:', error);
             });
         }, currentIntervals.blocks);
         
-        intervalIds = [transactionInterval, priceInterval, blockInterval];
+        // Update the intervalIds array for backward compatibility
+        intervalIds = [intervalRefs.transactions, intervalRefs.price, intervalRefs.blocks];
         
         console.log('✅ Auto-refresh intervals configured and started');
+        console.log('📊 Active intervals:', {
+            transactions: intervalRefs.transactions ? 'ACTIVE' : 'NULL',
+            price: intervalRefs.price ? 'ACTIVE' : 'NULL', 
+            blocks: intervalRefs.blocks ? 'ACTIVE' : 'NULL'
+        });
     }
     
-    // Function to update refresh intervals at runtime
+    // FIXED: Function to update refresh intervals at runtime
     function updateRefreshInterval(endpoint, newInterval) {
-        console.log(`🔄 Updating ${endpoint} refresh interval to ${newInterval}ms`);
+        console.log(`🔄 Updating ${endpoint} refresh interval from ${currentIntervals[endpoint]}ms to ${newInterval}ms`);
         
         currentIntervals[endpoint] = newInterval;
         
-        // Clear existing interval and set new one
-        if (intervalIds.length > 0) {
-            intervalIds.forEach(id => clearInterval(id));
-            setupAutoRefresh();
-        }
+        // FIXED: Restart all intervals with new settings (this clears old ones first)
+        setupAutoRefresh();
         
         showStatusNotification(`Updated ${endpoint} refresh to ${newInterval/1000}s`, 'info', 2000);
     }
     
+    // DEBUGGING: Add function to check current interval status
+    function debugIntervalStatus() {
+        console.log('📊 INTERVAL DEBUG STATUS:');
+        console.log('Current intervals config:', currentIntervals);
+        console.log('Active interval refs:', {
+            transactions: intervalRefs.transactions ? 'ACTIVE' : 'NULL',
+            price: intervalRefs.price ? 'ACTIVE' : 'NULL', 
+            blocks: intervalRefs.blocks ? 'ACTIVE' : 'NULL'
+        });
+        console.log('IntervalIds array length:', intervalIds.length);
+        console.log('API Status:', apiStatus);
+    }
     
     onMount(async () => {
-        console.log('🚀 Ergomempool SvelteKit app initialized with configurable API timing');
+        console.log('🚀 Ergomempool SvelteKit app initialized with FIXED configurable API timing');
         console.log('⚙️ API Configuration:', API_REFRESH_CONFIG);
+        
+        // Make debug function available in browser console
+        if (typeof window !== 'undefined') {
+            window.debugIntervals = debugIntervalStatus;
+        }
         
         // Stage 1: Load price first (fastest)
         loadingStage = 'price';
@@ -388,7 +459,7 @@
         loadingStage = 'complete';
         initialLoadComplete = true;
         
-        // Set up configurable auto-refresh intervals
+        // Set up FIXED configurable auto-refresh intervals
         setupAutoRefresh();
         
         // Load transaction table component lazily after initial render
@@ -399,15 +470,17 @@
         console.log('✅ App initialization complete');
     });
     
+    // FIXED: OnDestroy cleanup
     onDestroy(() => {
-        intervalIds.forEach(id => clearInterval(id));
-        console.log('🧹 Cleaned up all intervals');
+        console.log('🧹 Component destroying - cleaning up intervals...');
+        clearAllIntervals();
+        console.log('✅ All intervals cleaned up on destroy');
     });
     
-    // ENHANCED: Transaction loading with origin detection and data persistence
+    // FIXED: Transaction loading WITHOUT fetching price every time
     async function loadTransactionsOptimized() {
         try {
-            console.log('📊 Loading transactions with origin detection...');
+            console.log(`📊 [${new Date().toISOString()}] TRANSACTION API CALL STARTED`);
             const txData = await fetchTransactions();
             
             if (txData && txData.error && txData.serverData) {
@@ -424,13 +497,15 @@
                 }
             }
             
-            const priceData = await fetchPrice();
+            // FIXED: Use current price from store instead of fetching new price every time
+            const currentPriceValue = $currentPrice || 1.0; // Use store value with fallback
+            console.log(`💰 Using existing price for USD calculation: ${currentPriceValue}`);
             
             const maxTransactions = initialLoadComplete ? txData.length : Math.min(txData.length, API_REFRESH_CONFIG.INITIAL_LOAD_LIMIT);
             const limitedTxData = txData.slice(0, maxTransactions);
             
-            // Add USD values
-            const txWithUsd = addUsdValues(limitedTxData, priceData.price);
+            // Add USD values using existing price (not fetching new price)
+            const txWithUsd = addUsdValues(limitedTxData, currentPriceValue);
             
             // ENHANCED: Ensure origin detection is applied and wallet detection is current
             const txWithOriginsAndUsd = txWithUsd.map(tx => {
@@ -466,7 +541,9 @@
             if (!initialLoadComplete && txData.length > API_REFRESH_CONFIG.INITIAL_LOAD_LIMIT) {
                 setTimeout(() => {
                     const remainingTxData = txData.slice(API_REFRESH_CONFIG.INITIAL_LOAD_LIMIT);
-                    const remainingTxWithUsd = addUsdValues(remainingTxData, priceData.price);
+                    
+                    // FIXED: Use same existing price for remaining transactions
+                    const remainingTxWithUsd = addUsdValues(remainingTxData, currentPriceValue);
                     
                     // Apply origin detection to remaining transactions
                     const remainingTxWithOrigins = remainingTxWithUsd.map(tx => {
@@ -477,7 +554,7 @@
                     });
                     
                     transactions.update(current => [...current, ...remainingTxWithOrigins]);
-                    console.log(`📊 Loaded remaining ${remainingTxData.length} transactions in background`);
+                    console.log(`📊 Loaded remaining ${remainingTxData.length} transactions in background using existing price`);
                 }, API_REFRESH_CONFIG.BATCH_LOAD_DELAY);
             }
         } catch (error) {
@@ -495,6 +572,7 @@
     // Price loading with persistence
     async function loadPrice() {
         try {
+            console.log(`💰 [${new Date().toISOString()}] PRICE API CALL STARTED`);
             const priceData = await fetchPrice();
             currentPrice.set(priceData.price);
             lastSuccessfulLoad.price = new Date();
@@ -515,7 +593,7 @@
     // Block loading with persistence
     async function loadBlocks() {
         try {
-            console.log('🧱 Loading blocks...');
+            console.log(`🧱 [${new Date().toISOString()}] BLOCKS API CALL STARTED`);
             const blocks = await fetchBlocks();
             
             if (blocks && blocks.error && blocks.serverData) {
@@ -549,6 +627,7 @@
     }
 </script>
 
+<!-- Rest of the template remains exactly the same -->
 <svelte:head>
     <title>Ergomempool</title>
     <meta name="description" content="Real-time Ergo blockchain mempool visualizer with transaction packing simulation">

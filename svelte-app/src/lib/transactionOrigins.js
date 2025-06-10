@@ -508,8 +508,6 @@ export const PLATFORM_CONFIGS = {
       "oq3jWGvabYxVYtwQccW381u3uTDLg2Zbc3PSzLyPRqwFP37Shs61PchaqD7tEYrzcJzF498uLGKemB7jexeM3H6nYuNxd3sRLfuzspQFSc1jMimeZjnH7wbRXfTN6PWXjXbMTkW6R3EWHs4CwTEEbHwuDKoMME8DgX9SmJuLHL1QNKxEJEkFH5XRkbyWSUJqAroMG7jnyxucd3BbCfZQZrDjjs3iWprNdJw5ddj6D3v2AHRJmNsWvHEy2tu8mgD65isoPS8Xto7HSoBR6782n1qCQH4RPYhBeQZsq5LPqP6z5hAonp6C9CDe53fTWoDfAza5Rp2KGfwkWNuxf84KbVa78Nm3LS1GWzEaL6M7VA1ZBcTBXjfQrsp52qf9FM15dUL1Yv2NjcjmPhMy8RwPicafx91A2Rt4BWjBf1ehsXU6fPWEh7wF6ubqKPT1QaB7RhN3o8HwpvX1KGVrmE8ha3aCs9GRMVKejDU28YFTKcDv8bBykcdmQ9SYXQ1bVLhYJBA9UczBM9hUrYR9HT1DFgSpd14nb2YiHvWDtRP1rC5498YoB3dHikfSjpnPvFTXGHyJ6coZTCz33xdp5Qc4rZ4YFLJka8vANeMAfrHaQ6uCufyMZU6K2iRxg5kJcrtQQtXiEhkh5YwaeoYaHYxfTjwzkKhPU9q7jLr8gzWpZ43HRZUfYpsKQBHLBSPS67FCydsjJEcXJtYoBGGzXeP2CdP72xGb4LmS66a1SeSTyYHKS2tiENLDCyFbM",
     ]
   },
-
-
   
   SIGMAFI: {
     name: "SigmaFi",
@@ -521,6 +519,117 @@ export const PLATFORM_CONFIGS = {
       "3FdyuY8fqeTtYcsuvTsmsw4ZBGde2cad6hyntGxzSY3rd4JtTwTvK64xp3XJZvYNTijrTMZMQxkFiULuHpq46VFbAiSSHXLe1qy5WXNRELj4tcx6wEPbSDqzDyVbY6wKFQhmvYQT2XjqLJAiBGV9F6f2uXrjXFPzPnXpVeJnWc8ob1wMqbfgBQKdfu24qx3pejkAfAz2hmQQ57xgzGwHCcGyJdad7UxwmDetAUER8iwE32rygGCmqXaVeKGcJ33epYNGpDLPnYUg3Qz7eYuHHb7mAqwkEp6XGE1jWbf8nS7TA1taNpakssbWYN2YmB9NBG8nWNzLhc9QBdqyAn9WQ63Jh1znt2up6sQJR7xnon9ZsYoeo7bErzg4uoJbTLzwjhZBJ9En9bMX72xUb5zhvSSua6CseMMA6s86g2mwrieRwqFM7CGDypy78MzWS1nagUBKLet8LAFFpb6DKBK1h2HpAvLnMbWB7Kp3rJ4be6ed5crNdZTqhbSww96P2KNSZemhwfgAkUFjMJzB2dEG9VNAW1dMk5nBrS8JsRHhYpPqFcJiFtQvcar1ijs2PqsR9k4P41Y99iomfYXkSoA6z612v1U1C19ASVurzuxGP1vNwNyKLceFVTYXbgkgUFX8Z2nwMz6d2TCa4XTpt9daV5sBV88YJgCiYbL5QhxnoTdYRZbxu725jnV7gbnX9FWjLNaXYJubi5u8kPs3MYzSALeUvtfx6wJV1XyBn5DMbvy8XgFFMKyxtUrfU3dAVaZmUZJnYy8Dz6qrf8tyKx3uU7RfosjV7rcAFRDpozznWRfsxZUir5EzcVFQc9NbjB4HdgJxxvUJ9Nr9F8XCQLL89wCTtaNZBFF284qLtrQ",
     ]
   },
+
+  TWOMINERS: {
+    name: "2Miner payout",
+    logo: "/logos/2miners.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaRQTX5KNdnaWTTX7fEZVEQRn6qP4MJotPuRnS3QpoJxYpSaXoU1y7SHp8ZXMp92TH22DBY",
+    ]
+  },
+
+  DXPOOL: {
+    name: "DXPool payout",
+    logo: "/logos/dxpool.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaUPpNAbKL7UeNUFEcjkoqW6ev5P1hkynBmG4L5baYdZ8rSPYCDNmvwBLiJR7ABjndPhqGm",
+    ]
+  },
+
+  HEROMINERS: {
+    name: "Herominers payout",
+    logo: "/logos/herominers.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaSuf5QC1TJDgdxqJMQEQAM6YaTTRqmUDrmPoVky1b16WAK5zMrq3p2mYqpUNKCyi5CLS9V",
+    ]
+  },
+
+  K1: {
+    name: "K1 payout",
+    logo: "/logos/k1.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaTj2AZkM2vwnemCYyAUJymaFf8iJPUYmgLkJqQmPd3DTubYS5UfL75MhQbEjmuhBMbdspA",
+    ]
+  },
+
+  KRYPTEX: {
+    name: "Kryptex payout",
+    logo: "/logos/kryptex.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaTnTZomXPfuJ67oYJPbrv17yNkLjN6Nj8HxZEUf2iAdiv9gTqmnKKa2i75zmUtDnPQovBb",
+    ]
+  },
+
+  NANOPOOL: {
+    name: "Nanopool payout",
+    logo: "/logos/nanopool.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaRp6WD5jWZSnXzBbA44g1xSMk6Xv2r6Cey8snSH78S6ZbWjP24yyPTDCCZByLpNXXe6NnN",
+    ]
+  },
+
+  SIGPOOL: {
+    name: "Sigpool payout",
+    logo: "/logos/sigmanauts.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaQDYikoEkCMEPRxDiYnVRfiqhf3uLcMhbTPrTrrc7wkyF5LFMmgJyT4mPa6ucnmk3QTeUo",
+    ]
+  },
+
+  WOOLYPOOLY: {
+    name: "Woolypooly payout",
+    logo: "/logos/wooly.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaQ2HPUskY3hvgMA5uCbQWwZNPbMC1Hem9zM2V9U7KMah7LYWS4Hm4WECGuc22nofdQbHbY",
+    ]
+  },
+
+  JJPOOL: {
+    name: "JJpool payout",
+    logo: "/logos/jjpool.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaS7z8MA868ZjU6ujmWi8Wqcx7VK36jcogWt8cRCKoGJYE6ezDe5g7f6fG7arqXNhuNP8Je",
+    ]
+  },
+
+  TWOSOLO: {
+    name: "2Miners solo payout",
+    logo: "/logos/2miners.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "88dhgzEuTXaRiLRSYpvTCXWoN3A86gnWs3Z8BWkJGkGMXsR3WzUUyqbB47YAzhhsB6HJdJ4tC5AFYfSc",
+    ]
+  },
+
   
   P2P: {
     name: "P2P Transfer",
@@ -535,15 +644,19 @@ export const PLATFORM_CONFIGS = {
  * ENHANCED: Detect transaction origin by checking OUTPUT addresses against known contract addresses
  * This is the core logic - looks through all outputs to find matches with platform contract addresses
  */
+/**
+ * ENHANCED: Detect transaction origin by checking OUTPUT addresses first, then INPUT addresses as fallback
+ * This is the core logic - looks through all outputs first, then inputs if no matches found
+ */
 export function detectTransactionOrigin(transaction) {
   if (!transaction.outputs || transaction.outputs.length === 0) {
     console.log(`🔍 Transaction ${transaction.id?.substring(0, 8)}... has no outputs, defaulting to P2P`);
     return 'P2P';
   }
   
-  console.log(`🔍 Analyzing transaction ${transaction.id?.substring(0, 8)}... with ${transaction.outputs.length} outputs`);
+  console.log(`🔍 Analyzing transaction ${transaction.id?.substring(0, 8)}... with ${transaction.outputs.length} outputs and ${transaction.inputs?.length || 0} inputs`);
   
-  // Extract all output addresses from this transaction
+  // STEP 1: Check OUTPUT addresses first (existing logic)
   const outputAddresses = [];
   transaction.outputs.forEach((output, index) => {
     if (output.address) {
@@ -552,38 +665,76 @@ export function detectTransactionOrigin(transaction) {
     }
   });
   
-  if (outputAddresses.length === 0) {
-    console.log(`🔍 Transaction ${transaction.id?.substring(0, 8)}... has no valid output addresses, defaulting to P2P`);
-    return 'P2P';
-  }
-  
-  // Check each platform's contract addresses (skip P2P as it's the fallback)
-  for (const [platformKey, config] of Object.entries(PLATFORM_CONFIGS)) {
-    if (platformKey === 'P2P') continue; // Skip P2P - it's the default fallback
-    
-    // Skip platforms with no known contract addresses
-    if (!config.contractAddresses || config.contractAddresses.length === 0) {
-      console.log(`⚠️ Platform ${config.name} has no contract addresses defined, skipping...`);
-      continue;
-    }
-    
-    // Check if ANY output address matches ANY contract address for this platform
-    for (const outputAddress of outputAddresses) {
-      for (const contractAddress of config.contractAddresses) {
-        if (outputAddress === contractAddress) {
-          console.log(`🎯 MATCH FOUND! Transaction ${transaction.id?.substring(0, 8)}... detected as ${config.name}`);
-          console.log(`   Output address: ${outputAddress.substring(0, 12)}...`);
-          console.log(`   Contract address: ${contractAddress.substring(0, 12)}...`);
-          return platformKey;
+  if (outputAddresses.length > 0) {
+    // Check each platform's contract addresses for OUTPUT matches
+    for (const [platformKey, config] of Object.entries(PLATFORM_CONFIGS)) {
+      if (platformKey === 'P2P') continue; // Skip P2P - it's the default fallback
+      
+      // Skip platforms with no known contract addresses
+      if (!config.contractAddresses || config.contractAddresses.length === 0) {
+        console.log(`⚠️ Platform ${config.name} has no contract addresses defined, skipping...`);
+        continue;
+      }
+      
+      // Check if ANY output address matches ANY contract address for this platform
+      for (const outputAddress of outputAddresses) {
+        for (const contractAddress of config.contractAddresses) {
+          if (outputAddress === contractAddress) {
+            console.log(`🎯 OUTPUT MATCH FOUND! Transaction ${transaction.id?.substring(0, 8)}... detected as ${config.name}`);
+            console.log(`   Output address: ${outputAddress.substring(0, 12)}...`);
+            console.log(`   Contract address: ${contractAddress.substring(0, 12)}...`);
+            return platformKey;
+          }
         }
       }
     }
   }
   
-  // If we went through ALL outputs and found NO matches with ANY platform contract addresses, 
-  // then it's a P2P transaction
-  console.log(`👥 No platform contract matches found for transaction ${transaction.id?.substring(0, 8)}..., defaulting to P2P`);
-  console.log(`   Checked ${outputAddresses.length} outputs against ${Object.keys(PLATFORM_CONFIGS).length - 1} platforms`);
+  // STEP 2: If no output matches found, check INPUT addresses as fallback
+  console.log(`🔄 No output matches found, checking input addresses as fallback...`);
+  
+  const inputAddresses = [];
+  if (transaction.inputs && transaction.inputs.length > 0) {
+    transaction.inputs.forEach((input, index) => {
+      if (input.address) {
+        inputAddresses.push(input.address);
+        console.log(`   Input ${index}: ${input.address.substring(0, 12)}...`);
+      }
+    });
+    
+    if (inputAddresses.length > 0) {
+      // Check each platform's input contract addresses
+      for (const [platformKey, config] of Object.entries(PLATFORM_CONFIGS)) {
+        if (platformKey === 'P2P') continue; // Skip P2P - it's the default fallback
+        
+        // Check both regular contract addresses and input-specific addresses
+        const addressesToCheck = [
+          ...(config.contractAddresses || []),
+          ...(config.inputAddresses || [])
+        ];
+        
+        if (addressesToCheck.length === 0) {
+          continue;
+        }
+        
+        // Check if ANY input address matches ANY contract address for this platform
+        for (const inputAddress of inputAddresses) {
+          for (const contractAddress of addressesToCheck) {
+            if (inputAddress === contractAddress) {
+              console.log(`🎯 INPUT MATCH FOUND! Transaction ${transaction.id?.substring(0, 8)}... detected as ${config.name}`);
+              console.log(`   Input address: ${inputAddress.substring(0, 12)}...`);
+              console.log(`   Contract address: ${contractAddress.substring(0, 12)}...`);
+              return platformKey;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // STEP 3: If we went through ALL outputs AND inputs and found NO matches, then it's P2P
+  console.log(`👥 No platform contract matches found in outputs or inputs for transaction ${transaction.id?.substring(0, 8)}..., defaulting to P2P`);
+  console.log(`   Checked ${outputAddresses.length} outputs and ${inputAddresses.length} inputs against ${Object.keys(PLATFORM_CONFIGS).length - 1} platforms`);
   
   return 'P2P';
 }
@@ -670,11 +821,24 @@ export function processTransactionsWithOrigins(transactions, walletAddress = nul
   
   // Log contract addresses for debugging
   Object.entries(PLATFORM_CONFIGS).forEach(([key, config]) => {
-    if (config.contractAddresses.length > 0) {
-      console.log(`🏷️ ${config.name}: ${config.contractAddresses.length} contract addresses`);
-      config.contractAddresses.forEach((addr, index) => {
-        console.log(`   ${index + 1}. ${addr.substring(0, 12)}...`);
-      });
+    const outputCount = config.contractAddresses?.length || 0;
+    const inputCount = config.inputAddresses?.length || 0;
+    const totalCount = outputCount + inputCount;
+    
+    if (totalCount > 0) {
+      console.log(`🏷️ ${config.name}: ${outputCount} output + ${inputCount} input = ${totalCount} total addresses`);
+      
+      if (config.contractAddresses?.length > 0) {
+        config.contractAddresses.forEach((addr, index) => {
+          console.log(`   Output ${index + 1}. ${addr.substring(0, 12)}...`);
+        });
+      }
+      
+      if (config.inputAddresses?.length > 0) {
+        config.inputAddresses.forEach((addr, index) => {
+          console.log(`   Input ${index + 1}. ${addr.substring(0, 12)}...`);
+        });
+      }
     }
   });
   
@@ -701,7 +865,7 @@ export function processTransactionsWithOrigins(transactions, walletAddress = nul
   // Log if majority are P2P (might indicate missing contract addresses)
   const p2pPercentage = stats.P2P ? stats.P2P.percentage : 0;
   if (p2pPercentage > 80) {
-    console.warn(`⚠️ Warning: ${p2pPercentage.toFixed(1)}% of transactions are P2P. Consider adding more contract addresses to platform configs.`);
+    console.warn(`⚠️ Warning: ${p2pPercentage.toFixed(1)}% of transactions are P2P. Consider adding more contract/input addresses to platform configs.`);
   }
   
   return processedTransactions;
@@ -762,17 +926,19 @@ export function addPlatformConfig(key, config) {
     logo: config.logo || `/logos/${key.toLowerCase()}.svg`,
     color: config.color || '#95a5a6',
     website: config.website || null,
-    contractAddresses: config.contractAddresses || []
+    contractAddresses: config.contractAddresses || [],
+    inputAddresses: config.inputAddresses || []
   };
   
-  console.log(`✅ Added new platform: ${config.name} with ${config.contractAddresses?.length || 0} contract addresses`);
+  const totalAddresses = (config.contractAddresses?.length || 0) + (config.inputAddresses?.length || 0);
+  console.log(`✅ Added new platform: ${config.name} with ${totalAddresses} total addresses (${config.contractAddresses?.length || 0} output + ${config.inputAddresses?.length || 0} input)`);
   return true;
 }
 
 /**
  * Helper function to add contract addresses to existing platform
  */
-export function addContractAddresses(platformKey, addresses) {
+export function addContractAddresses(platformKey, addresses, type = 'output') {
   if (!PLATFORM_CONFIGS[platformKey]) {
     console.error(`❌ Platform ${platformKey} not found`);
     return false;
@@ -782,10 +948,66 @@ export function addContractAddresses(platformKey, addresses) {
     addresses = [addresses];
   }
   
-  const existingCount = PLATFORM_CONFIGS[platformKey].contractAddresses.length;
-  PLATFORM_CONFIGS[platformKey].contractAddresses.push(...addresses);
-  
-  console.log(`✅ Added ${addresses.length} contract addresses to ${PLATFORM_CONFIGS[platformKey].name} (total: ${PLATFORM_CONFIGS[platformKey].contractAddresses.length})`);
+  if (type === 'input') {
+    if (!PLATFORM_CONFIGS[platformKey].inputAddresses) {
+      PLATFORM_CONFIGS[platformKey].inputAddresses = [];
+    }
+    const existingCount = PLATFORM_CONFIGS[platformKey].inputAddresses.length;
+    PLATFORM_CONFIGS[platformKey].inputAddresses.push(...addresses);
+    console.log(`✅ Added ${addresses.length} input addresses to ${PLATFORM_CONFIGS[platformKey].name} (total input: ${PLATFORM_CONFIGS[platformKey].inputAddresses.length})`);
+  } else {
+    const existingCount = PLATFORM_CONFIGS[platformKey].contractAddresses.length;
+    PLATFORM_CONFIGS[platformKey].contractAddresses.push(...addresses);
+    console.log(`✅ Added ${addresses.length} output addresses to ${PLATFORM_CONFIGS[platformKey].name} (total output: ${PLATFORM_CONFIGS[platformKey].contractAddresses.length})`);
+  }
   
   return true;
+}
+
+/**
+ * Helper function to add input addresses specifically
+ */
+export function addInputAddresses(platformKey, addresses) {
+  return addContractAddresses(platformKey, addresses, 'input');
+}
+
+/**
+ * Helper function to get all addresses for a platform (both input and output)
+ */
+export function getPlatformAddresses(platformKey) {
+  const config = PLATFORM_CONFIGS[platformKey];
+  if (!config) return { output: [], input: [], total: 0 };
+  
+  const output = config.contractAddresses || [];
+  const input = config.inputAddresses || [];
+  
+  return {
+    output,
+    input,
+    total: output.length + input.length,
+    combined: [...output, ...input]
+  };
+}
+
+/**
+ * Helper function to check if an address belongs to any platform
+ */
+export function findPlatformByAddress(address, type = 'both') {
+  for (const [platformKey, config] of Object.entries(PLATFORM_CONFIGS)) {
+    if (platformKey === 'P2P') continue;
+    
+    if (type === 'output' || type === 'both') {
+      if (config.contractAddresses?.includes(address)) {
+        return { platform: platformKey, type: 'output', config };
+      }
+    }
+    
+    if (type === 'input' || type === 'both') {
+      if (config.inputAddresses?.includes(address)) {
+        return { platform: platformKey, type: 'input', config };
+      }
+    }
+  }
+  
+  return null;
 }

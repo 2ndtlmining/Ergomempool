@@ -25,7 +25,7 @@ const CACHE_CONFIG = {
     MAX_AGE_MINUTES: 30,           // Remove transactions older than 30 minutes
     VALIDATION_BATCH_SIZE: 10,     // Validate this many transactions per check
     FULL_SYNC_INTERVAL_MS: 120000, // Full sync every 2 minutes
-    QUICK_SYNC_INTERVAL_MS: 15000, // Quick sync every 15 seconds
+    QUICK_SYNC_INTERVAL_MS: 5000, // Quick sync every 5 seconds
     MAX_VALIDATION_FAILURES: 3,   // Remove after 3 failed validations
 };
 
