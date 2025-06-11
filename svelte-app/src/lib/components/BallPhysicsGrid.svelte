@@ -29,13 +29,165 @@
     let animationId;
     let lastTime = 0;
     
+    // FIXED: Track processed transactions to prevent duplicates
+    let processedTransactionIds = new Set();
+    
     // Tooltip state
     let showTooltip = false;
     let tooltipX = 0;
     let tooltipY = 0;
     let tooltipTransaction = null;
     
+    // ADDED: Coordinated mining function to remove balls when blocks are mined
+    async function handleCoordinatedMining(blockInfo) {
+        const { height, transactionsCount } = blockInfo;
+        
+        console.log(`⛏️ Ball Physics: Starting coordinated mining for block ${height}: ${transactionsCount} transactions`);
+        
+        if (balls.length === 0) {
+            console.log(`📭 No balls available to mine for block ${height}`);
+            return;
+        }
+        
+        // Calculate how many balls to remove (similar to TransactionPackingGrid logic)
+        let ballsToRemove = calculateBallsToRemove(transactionsCount, balls.length);
+        
+        if (ballsToRemove > 0) {
+            await performBallMiningAnimation(ballsToRemove, height);
+        }
+    }
+    
+    // ADDED: Calculate how many balls to remove during mining
+    function calculateBallsToRemove(blockTxCount, availableBalls) {
+        console.log(`🧮 Calculating balls to remove: block=${blockTxCount}, available=${availableBalls}`);
+        
+        if (availableBalls === 0) return 0;
+        
+        // Remove a reasonable percentage of balls based on block size
+        // If block has many transactions, remove more balls
+        if (blockTxCount === 0) {
+            return Math.min(1, availableBalls); // Coinbase only, remove 1 ball
+        }
+        
+        if (blockTxCount <= availableBalls) {
+            return Math.min(blockTxCount, Math.max(1, Math.floor(availableBalls * 0.3))); // Remove 30% or block count, whichever is smaller
+        }
+        
+        // Block needs more than we have, remove a good chunk but not all
+        return Math.max(1, Math.floor(availableBalls * 0.5)); // Remove 50% when block is large
+    }
+    
+    // ADDED: Animate ball mining/removal
+    async function performBallMiningAnimation(ballsToRemove, blockHeight) {
+        console.log(`⛏️ Ball Physics: Mining ${ballsToRemove} balls for block ${blockHeight}`);
+        
+        // Sort balls by age (remove oldest first) or by position
+        const sortedBalls = [...balls]
+            .filter(ball => ball.element && !ball.settled) // Prefer moving balls
+            .concat(balls.filter(ball => ball.element && ball.settled)) // Then settled balls
+            .slice(0, ballsToRemove);
+        
+        if (sortedBalls.length === 0) {
+            console.log('📭 No suitable balls to mine');
+            return;
+        }
+        
+        // Add visual indication that balls are being "mined"
+        sortedBalls.forEach((ball, index) => {
+            setTimeout(() => {
+                if (ball.element) {
+                    // Add mining glow effect
+                    ball.element.style.border = '3px solid #27ae60';
+                    ball.element.style.boxShadow = '0 0 20px rgba(39, 174, 96, 0.9)';
+                    ball.element.style.filter = 'brightness(1.3)';
+                    
+                    // Make ball "disappear" after a short delay
+                    setTimeout(() => {
+                        if (ball.element) {
+                            ball.element.style.transition = 'all 0.5s ease-out';
+                            ball.element.style.transform = 'scale(0.1)';
+                            ball.element.style.opacity = '0';
+                            ball.element.style.filter = 'blur(2px)';
+                        }
+                        
+                        // Remove from arrays after animation
+                        setTimeout(() => {
+                            const ballIndex = balls.indexOf(ball);
+                            if (ballIndex > -1) {
+                                balls.splice(ballIndex, 1);
+                                processedTransactionIds.delete(ball.transaction.id);
+                                ball.destroy();
+                                console.log(`⛏️ Removed ball for transaction ${ball.transaction.id?.substring(0, 8)}...`);
+                            }
+                        }, 500);
+                        
+                    }, 300);
+                }
+            }, index * 100); // Stagger the mining animation
+        });
+        
+        console.log(`✅ Ball mining animation started for ${sortedBalls.length} balls`);
+    }
+    
     // Export these functions for Controls.svelte to use
+    // ADDED: Debug function to check sync status
+    export function debugBallSync() {
+        console.log('🔍 Ball Physics Debug Info:');
+        console.log(`- Store transactions: ${$transactions.length}`);
+        console.log(`- Balls: ${balls.length}`);
+        console.log(`- Processed IDs: ${processedTransactionIds.size}`);
+        console.log(`- Transaction IDs in store:`, $transactions.map(tx => tx.id.substring(0, 8)));
+        console.log(`- Ball transaction IDs:`, balls.map(ball => ball.transaction.id.substring(0, 8)));
+        
+        // Check for orphaned balls
+        const currentTransactionIds = new Set($transactions.map(tx => tx.id));
+        const orphanedBalls = balls.filter(ball => !currentTransactionIds.has(ball.transaction.id));
+        if (orphanedBalls.length > 0) {
+            console.warn(`🚨 Found ${orphanedBalls.length} orphaned balls!`);
+        }
+        
+        return {
+            storeTransactions: $transactions.length,
+            balls: balls.length,
+            processedIds: processedTransactionIds.size,
+            orphanedBalls: orphanedBalls.length
+        };
+    }
+    
+    // ADDED: Force sync function to fix mismatches
+    export function forceSyncBalls() {
+        console.log('🔄 Force syncing balls with transaction store...');
+        
+        // Clear all existing balls
+        balls.forEach(ball => ball.destroy());
+        balls = [];
+        processedTransactionIds.clear();
+        
+        // Recreate balls from current transaction store
+        $transactions.forEach(transaction => {
+            if (balls.length < MAX_BALLS) {
+                const ball = createBallFromTransaction(transaction);
+                balls.push(ball);
+                processedTransactionIds.add(transaction.id);
+            }
+        });
+        
+        console.log(`✅ Force sync complete: ${balls.length} balls created for ${$transactions.length} transactions`);
+    }
+    
+    // ADDED: Manual mining function for testing
+    export function triggerTestMining() {
+        if (balls.length === 0) {
+            console.log('📭 No balls to mine in test mining');
+            return;
+        }
+        
+        const ballsToMine = Math.min(5, Math.ceil(balls.length * 0.3));
+        console.log(`🧪 Test mining: removing ${ballsToMine} balls`);
+        
+        performBallMiningAnimation(ballsToMine, 'TEST');
+    }
+    
     export function addDummyTransactions() {
         const dummyCount = 12;
         let addedCount = 0;
@@ -66,6 +218,7 @@
     export function clearBalls() {
         balls.forEach(ball => ball.destroy());
         balls = [];
+        processedTransactionIds.clear(); // FIXED: Clear the tracking set too
         console.log('🗑️ All balls cleared');
     }
     
@@ -442,6 +595,12 @@
     }
     
     function addTransactionBall(transaction) {
+        // FIXED: Check if transaction already exists
+        if (processedTransactionIds.has(transaction.id)) {
+            console.log(`⏭️ Transaction ${transaction.id?.substring(0, 8)}... already exists, skipping`);
+            return null;
+        }
+        
         const txSize = transaction.size || 1000;
         
         if (!canAddTransaction(txSize)) {
@@ -462,6 +621,8 @@
                 
                 if (ballIndex > -1) {
                     removedSize += ballToRemove.transaction.size || 0;
+                    // FIXED: Remove from tracking set when removing ball
+                    processedTransactionIds.delete(ballToRemove.transaction.id);
                     ballToRemove.destroy();
                     balls.splice(ballIndex, 1);
                 }
@@ -470,6 +631,9 @@
         
         const ball = new Ball(transaction);
         balls.push(ball);
+        // FIXED: Add to tracking set
+        processedTransactionIds.add(transaction.id);
+        console.log(`➕ Added new ball for transaction ${transaction.id?.substring(0, 8)}...`);
         return ball;
     }
     
@@ -488,33 +652,42 @@
         return `${id.substring(0, startChars)}...${id.substring(id.length - endChars)}`;
     }
     
-    // Initialize with existing transactions
+    // FIXED: Updated reactive statement to only add NEW transactions
     $: if ($transactions.length > 0 && physicsContainer) {
-        initializeBallsFromTransactions();
+        addNewTransactionsOnly($transactions);
     }
     
-    function initializeBallsFromTransactions() {
-        // Clear existing balls
-        balls.forEach(ball => ball.destroy());
-        balls = [];
+    // FIXED: New function that only adds transactions not yet processed
+    function addNewTransactionsOnly(transactions) {
+        if (!Array.isArray(transactions)) return;
         
-        const sortedTransactions = [...$transactions].sort((a, b) => (b.size || 0) - (a.size || 0));
+        console.log(`🔄 Checking for new transactions... (${transactions.length} total, ${processedTransactionIds.size} already processed)`);
         
         let addedCount = 0;
+        const sortedTransactions = [...transactions].sort((a, b) => (b.size || 0) - (a.size || 0));
+        
         for (const tx of sortedTransactions) {
-            if (canAddTransaction(tx.size || 1000)) {
-                addTransactionBall(tx);
-                addedCount++;
-            } else {
-                break;
+            // Only add if we haven't processed this transaction yet
+            if (!processedTransactionIds.has(tx.id)) {
+                if (canAddTransaction(tx.size || 1000)) {
+                    addTransactionBall(tx);
+                    addedCount++;
+                } else {
+                    console.log(`🚫 Cannot add transaction ${tx.id?.substring(0, 8)}... - capacity reached`);
+                    break;
+                }
             }
         }
         
-        console.log(`📦 Loaded ${addedCount}/${$transactions.length} transactions in simple ball physics mode`);
-        
-        if (!physicsRunning) {
-            physicsRunning = true;
-            animate(performance.now());
+        if (addedCount > 0) {
+            console.log(`📦 Added ${addedCount} new transactions (${processedTransactionIds.size} total processed)`);
+            
+            if (!physicsRunning) {
+                physicsRunning = true;
+                animate(performance.now());
+            }
+        } else {
+            console.log(`✅ No new transactions to add`);
         }
     }
     
@@ -524,7 +697,23 @@
     onMount(() => {
         if (physicsContainer) {
             animate(performance.now());
-            console.log('⚡ Simple Ball Physics Grid mounted');
+            console.log('⚡ Simple Ball Physics Grid mounted - balls will persist between updates');
+        }
+        
+        // ADDED: Listen for coordinated block events to remove balls during mining
+        const handleNewBlockEvent = (event) => {
+            const blockInfo = event.detail;
+            console.log(`🎭 BallPhysics received coordinated block event:`, blockInfo);
+            
+            // Remove balls when blocks are mined (similar to TransactionPackingGrid)
+            setTimeout(() => {
+                handleCoordinatedMining(blockInfo);
+            }, 100); // Small delay to coordinate with other components
+        };
+        
+        if (typeof window !== 'undefined') {
+            window.addEventListener('ergomempool:newblock', handleNewBlockEvent);
+            console.log('📡 Ball Physics listening for coordinated block events');
         }
     });
     
@@ -533,8 +722,15 @@
             cancelAnimationFrame(animationId);
         }
         
+        // ADDED: Clean up event listener
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('ergomempool:newblock', () => {});
+            console.log('🧹 Removed coordinated block event listener from Ball Physics');
+        }
+        
         balls.forEach(ball => ball.destroy());
         balls = [];
+        processedTransactionIds.clear();
         console.log('🧹 Simple Ball Physics Grid destroyed');
     });
 </script>
