@@ -2,6 +2,7 @@
     import { transactions, walletConnector, valueColors } from '$lib/stores.js';
     import { isWalletTransaction } from '$lib/wallet.js';
     import { identifyTransactionType } from '$lib/transactionTypes.js';
+    import { getPlatformConfig } from '$lib/transactionOrigins.js';
     
     // BLOCKCHAIN CAPACITY CONFIGURATION
     const BLOCKCHAIN_CONFIG = {
@@ -165,7 +166,7 @@
         
         // Recreate balls from current transaction store
         $transactions.forEach(transaction => {
-            if (balls.length < MAX_BALLS) {
+            if (balls.length < PHYSICS_CONFIG.maxBalls) {
                 const ball = createBallFromTransaction(transaction);
                 balls.push(ball);
                 processedTransactionIds.add(transaction.id);
@@ -547,12 +548,18 @@
             }
         }
         
+        // ENHANCED: Updated showTooltip with platform logo support
         showTooltip(e) {
             tooltipTransaction = this.transaction;
-            // FIXED: Use clientX/Y instead of pageX/Y for proper positioning
             tooltipX = e.clientX + 10;
             tooltipY = e.clientY - 10;
             showTooltip = true;
+            
+            // Get platform configuration for this transaction
+            const platformConfig = getPlatformConfig(this.transaction.origin || 'P2P');
+            
+            // Store platform info for the tooltip
+            tooltipTransaction.platformConfig = platformConfig;
         }
         
         hideTooltip() {
@@ -747,14 +754,27 @@
     </div>
 </div>
 
-<!-- FIXED: Simplified Tooltip with proper positioning -->
+<!-- ENHANCED: Tooltip with platform logo support -->
 {#if showTooltip && tooltipTransaction}
     {@const isWallet = $walletConnector.isConnected && $walletConnector.connectedAddress && isWalletTransaction(tooltipTransaction, $walletConnector.connectedAddress)}
     {@const transactionType = identifyTransactionType(tooltipTransaction)}
+    {@const platformConfig = tooltipTransaction.platformConfig || { name: 'P2P Transfer', logo: '/logos/p2p.png' }}
     <div 
         class="simple-ball-tooltip" 
         style="position: fixed; left: {tooltipX}px; top: {tooltipY}px; display: block;"
     >
+        <!-- Platform header with logo -->
+        <div class="platform-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.2);">
+            <img 
+                src={platformConfig.logo} 
+                alt={platformConfig.name}
+                style="width: 20px; height: 20px; border-radius: 3px; object-fit: contain; background: rgba(255,255,255,0.1); padding: 2px;"
+            />
+            <span style="color: #ffffff; font-weight: bold; font-size: 11px;">
+                {platformConfig.name}
+            </span>
+        </div>
+        
         {#if isWallet}
             <div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🌟 Your Wallet Transaction</div>
         {/if}
@@ -763,7 +783,7 @@
         {:else if transactionType.icon === '🧪'}
             <div style="color: #f39c12; font-weight: bold; margin-bottom: 4px;">🧪 Test Transaction</div>
         {/if}
-        <strong>Transaction</strong><br>
+        <strong>Transaction Details</strong><br>
         ID: {shortenTransactionId(tooltipTransaction.id)}<br>
         Size: {formatBytes(tooltipTransaction.size || 0)}<br>
         Value: {(tooltipTransaction.value || 0).toFixed(4)} ERG<br>
@@ -824,6 +844,7 @@
         color: rgba(255, 255, 255, 0.9);
     }
     
+    /* ENHANCED: Updated tooltip styling with platform header support */
     .simple-ball-tooltip {
         background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
         border: 2px solid var(--primary-orange);
@@ -833,10 +854,12 @@
         color: var(--text-light);
         pointer-events: none;
         z-index: 1000;
-        white-space: nowrap;
+        white-space: normal;
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
-        max-width: 150px;
+        max-width: 280px;
+        line-height: 1.4;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     /* FIXED: Removed all transform/scale effects from ball styling */
@@ -903,6 +926,11 @@
         .bounce-hint {
             font-size: 11px;
         }
+        
+        .simple-ball-tooltip {
+            max-width: 250px;
+            font-size: 11px;
+        }
     }
     
     @media (max-width: 480px) {
@@ -913,6 +941,12 @@
         .simple-block-label {
             font-size: 12px;
             padding: 6px 12px;
+        }
+        
+        .simple-ball-tooltip {
+            max-width: 220px;
+            font-size: 10px;
+            padding: 10px;
         }
     }
 </style>
