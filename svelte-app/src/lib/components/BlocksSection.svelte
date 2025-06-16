@@ -21,7 +21,7 @@
         "hBMbdspA": "K1 Pool",
         "DnPQovBb": "Kryptex",
         "NXXe6NnN": "Nanopool",
-        "utiXtQYP": "Sigmanauts",
+        "mk3QTeUo": "Sigmanauts",
         "ofdQbHbY": "Woolypooly",
         "NhuNP8Je": "JJpool",
         "C5AFYfSc": "2Miners Solo"
@@ -35,7 +35,7 @@
         "hBMbdspA": "logos/k1.png",
         "DnPQovBb": "logos/kryptex.png",
         "NXXe6NnN": "logos/nanopool.png",
-        "utiXtQYP": "logos/sigmanauts.png",
+        "mk3QTeUo": "logos/sigmanauts.png",
         "ofdQbHbY": "logos/wooly.png",
         "Unknown": "logos/unknown.svg",
         "NhuNP8Je": "logos/jjpool.png",
