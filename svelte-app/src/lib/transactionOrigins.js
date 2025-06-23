@@ -610,6 +610,18 @@ export const PLATFORM_CONFIGS = {
     ]
   },
 
+  UNMINEABLE: {
+    name: "Unmineable payout",
+    logo: "/logos/unmineable.png",
+    color: "#34495e",
+    website: "https://sigmafi.app/",
+    inputAddresses: [
+      // Sigmafi address
+      "9hhM7ZqQCVX6iti8Jos8BLv2MTVis51mm8sQNfwXfUqNgTjEbqv",
+    ]
+  },
+
+
   JJPOOL: {
     name: "JJpool payout",
     logo: "/logos/jjpool.png",
