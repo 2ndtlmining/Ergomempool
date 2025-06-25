@@ -1,164 +1,226 @@
-# Ergomempool
+# Ergomempool - Real-time Ergo Blockchain Mempool Visualizer
 
-Ergomempool is a real-time web application that provides comprehensive monitoring and visualization of the Ergo blockchain mempool, blocks, and mining activity.
+A sophisticated real-time visualization tool for the Ergo blockchain mempool, featuring multiple interactive visualization modes, transaction origin detection, and advanced packing algorithms.
 
-## 🚀 Features
+![Ergomempool Logo](public/Ergomempool_logo_f.svg)
 
-### Real-time Mempool Visualization
-- Interactive grid visualization of unconfirmed transactions
-- Color-coded squares by transaction size or value
-- Transaction details on hover with USD conversion
-- Support for up to 500 transactions in the visualization
+## 🌟 Features
 
-### Live Block Monitoring
-- Display of the last 4 mined blocks with detailed information
-- Real-time "Next Block" estimation showing pending transactions
-- Block size, total rewards (base + fees), and transaction count
-- Mining pool identification with logos and names
-- Clickable block heights linking to block explorer
+- **Real-time Transaction Monitoring**: Live updates from the Ergo blockchain mempool
+- **Multiple Visualization Modes**: Four different ways to visualize transaction data
+- **Transaction Origin Detection**: Automatically identifies transactions from major Ergo platforms
+- **Advanced Packing Algorithm**: Gravity-based bottom-up packing simulation
+- **Wallet Integration**: Connect your Ergo wallet to highlight your transactions
+- **Responsive Design**: Works seamlessly across desktop, tablet, and mobile devices
+- **Platform Activity Tracking**: Monitor activity from DEXs, bridges, mining pools, and more
 
-### Wallet Integration
-- Connect Ergo wallets (Nautilus, Eternl, Minotaur)
-- Highlight your own transactions in the mempool
-- Send test transactions with custom amounts
-- Donation functionality built-in
+## 🎨 Visualization Modes
 
-### Mining Pool Tracking
-- Recognition of major Ergo mining pools
-- Pool logos and human-readable names
-- Mining pool performance tracking
+### 1. Transaction Packing Grid (Default)
+The main visualization mode that simulates how transactions would be packed into blocks using a gravity-based algorithm.
 
-## 📊 Data Refresh Intervals
+- **Algorithm**: Bottom-up gravity packing with responsive spacing
+- **Features**: Real-time capacity monitoring, packing efficiency display
+- **Interactions**: Add test transactions, repack with gravity simulation
+- **Color Coding**: Transactions colored by value (blue → purple → red for increasing values)
 
-The application automatically updates data at different intervals optimized for each data type:
+### 2. Hexagon Packing Mode
+An artistic hexagonal visualization that shows transaction packing in a honeycomb pattern.
 
-- **Mempool Transactions**: Every 30 seconds
-- **Block Information**: Every 30 seconds  
-- **ERG Price Data**: Every 5 minutes
+- **Layout**: Hexagonal grid with automatic packing animation
+- **Animation**: Smooth transitions and packing sequences
+- **Best For**: Presentations and aesthetic appeal
 
-These intervals provide real-time feel while being respectful of API rate limits.
+### 3. Ball Physics Mode
+A dynamic physics simulation where transactions are represented as balls with realistic physics.
 
-## 🎯 Use Cases
+- **Physics**: Gravity, friction, collision detection, and pressure simulation
+- **Features**: Block mining animations, capacity pressure effects
+- **Interactions**: Balls settle naturally, respond to new transactions
+- **Visual Effects**: Pressure-based color shifts and scaling
 
-- **Miners**: Monitor mempool size and fee trends
-- **Traders**: Track large transactions and market activity
-- **Developers**: Analyze transaction patterns and network activity
-- **Users**: Check transaction status and network congestion
-- **Mining Pools**: Monitor competition and block discovery
+### 4. Grid View Mode
+A clean, table-like grid layout for detailed transaction analysis.
 
-## 🛠 Technical Details
+- **Layout**: Organized rows and columns
+- **Information**: Detailed transaction metadata
+- **Best For**: Analysis and data inspection
 
-### APIs Used
-- **Ergo Platform API**: `https://api.ergoplatform.com/`
-  - Unconfirmed transactions endpoint
-  - Block data and mining information
-- **Spire Pools Oracle**: ERG-USD price data
-- **Sigmaspace Block Explorer**: Block and transaction links
+## 🎯 Transaction Detection & Color Coding
 
-### Data Sources
-- Fetches up to 99,999 unconfirmed transactions (sorted by size)
-- Retrieves last 4 blocks with complete transaction details
-- Real-time price data from Ergo oracle network
+### Platform Detection
+The app automatically detects transactions from major Ergo ecosystem platforms:
 
-### Performance
-- Client-side visualization limiting to 500 transactions for optimal performance
-- Efficient caching of price data to reduce API calls
-- Responsive design supporting desktop and mobile devices
+#### DEXs & Trading
+- **ErgoDEX** - Blue (`#3498db`)
+- **Spectrum Finance** - Various colors
+- **Mew Finance** - Various colors
 
-## 🚀 Deployment Instructions
+#### Bridges & Cross-chain
+- **Rosen Bridge** - Orange (`#e67e22`)
 
-### Prerequisites
-- Python 3.7+
-- pip package manager
+#### Privacy & Mixing
+- **Ergomixer** - Purple (`#9b59b6`)
 
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/2ndtlmining/Ergomempool.git
-   cd Ergomempool
-   ```
+#### Stablecoins & Finance
+- **SigUSD** - Red (`#e74c3c`)
+- **SigmaFi** - Dark blue (`#34495e`)
+- **Duckpools** - Various colors
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+#### Mining Pools
+- **2Miners** - Auto-detected payouts
+- **Woolypooly** - Auto-detected payouts
+- **Herominers** - Auto-detected payouts
+- **And many more...**
 
-3. Run the application:
-   ```bash
-   python app.py
-   ```
+#### Exchanges
+- **KuCoin** - Auto-detected deposits/withdrawals
+- **Gate.io** - Auto-detected transactions
+- **MEXC** - Auto-detected transactions
+- **And many more...**
 
-4. Access the application in your web browser at `http://localhost:5000`
+#### Other Platforms
+- **Auction House** - NFT marketplace
+- **Duckpools** - Gaming platform
+- **Ergo Raffle** - Community raffles
+- **And 20+ more platforms**
 
-### Production Deployment
-For production deployment, consider:
-- Using a WSGI server like Gunicorn
-- Setting up reverse proxy with Nginx
-- Configuring environment variables for API endpoints
-- Implementing proper logging and monitoring
+### Color Coding System
 
-## 🔧 Configuration
+#### By Transaction Value
+- **Light Blue** (`#3498db`): Low value transactions (0-20% of max)
+- **Medium Blue** (`#2980b9`): Low-medium value (20-40% of max)
+- **Purple** (`#9b59b6`): Medium value (40-60% of max)
+- **Dark Purple** (`#8e44ad`): Medium-high value (60-80% of max)
+- **Red** (`#e74c3c`): High value (80-90% of max)
+- **Dark Red** (`#c0392b`): Highest value (90-100% of max)
 
-### Mining Pool Recognition
-- Edit `miner_names.json` to add/update mining pool names
-- Edit `miner_logos.json` to add/update mining pool logos
-- Logos should be placed in `/static/logos/` directory
+#### Special Transaction Types
+- **Wallet Transactions**: Gold border (`#f39c12`) with glow effect
+- **Test Transactions**: Orange border with "🧪" indicator
+- **Donation Transactions**: Red with "💖" indicator
 
-### Refresh Intervals
-To modify data refresh rates, edit `main.js`:
+## 🔧 Packing Algorithm
+
+### Gravity-Based Bottom-Up Packing
+The core packing algorithm simulates how transactions would be efficiently packed into blocks:
+
+#### Algorithm Features
+- **Density-Based Spacing**: Automatically adjusts spacing based on container size
+- **Bottom-Up Priority**: Transactions settle towards the bottom like gravity
+- **Collision Detection**: Prevents overlapping transactions
+- **Capacity Limits**: Respects Ergo's 2MB block size limit
+- **Responsive Design**: Adapts to different screen sizes
+
+#### Configuration Options
 ```javascript
-// Change transaction/block refresh (currently 30 seconds)
-setInterval(() => {
-    loadTransactions();
-    loadBlockLabels();
-}, 30000); // Change this value
+// API refresh intervals (easily configurable)
+TRANSACTIONS_INTERVAL: 10000,    // 10 seconds
+BLOCKS_INTERVAL: 60000,          // 1 minute  
+PRICE_INTERVAL: 300000,          // 5 minutes
 
-// Change price refresh (currently 5 minutes)  
-setInterval(() => {
-    loadPrice();
-}, 300000); // Change this value
+// Visual parameters
+minSpacing: responsive,          // Dynamic based on screen size
+maxAttempts: 200,               // Placement attempts per transaction
+edgePadding: scaled,            // Proportional to container
 ```
 
-## 🎨 Features in Detail
+#### Packing Stats
+The algorithm provides real-time statistics:
+- **Block Capacity**: 2MB limit visualization
+- **Mempool Size**: Current transaction count
+- **Utilization**: Percentage of block space used
+- **Efficiency**: Packing algorithm efficiency
+- **Status**: Ready/Packing/Full indicators
 
-### Mempool Visualizer
-- Grid layout with each square representing a transaction
-- Two color modes: by transaction size or by ERG value
-- Hover tooltips showing transaction ID, size, and value
-- Click to open transaction in block explorer
-- Special highlighting for wallet transactions
+## 🛠️ Installation & Setup
 
-### Block Animation
-- Smooth transitions when new blocks are mined
-- Visual feedback for block confirmations
-- Time-ago indicators for block mining times
+### Prerequisites
+- Node.js 18+ 
+- npm, pnpm, or yarn
+- Modern web browser with ES2020+ support
 
-### Wallet Features
-- Non-custodial wallet connection
-- Transaction signing and broadcasting
-- Test transaction functionality for development
-- Secure donation processing
+
+## ⚙️ Configuration
+
+### API Settings
+The app includes configurable API refresh intervals in `+page.svelte`:
+
+```javascript
+const API_REFRESH_CONFIG = {
+    TRANSACTIONS_INTERVAL: 10000,    // Adjust refresh rate
+    BLOCKS_INTERVAL: 60000,          
+    PRICE_INTERVAL: 300000,          
+    ENABLE_AUTO_REFRESH: true,       // Toggle auto-refresh
+    MAX_CONSECUTIVE_FAILURES: 3,    // Error handling
+};
+```
+
+## 🔌 API Endpoints
+
+The app connects to Ergo blockchain APIs:
+
+- **Transactions**: `/api?endpoint=transactions`
+- **Blocks**: `/api?endpoint=blocks`  
+- **Price**: `/api?endpoint=price`
+
+Error handling includes:
+- Automatic retries with exponential backoff
+- Fallback data preservation
+- Network error recovery
+- Server error handling
+
+## 🎮 User Interactions
+
+### Header Controls
+- **Mode Selector**: Switch between visualization modes
+- **Refresh Button**: Manual data refresh
+- **Test Transactions**: Add dummy transactions for testing
+- **Repack Button**: Trigger gravity-based repacking
+
+### Wallet Integration
+- **Connect Wallet**: Support for Nautilus, Eternl, Minotaur
+- **Transaction Highlighting**: Your transactions get special styling
+- **Address Detection**: Automatic detection of wallet transactions
+
+### Real-time Features
+- **Live Updates**: Configurable refresh intervals
+- **Block Mining**: Animated block confirmation
+- **New Transactions**: Smooth entry animations
+- **Capacity Monitoring**: Real-time block space tracking
+
+## 📊 Statistics & Monitoring
+
+### Packing Statistics
+- Total transactions in mempool
+- Block capacity utilization
+- Packing efficiency percentage
+- Average transaction size
+- Bottom-heaviness metric
+
+### Platform Activity
+- Transaction count by platform
+- Volume by platform
+- Activity trends over time
+- Origin distribution
+
+### Performance Metrics
+- API response times
+- Update frequencies
+- Error rates
+- Data freshness indicators
+
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add platform configurations if needed
+5. Test thoroughly
+6. Submit a pull request
 
-## 📄 License
 
-This project is open source. Please check the repository for license details.
 
-## 🔗 Links
 
-- **Live Application**: [Ergomempool](https://ergomempool.com) *(if hosted)*
-- **Ergo Platform**: [ergoplatform.org](https://ergoplatform.org)
-- **Block Explorer**: [sigmaspace.io](https://sigmaspace.io)
-
-## 📞 Support
-
-For questions, issues, or feature requests:
-- Open an issue on GitHub
-- Contact: *(add your preferred contact method)*
-
----
-
-*Built for the Ergo community with ❤️*
+**Built with ❤️ for the Ergo ecosystem**
