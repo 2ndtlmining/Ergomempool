@@ -321,6 +321,9 @@ export const PLATFORM_CONFIGS = {
     contractAddresses: [
       // NFT marketplace addresses - add real addresses here
       "9fCKJ7g6ZffHAQb9UQY7S6YLF6dRVejBAXw284XNazkq8XLuZbw",
+      "9hZ9ygGKcQ9z1oaYQEmNF53aiNQTazhBo9DFC8tQsR47a15ueGw",
+      "9hfswHWqDMd2pLDRFCfxQWDTEjNwfsNSw6tweedZwuBe8z92ZyV",
+
     ]
   },
 
