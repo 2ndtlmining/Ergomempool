@@ -200,6 +200,18 @@ export const PLATFORM_CONFIGS = {
     ]
   },
 
+  NonKyc: {
+    name: "NonKyc",
+    logo: "/logos/nonkyc.png",
+    color: "#e74c3c",
+    website: "https://nonkyc.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9hmS5u1Khhc4PFERTA2dGzSkDuwUrrENQEUAveF6gHj8xCi9qy3",
+      "L3f7CYdgf1eLfrujatFbykCY4L4v2uf7S8bXaN2xbeEU1QjjtPEgYAwCYKyfuqouRXMF2s1EKnFA94FRAVRW3C7FdM84kgfG7uB5yJTxDKHJYxvvYtyHHUJ8Z9t7Kcc7a8DUTwopNBW9QnUrazesNNSQDZ2bk5BooEx5QYFsrq4YaNjK2LmBQJxR3ZxSY9SQ4kX149MEgRnf4BcCs9PepWwWw6befMEvcvtA2jHC3UdmapHabKUjU59p6KEPomT5xLQjK4hSjE6fEMpMmFPShjMRrZNQSauBkxWvYDKD7df94vZLFRPqTXiA2Wp8zGjxPfh2wC5S1keeCFCm3GUdKiMJdeaPUZxcakxPUC3fSikLbuwp6nCoVBp2FRPi8CU5hSDwusTvNpp9AHjwmaQVRm25tJvsi5AicYXg6utXiyGcAmBSFn3rUEB451xHE9coNFxZcpAsMnaL8fv4JMqmfWiemHnKeRAPok7UfhcxWXoUWx971t8KEG49pDWyt7PZqjtSqBz5UrxXcSCjYb1YkEj9gdBhBoLfDLNHuErLcKA6Dhtw4mawmwckiBzTJKo791KDvXeLxx5NTwEoUVSnnSwBx63e4P6kdTjQxZRT1Te4JWhDo6rLkETEXH5xm3c97dQkd1zfHERWsUgDatPeCQFMCYQxaEjxa6MRjDDv1amPs5pqacjWMSRabXcBiFU9WV3iLUMqDmf6DU3LSuxmCu2P5MPCNK8dpxZHr7ziHDqs6JU17yaaruJVXnmMxpUTxU1gXTv6nBohhvUsKdbQYBpxfuDauuticnYCQYW7EJH634y7G6yBfNKsmMHyJ2RVPQRyYhihNRYUUaEXJAYeakd373qo8C9NPwPy5XAxxiBTnwfTUki6UtE47X7EDaKJ4mY79VcobDiTkRJ4zGooWFxqhqE9ZbcJn8igp4UnPhbSkUKP2Bis1FTHhLg6CC2WqXnyHWQerCZH5iYGcectHuXfwDuYyH9n29wa4sWHVTnqUdMgmNpdYTjFHnCvUR1j7QTiVWdwEZYRpvnTZD96p9wWKHYhaVWBLuTo9W5vG37qhJvn88tx5UBEe3pqW5ZK9nJavPGCMy5wAG9xLEuP229Js1GWWwipzWtr5b4JXJ2iAB4qQCWAE9KDxSGt58YkN5rSEY6mED48Z7B3gm2o743yNzCa8oVM5DiPVD6eh45mzBQihVakkmppAHs78h3grJhmpFDqaenzifWFhpRyyK6n7xoHDXLqLTWgC9AU8cCqr7R6HByifGAEshH3itGABjPf4AV",
+    ]
+  },
+
 
   AUCTIONCOIN: {
     name: "Auction Coin",
