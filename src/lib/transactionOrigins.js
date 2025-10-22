@@ -212,6 +212,17 @@ export const PLATFORM_CONFIGS = {
     ]
   },
 
+  Gridbot: {
+    name: "Gridbot",
+    logo: "/logos/gridbot.png",
+    color: "#e73ccbff",
+    website: "https://github.com/Telefragged/off-the-grid/",
+    contractAddresses: [
+      // address
+      "873uAozZGWZtbb5NskvFGM7h9uVm1VHnSnThQ4X8dwXms1DGHzGU3QjqwR6s3hXhaZgfmZjmFZaq5A3w2iaeAvMnS4fkFZFpUD8NqLEkPE1crXtNYNz8g7j96fm6ywXfQpzTk8SCo7Q6vYQbBfnzsZYVjWUhqoAh1TqruisuFJf3okNZKY5Zo8TCczvXAFuptYjsgTXcW6tQDxD719mYf5p97FPZpxeDC9amornQf19VQeEVsWeckzXqRKvZBvv6kYzg3b7bgpvwvRPNgeSMgjDSzjoPhXTQM7E9r4Z5GCuui9CyjeKueySeQ6wc966JnvKn1wfiTpxLm3nUZrcvooe11ZvuBy6ZxLsmNUzP7jnvhAXWgFu1aXx8zCU9GHG5XUU6eGk3S4z4ZLECQsMVZqFrmuaRp59DHMLL9CERvNqJiFWebcs1YMxdG3XLodsKdJqGKii6Hadakkh5aKbNAvMRGMRWYWirtZXnBrCdvg4cuzfk8eUBFsp7i4WcNb46Zszx1mstyyjwtkpXv8yXoQUv2QPbradxsyeQFex87k5zGeHJmLpXbdDieXfvEsjCef3YgeVtaWEeTQaMx8CFyPrQegot5b9nvTfUo6ryCjYYKgE4XNa7PXxNJ3x4B8jkagf9FMXPRU6Kfcqk738SbCNQDTCmwHyjjJWtnx1adTAujLU8wSJFYwWG3bzCdoDBfmcc3dARZxLMV6YpPkQ6hLZu148ZN7d1T8UuLu1gQLxAbcsVXkBpSLfP4EGu85te1BZazrF6BCVmw52V5246vzUXQm5VVPzXG3NiZRjZ2BGcnR479Z1DU9Vzvd34KQMnjMXmoxeELLAtTfeLp1musyJKURRXaRiYhK9F5Q5vAfBBU3NX8Vmtv4LJNDm8TKRVGrbkacTQnc8vGfitrw8m45CjFdbFjCvgxVuLAJ6eUgg",
+    ]
+  },
+
 
   AUCTIONCOIN: {
     name: "Auction Coin",
