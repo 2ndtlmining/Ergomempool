@@ -455,6 +455,17 @@ export const PLATFORM_CONFIGS = {
     ]
   },
 
+  Tokenjay: {
+    name: "TokenJay",
+    logo: "/logos/tokenjay.png",
+    color: "#e73ca0ff",
+    website: "https://tokenjay.app/",
+    contractAddresses: [
+      // add real addresses here
+      "DaJygexrs8GgHiucBGuPQcrryQPESkfsKtgMAEtnFeYBBST2x2kNQS3iucFhNE9d7EVWGVSj3eFPbuJQo1Mhy2SanJ1nFbE9xpb6W4R2m9pRisRydf15oWQL6GYs8CRZsQuQ4WiApGMZPZxpddnRBWTTSPiBiazBkQmqELhuu3iimuBTK19VrLBCknsLbFEHEWnYQieC828aE5EoR7QvH8gC3YhEbet2GqDhfpcXhVcnNCNBT8RJx6n2SegZg4ZYn7dmjhpp5vR3TszinJ9zHrFwNuQerXFAsM3TiGw7r",
+    ]
+  },
+
   ERGORAFFLE: {
     name: "Ergo Raffle",
     logo: "/logos/ergo_raffle.png",
