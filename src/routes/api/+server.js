@@ -11,10 +11,10 @@ const API_CONFIG = {
         transactions: 'https://api.ergoplatform.com/transactions/unconfirmed'
     },
     backup: {
-        name: 'Cornell',
-        base: 'https://api.ergo.aap.cornell.edu',
-        blocks: 'https://api.ergo.aap.cornell.edu/api/v1/blocks',
-        transactions: 'https://api.ergo.aap.cornell.edu/transactions/unconfirmed'
+        name: 'P2p',
+        base: 'https://api-p2p.ergoplatform.com/',
+        blocks: 'https://api-p2p.ergoplatform.com/api/v1/blocks',
+        transactions: 'https://api-p2p.ergoplatform.com/transactions/unconfirmed'
     },
     timeout: 10000,
     retryDelay: 1000
