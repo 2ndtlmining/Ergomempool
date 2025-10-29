@@ -465,6 +465,16 @@ export const PLATFORM_CONFIGS = {
       "DaJygexrs8GgHiucBGuPQcrryQPESkfsKtgMAEtnFeYBBST2x2kNQS3iucFhNE9d7EVWGVSj3eFPbuJQo1Mhy2SanJ1nFbE9xpb6W4R2m9pRisRydf15oWQL6GYs8CRZsQuQ4WiApGMZPZxpddnRBWTTSPiBiazBkQmqELhuu3iimuBTK19VrLBCknsLbFEHEWnYQieC828aE5EoR7QvH8gC3YhEbet2GqDhfpcXhVcnNCNBT8RJx6n2SegZg4ZYn7dmjhpp5vR3TszinJ9zHrFwNuQerXFAsM3TiGw7r",
     ]
   },
+  Crystalpool: {
+    name: "Crystalpool",
+    logo: "/logos/crystalpool.png",
+    color: "#1290a4ff",
+    website: "https://ergfi.xyz/",
+    contractAddresses: [
+      // add real addresses here
+      "9eaX1P6KkckoZa2cc8Cn2iL3tjsUL5MN9CQCTPCE1GbcaZwcqns",
+    ]
+  },
 
   ERGORAFFLE: {
     name: "Ergo Raffle",
