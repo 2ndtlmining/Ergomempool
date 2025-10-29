@@ -172,6 +172,17 @@ export const PLATFORM_CONFIGS = {
     ]
   },
 
+  SRSniper: {
+    name: "SR Sniper",
+    logo: "/logos/SRsniper.png",
+    color: "#e74c3c",
+    website: "https://sigmausd.io/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9eipEgK4eo3fZYj2RY4uAK5BDdob5oinAvo41XTwrnVpjsYYsZ3",
+    ]
+  },
+
     MEWFINANCE: {
     name: "MewFinance",
     logo: "/logos/mew.png",
