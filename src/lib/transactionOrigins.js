@@ -174,7 +174,7 @@ export const PLATFORM_CONFIGS = {
 
   SRSniper: {
     name: "SR Sniper",
-    logo: "/logos/SRsniper.png",
+    logo: "/logos/SRsniper2.png",
     color: "#e74c3c",
     website: "https://sigmausd.io/",
     contractAddresses: [
@@ -501,7 +501,7 @@ export const PLATFORM_CONFIGS = {
   },
 DevDOA: {
     name: "Dev DOA",
-    logo: "/logos/devdoa.png",
+    logo: "/logos/devdoa2.png",
     color: "#e74c3c",
     website: "https://ergoraffle.com/",
     contractAddresses: [
@@ -569,7 +569,7 @@ DevDOA: {
 
   DexyGold: {
     name: "Dexy Gold",
-    logo: "/logos/dexygold.png",
+    logo: "/logos/dexygold2.png",
     color: "#ebf309ff",
     website: "https://docs.ergoplatform.com/eco/dexy/",
     contractAddresses: [
@@ -587,7 +587,7 @@ DevDOA: {
 
   Ergofoundation: {
     name: "Ergo Foundation",
-    logo: "/logos/ergofoundation.png",
+    logo: "/logos/ergofoundation2.png",
     color: "#ebf309ff",
     website: "https://docs.ergoplatform.com/",
     contractAddresses: [
