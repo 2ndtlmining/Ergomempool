@@ -172,6 +172,17 @@ export const PLATFORM_CONFIGS = {
     ]
   },
 
+  USE: {
+    name: "DexyUSD",
+    logo: "/logos/use.png",
+    color: "#703831ff",
+    website: "https://docs.ergoplatform.com/eco/dexy/",
+    contractAddresses: [
+      // NFT marketplace addresses - add real addresses here
+      "9iQJg8pmqP9G5sUcbtV9AWQQnBs52gdeKb2ktZjV6E69y3firSU",
+    ]
+  },
+
   SRSniper: {
     name: "SR Sniper",
     logo: "/logos/SRsniper2.png",
